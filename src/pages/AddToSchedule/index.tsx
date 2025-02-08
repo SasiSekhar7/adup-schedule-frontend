@@ -107,44 +107,56 @@ function AddToSchedule() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-md font-semibold mb-6">Ad Scheduling</h1>
+    <div > 
+      <h1 className="text-md font-semibold mb-4 ">Ad Scheduling</h1>
 
       <div className="grid gap-6 md:grid-cols-2 max-h-[100vh]">
         {/* ✅ Select Ad */}
+      {/* <div className="col-span-2 grid grid-cols-2 gap-6 h-[60vh]"> */}
+
         <Card>
-          <CardHeader>
-            <CardTitle className="text-md">Select Ad</CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* <CardHeader>
+            <CardTitle className="text-md p-0">Select Ad</CardTitle>
+          </CardHeader> */}
+      <h1 className="text-md font-semibold p-4">Select Ad</h1>
+
+          <CardContent className="max-h-[70vh]">
+            {/* <div className="h-[50vh]"> */}
+
             <DataTable
               data={adsData}
               columns={adcolumns}
               filters={[{ label: "Ad Name", value: "name" }]}
               onRowSelectionChange={handleSelectedAd}
+              maxHeight="40vh"
             />
+            {/* </div> */}
+
           </CardContent>
         </Card>
 
         {/* ✅ Select Device */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-md">Select Device</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <h1 className="text-md font-semibold p-4">Select Devices</h1>
+
+          <CardContent className="max-h-[70vh]">
+          {/* <div className="h-[30vh]"> */}
+
             <DataTable
               data={devicesData}
               columns={devicecolumns}
               filters={[{ label: "Locations", value: "location" }]}
               onRowSelectionChange={handleSelectedDevices}
-            />
+            maxHeight="40vh"/>
+            {/* </div> */}
           </CardContent>
         </Card>
+        {/* </div> */}
 
         {/* ✅ Date Range Picker */}
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center w-full ">
-            <CardTitle className="text-md mr-4">Select Date Range</CardTitle>
+            <CardTitle className="text-md mx-4">Select Date Range</CardTitle>
             {/* <DateTimeRangePicker onChange={setDateRange} value={dateRange}   /> */}
             <DatePicker
               selected={startDate}
@@ -161,7 +173,7 @@ function AddToSchedule() {
               className="border rounded-md px-4 py-2"
             />
 
-            <CardTitle className="text-md mr-4">
+            <CardTitle className="text-md mx-4">
               Select No. of plays per day
             </CardTitle>
             {/* <DateTimeRangePicker onChange={setDateRange} value={dateRange}   /> */}

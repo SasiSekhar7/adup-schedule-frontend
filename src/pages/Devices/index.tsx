@@ -27,12 +27,12 @@ function Home() {
         </p>
       </div>
 
-      <div className="ml-auto">
+      {/* <div className="ml-auto">
         <Button >
           Add Device
           <Plus className="h-4 w-4"/>
         </Button>
-      </div>
+      </div> */}
       </div>
      
 

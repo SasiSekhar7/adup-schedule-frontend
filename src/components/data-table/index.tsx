@@ -32,15 +32,21 @@ import { Input } from "../ui/input";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filters: [{ label: string; value: string }];
-  onRowSelectionChange?: (selectedRows: any) => void; // Add this prop for callback
+  filters: filter[];
+  maxHeight?: string; // ✅ New prop
+  onRowSelectionChange?: (selectedRows: any) => void;
+}
+type filter = {
+  label: string; 
+  value: string 
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filters,
-  onRowSelectionChange, // Destructure the callback prop
+  maxHeight = "80vh", // ✅ Default maxHeight
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -50,37 +56,19 @@ export function DataTable<TData, TValue>({
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
-// useEffect to log selected rows after state updates
-React.useEffect(() => {
-  const selectedRows = table
-    .getFilteredSelectedRowModel()
-    .rows.map((row) => row.original);
-
-  onRowSelectionChange?.(selectedRows); // Pass selected rows to the callback
-}, [rowSelection]); // Run effect when rowSelection changes
+  React.useEffect(() => {
+    const selectedRows = table
+      .getFilteredSelectedRowModel()
+      .rows.map((row) => row.original);
+    onRowSelectionChange?.(selectedRows);
+  }, [rowSelection]);
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-    },
+    state: { sorting, columnVisibility, rowSelection, columnFilters },
     enableRowSelection: true,
-    onRowSelectionChange: (newSelection) => {
-      setRowSelection(newSelection);
-    
-      if (onRowSelectionChange) {
-        const selectedRows = table
-          .getFilteredSelectedRowModel()
-          .rows.map((row) => row.original); // Extract actual row data
-    
-        onRowSelectionChange(selectedRows); // Pass selected rows to the callback
-      }
-    },
-    
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -93,27 +81,32 @@ React.useEffect(() => {
   });
 
   return (
-    <div className="space-y-4 ">
-      <div>
-        {filters?.map((filter) => (
-          <div className="flex items-center py-4" key={filter.value}>
-            <Input
-              placeholder={`Filter ${filter.label}...`}
-              value={
-                (table.getColumn(`${filter.value}`)?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(event) =>
-                table.getColumn(`${filter.value}`)?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-          </div>
-        ))}
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-row items-center space-x-4">
+
+      {filters?.map((filter) => (
+        <div className="flex items-center " key={filter.value}>
+          <Input
+            placeholder={`Filter ${filter.label}...`}
+            type={filter.value ==="start_time"?"date":"text"}
+            value={(table.getColumn(`${filter.value}`)?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn(`${filter.value}`)?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        </div>
+      ))}
       </div>
 
-      <div className="rounded-md border">
-        <Table className="text-sm">
+
+      {/* Table Container with maxHeight */}
+      <div
+        className="rounded-md border overflow-auto"
+        style={{ maxHeight }} // ✅ Apply maxHeight dynamically
+      >
+        <Table className="text-sm w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -148,6 +141,8 @@ React.useEffect(() => {
           </TableBody>
         </Table>
       </div>
+      
+      {/* Pagination */}
       <DataTablePagination table={table} />
     </div>
   );

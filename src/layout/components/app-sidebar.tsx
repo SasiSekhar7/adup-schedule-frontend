@@ -26,21 +26,34 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useLocation } from "react-router-dom";
+import api from "@/api";
 
+interface User {
+  name: string,
+  email: string
+}
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation(); // ✅ Move inside the component
+  const [user, setUser] = React.useState<User>()
+  React.useEffect(()=>{fetchData()},[])
 
+  const fetchData = async () => {
+    try {
+      const response = await api.get('/user/data')
+      setUser(response.user)
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const data = {
     user: {
-      name: "shadcn",
-      email: "m@example.com",
+      name: user?.name,
+      email: user?.email,
       avatar: "/avatars/shadcn.jpg",
     },
     teams: [
       { name: "AdUp Console", logo:"https://demokrito.com/wp-content/uploads/2024/12/DWORD-WHITE-300x96.png", plan: "Enterprise" },
-      
-      { name: "Acme Corp.", logo: AudioWaveform, plan: "Startup" },
-      { name: "Evil Corp.", logo: Command, plan: "Free" },
+
     ],
     navMain: [
       {
@@ -71,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: "All", url: "/schedule" },
           { title: "Schuedule Ad", url: "/schedule/add" },
-          { title: "Statistics", url: "#" },
+          { title: "Calendar", url: "/schedule/calendar" },
           { title: "Changelog", url: "#" },
         ],
       },

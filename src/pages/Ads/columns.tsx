@@ -1,9 +1,25 @@
 "use client";
 
 import { DataTableColumnHeader } from "@/components/data-table/components/data-table-column-header";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu,   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger
+ } from "@/components/ui/dropdown-menu";
+
 import { ColumnDef } from "@tanstack/react-table";
+import { ChevronRight, EllipsisVertical, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Define types for Ad
 export interface Ad {
@@ -69,43 +85,8 @@ export const columns: ColumnDef<Ad>[] = [
   {
     accessorKey: "url",
     header: "URL",
-    cell: ({ row }) => {
-      const path = row.getValue("url");
-      if (!path) return null;
-
-      // Extract the file extension
-      const fileExtension = path.split(".").pop()?.toLowerCase();
-    
-      // Check if it's a video or image
-      const isVideo = fileExtension === "mp4" || fileExtension === "webm" || fileExtension === "ogg";
-      const isImage = fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "png" || fileExtension === "gif";
-    
-      return(
-        <Dialog>
-          <DialogTrigger>
-            <span className="truncate underline underline-offset-2 text-blue-700">{
-              path.split('/').pop()
-            }</span>
-          </DialogTrigger>
-          <DialogContent>
-          <div className="max-h-[80vh]">
-      {isVideo ? (
-        <video controls className="w-full max-h-[80vh] rounded-md">
-          <source src={path} type={`video/${fileExtension}`} />
-          Your browser does not support the video tag.
-        </video>
-      ) : isImage ? (
-        <img src={path} alt="Preview" className="w-full h-auto  max-h-[80vh]rounded-md" />
-      ) : (
-        <a href={path} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-          Download File
-        </a>
-      )}
-    </div>
-          </DialogContent>
-        </Dialog>
-      )
-    },
+    cell: ({ row }) => row.getValue('url')
+      
   },
   {
     accessorKey: "duration",
@@ -125,5 +106,40 @@ export const columns: ColumnDef<Ad>[] = [
       <DataTableColumnHeader column={column} title="Updated At" />
     ),
     cell: ({ row }) => new Date(row.getValue("updated_at")).toLocaleString(),
+  },
+  {
+    accessorKey: "ad_id",
+    header: "Actions",
+    cell: ({ row }) => {
+      const navigate = useNavigate();
+      const [open, setOpen] = useState(false);
+    
+      return(
+        <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+          >
+            <MoreHorizontal />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem onClick={()=>navigate(`/ads/${row.getValue("ad_id")}`)}>View</DropdownMenuItem>
+        <DropdownMenuSeparator />
+
+          <DropdownMenuItem onClick={()=>navigate(`/ads/${row.getValue("ad_id")}/edit`)}>Edit / Delete
+
+          <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+
+     
+        </DropdownMenuContent>
+      </DropdownMenu>)
   }
+}
 ];

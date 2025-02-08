@@ -1,34 +1,31 @@
 import axios from "axios";
 
-
 const api = axios.create({
-    baseURL:'http://localhost:8080/api'
-})
+    baseURL: `${import.meta.env.VITE_BASE_URL}`
+});
 
 api.interceptors.request.use(
-    //async (config) => {
-    //     // Add Authorization token to the headers
-    //     if (token) {
-    //         config.headers['authToken'] = authToken;
-    //     }
-    //     return config;
-    // },
-    // (error) => {
-    //     // Handle request errors
-    //     console.error('Request error:', error.message);
-    //     return Promise.reject(error);
-    // }
-);
-
-
-api.interceptors.response.use(
-    (response) => {
-        return response.data;
+    async (config) => {
+        const token = sessionStorage.getItem('token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
     },
     (error) => {
-        // Handle request errors
-        return Promise.reject(error.response.data);
-    }   
+        console.error('Request error:', error.message);
+        return Promise.reject(error);
+    }
+);
+
+api.interceptors.response.use(
+    (response) => response.data,
+    (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            window.location.href = "/login"; // Redirect to login page
+        }
+        return Promise.reject(error.response?.data || error.message);
+    }
 );
 
 export default api;

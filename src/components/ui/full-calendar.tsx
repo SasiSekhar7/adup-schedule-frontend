@@ -209,8 +209,6 @@ const EventGroup = ({
           const hoursDifference =
             differenceInMinutes(event.end, event.start) / 60;
           const startPosition = event.start.getMinutes() / 60;
-          const widthPercentage = 100 / event.totalColumns;
-          const leftOffset = event.column * widthPercentage;
 
           return (
             <div
@@ -222,13 +220,11 @@ const EventGroup = ({
               style={{
                 top: `${startPosition * 100}%`,
                 height: `${hoursDifference * 100}%`,
-                width: `${widthPercentage}%`,
-                left: `${leftOffset}%`,
               }}
             >
               <div className="flex flex-col space-y-2">
                 <h3 className="text-lg font-semibold">{event.title}</h3>
-                <div className="text-sm opacity-80">
+                {/* <div className="text-sm opacity-80">
                   <p className='flex flex-row space-x-2'>
                     Ad:{" "}
                     <span className="font-medium">{event.ad.name}</span>
@@ -271,7 +267,7 @@ const EventGroup = ({
                     </span>
                   </p>
                 </div>
-                
+                 */}
               </div>
 
             </div>

@@ -5,9 +5,11 @@ import { Device, DevicesResponse, columns } from "./columns";
 import { data } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import AddAdComponent from "./components/AddAds";
 
 function Ads() {
   const [data, setData] = useState<Device[]>([])
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     const fetchDta = async () => {
       const response =  await api.get<DevicesResponse>('/ads/all')
@@ -16,6 +18,9 @@ function Ads() {
     };
     fetchDta();
   }, []);
+  function onIsOpenChange(){
+
+  }
   return (
     <div className="">
       <div className="flex items-center w-full mb-4">
@@ -29,10 +34,7 @@ function Ads() {
       </div>
 
       <div className="ml-auto">
-        <Button >
-          Uplaod Ad
-          <Plus className="h-4 w-4"/>
-        </Button>
+        <AddAdComponent onIsOpenChange={onIsOpenChange}/>
       </div>
       </div>
      
