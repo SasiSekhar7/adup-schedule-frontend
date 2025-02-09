@@ -34,6 +34,8 @@ function AddAdComponent({ onIsOpenChange }) {
   const [file, setFile] = useState<File>();
   const [ad, setAd] = useState<AdToSubmit>({duration:10});
   const [error, setError] = useState<string>();
+  const [loading, setLoading] = useState<boolean>(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,6 +49,7 @@ function AddAdComponent({ onIsOpenChange }) {
   }, []);
 
   const handleCreate = async () => {
+    setLoading(true)
     try {
       if (!file) throw "No File uploaded";
       const { name, duration, client_id } = ad;
@@ -60,8 +63,11 @@ function AddAdComponent({ onIsOpenChange }) {
       formData.append('name', ad?.name);
       formData.append('duration', ad?.duration);
       await api.post('/ads/add', formData)
+      setLoading(false)
     } catch (error) {
       setError(error);
+      setLoading(false)
+
       console.log(error);
     }
   };
