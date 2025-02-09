@@ -20,7 +20,7 @@ export interface Schedule {
   createdAt: string;
   updatedAt: string;
   ad_name: string;
-  device_location: string;
+  group_name: string;
 }
 
 
@@ -67,12 +67,12 @@ export const columns: ColumnDef<Schedule>[] = [
     cell: ({ row }) => row.getValue("ad_name"),
   },
   {
-    accessorKey: "device_id",
+    accessorKey: "group_name",
     header: ({column})=>(
-      <DataTableColumnHeader column={column} title="Device" />
+      <DataTableColumnHeader column={column} title="Device Group" />
     ),
     cell: ({ row }) => (<div>
-        {row.getValue("device_id")}
+        {row.getValue("group_name")}
 
     </div>),
   },
