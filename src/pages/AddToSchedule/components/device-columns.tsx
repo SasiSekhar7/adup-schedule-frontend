@@ -14,9 +14,6 @@ const statusVariants: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700 border border-gray-400",
 };
 
-interface DeviceGroup {
-  name: string;
-}
 
 export interface Device {
   device_id: string;
@@ -31,11 +28,17 @@ export interface Device {
   group_name: string;
 }
 
-export interface DevicesResponse {
-  devices: Device[];
+export interface DeviceGroup {
+  group_id: string;
+  name: string;
+  device_count: number
 }
 
-export const devicecolumns: ColumnDef<Device>[] = [
+export interface DevicesGroupsResponse {
+  devices: DeviceGroup[];
+}
+
+export const devicecolumns: ColumnDef<DeviceGroup>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -59,61 +62,20 @@ export const devicecolumns: ColumnDef<Device>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "device_id",
-    header: ({column})=>(
-      <DataTableColumnHeader column={column} title="Device ID"/>
-    ),
-    cell: ({ row }) => row.getValue("device_id"),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "group_name",
+    accessorKey: "name",
     header: ({column})=>(
       <DataTableColumnHeader column={column} title="Group Name"/>
     ),
-    cell: ({ row }) => row.getValue("group_name"),
+    cell: ({ row }) => row.getValue("name"),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: "location",
+    accessorKey: "device_count",
     header:({column})=>(
-      <DataTableColumnHeader column={column} title="Location"/>
+      <DataTableColumnHeader column={column} title="Device Count"/>
 
     ),
-    cell: ({ row }) => row.getValue("location"),
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge className={cn("px-3 py-1 rounded-full text-sm font-medium", statusVariants[status] || "bg-gray-100 text-gray-700 border border-gray-300")}>
-          {status}
-        </Badge>
-      );
-    },
-    filterFn: (row, id, value) => value.includes(row.getValue(id)),
-  },
-  {
-      accessorKey: "last_synced",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Last Synced" />,
-      cell: ({ row }) => {
-        const lastSynced = new Date(row.getValue("last_synced"));
-        return formatDistanceToNow(lastSynced, { addSuffix: true }); // e.g., "5 minutes ago"
-      },
-      enableSorting: true,
-    },
-    {
-      accessorKey: "next_sync",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Next Sync" />,
-      cell: ({ row }) => {
-        const lastSynced = new Date(row.getValue("last_synced"));
-        const nextSync = addHours(lastSynced, 1); // Assumes next sync is 1 hour after last sync
-        return nextSync.toLocaleString(); // Formats as a readable timestamp
-      },
-      enableSorting: true,
-    },
+    cell: ({ row }) => row.getValue("device_count"),
+  }
 ];

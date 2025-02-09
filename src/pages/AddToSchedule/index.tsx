@@ -14,7 +14,7 @@ import "react-date-range/dist/theme/default.css"; // theme css file
 // ✅ Data Table & Columns
 import { DataTable } from "@/components/data-table";
 import { adcolumns } from "./components/ad-columns";
-import { devicecolumns } from "./components/device-columns";
+import { devicecolumns, DeviceGroup, DevicesGroupsResponse } from "./components/device-columns";
 
 // ✅ API & Types
 import api from "@/api";
@@ -41,7 +41,7 @@ type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 function AddToSchedule() {
   const [dateRange, setDateRange] = useState<Value>([new Date(), new Date()]);
-  const [devicesData, setDevicesData] = useState<Device[]>([]);
+  const [devicesData, setDevicesData] = useState<DeviceGroup[]>([]);
   const [adsData, setAdsData] = useState<Ad[]>([]);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
@@ -53,7 +53,7 @@ function AddToSchedule() {
       // You can proceed with the scheduling logic here
       const data = {
         ad_id: selectedAd?.ad_id,
-        devices: selectedDevices.map((device) => device.device_id),
+        groups: selectedDevices.map((group) => group.group_id),
         start_time: startDate,
         end_time: endDate,
         total_duration: plays,
@@ -81,8 +81,8 @@ function AddToSchedule() {
 
     const fetchDevicesData = async () => {
       try {
-        const response = await api.get<DevicesResponse>("/device/all");
-        setDevicesData(response.devices);
+        const response = await api.get<DevicesGroupsResponse>("/device/fetch-groups");
+        setDevicesData(response.groups);
       } catch (error) {
         console.error("Error fetching devices:", error);
       }
@@ -137,7 +137,7 @@ function AddToSchedule() {
 
         {/* ✅ Select Device */}
         <Card>
-        <h1 className="text-md font-semibold p-4">Select Devices</h1>
+        <h1 className="text-md font-semibold p-4">Select Group</h1>
 
           <CardContent className="max-h-[70vh]">
           {/* <div className="h-[30vh]"> */}
@@ -145,7 +145,7 @@ function AddToSchedule() {
             <DataTable
               data={devicesData}
               columns={devicecolumns}
-              filters={[{ label: "Locations", value: "location" }]}
+              filters={[{ label: "Name", value: "name" }]}
               onRowSelectionChange={handleSelectedDevices}
             maxHeight="40vh"/>
             {/* </div> */}
@@ -216,7 +216,7 @@ function AddToSchedule() {
                   <span className="font-extrabold">
                     {selectedDevices.length}{" "}
                   </span>
-                  device(s) selected for{" "}
+                  groups(s) selected for{" "}
                   <span className="font-extrabold">{totalDays} </span>days.
                 </div>
               ) : (
