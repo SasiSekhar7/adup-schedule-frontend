@@ -128,7 +128,7 @@ function AddAdComponent({ onIsOpenChange }) {
         {error && <span className="text-red-500 text-sm">{error}</span>}
 
         <DialogFooter>
-          <Button onClick={handleCreate}>
+          <Button onClick={handleCreate} disabled={loading}>
             <Save />
             Create
           </Button>
