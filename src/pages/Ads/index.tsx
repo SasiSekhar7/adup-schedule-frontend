@@ -9,17 +9,17 @@ import AddAdComponent from "./components/AddAds";
 
 function Ads() {
   const [data, setData] = useState<Device[]>([])
-  const [open, setOpen] = useState(false);
+  const fetchDta = async () => {
+    const response =  await api.get<DevicesResponse>('/ads/all')
+    setData(response.ads)
+    console.log(typeof response.ads)
+  };
   useEffect(() => {
-    const fetchDta = async () => {
-      const response =  await api.get<DevicesResponse>('/ads/all')
-      setData(response.ads)
-      console.log(typeof response.ads)
-    };
+
     fetchDta();
   }, []);
   function onIsOpenChange(){
-
+    fetchDta();
   }
   return (
     <div className="">

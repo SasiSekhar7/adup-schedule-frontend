@@ -29,12 +29,13 @@ interface AdToSubmit {
   duration: number;
 }
 function AddAdComponent({ onIsOpenChange }) {
-  const [open, setOpen] = useState(false);
   const [clients, setClients] = useState();
   const [file, setFile] = useState<File>();
   const [ad, setAd] = useState<AdToSubmit>({duration:10});
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,6 +65,8 @@ function AddAdComponent({ onIsOpenChange }) {
       formData.append('duration', ad?.duration);
       await api.post('/ads/add', formData)
       setLoading(false)
+      setOpen(false)
+      onIsOpenChange();
     } catch (error) {
       setError(error);
       setLoading(false)
@@ -72,7 +75,7 @@ function AddAdComponent({ onIsOpenChange }) {
     }
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}> 
       <DialogTrigger>
         <Button>
           Uplaod Ad
