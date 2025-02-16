@@ -59,6 +59,13 @@ export default function EditCampaignPage() {
         }
     }
     
+    const handleDownload = () => {
+      const link = document.createElement("a")
+      link.href = campaignUrl
+      link.download = `campaign-${campaign_id}.png`
+      link.click()
+  }
+
     // Updated Input (with UTM parameters)
     
     useEffect(() => {
