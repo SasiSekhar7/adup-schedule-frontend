@@ -23,7 +23,7 @@ export default function EditCampaignPage() {
     const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
 
     useEffect(() => {
-        const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}`
+        const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}&utm_source=qrcode&utm_medium=ad_screen&utm_campaign=qr_in_ads`
         QRCode.toDataURL(campaignUrl, { width: 300 }, (err: any, url: string) => {
             if (!err) setQrCodeUrl(url)
             else console.error("QR Code Generation Error:", err)
