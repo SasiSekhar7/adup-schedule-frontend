@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -48,20 +49,31 @@ function AddToSchedule() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [plays, setPlays] = useState("360");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const handleScheduleAd = async () => {
-    if (startDate && endDate && selectedAd && selectedDevices) {
-      // You can proceed with the scheduling logic here
-      const data = {
-        ad_id: selectedAd?.ad_id,
-        groups: selectedDevices.map((group) => group.group_id),
-        start_time: startDate,
-        end_time: endDate,
-        total_duration: plays,
-        priority: 1,
-      };
-      console.log(data);
-      // await api.post("/schedule/add", data);
+    setLoading(true)
+    try {
+      if (startDate && endDate && selectedAd && selectedDevices) {
+        // You can proceed with the scheduling logic here
+        const data = {
+          ad_id: selectedAd?.ad_id,
+          groups: selectedDevices.map((group) => group.group_id),
+          start_time: startDate,
+          end_time: endDate,
+          total_duration: plays,
+          priority: 1,
+        };
+        console.log(data);
+        await api.post("/schedule/add", data);
+        navigate('/schedule')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error(error)
+      setLoading(false)
     }
+
   };
 
   const totalDays =
