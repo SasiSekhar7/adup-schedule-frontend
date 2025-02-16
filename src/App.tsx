@@ -14,6 +14,7 @@ import PrivateRoute from "./routes/PrivateRoute"
 import Campaigns from "./pages/Campaigns"
 import NewCampaignPage from "./pages/Campaigns/new"
 import EditCampaignPage from "./pages/Campaigns/edit"
+import CampaignInteractions from "./pages/CampaignInteractions"
 
 
 function App() {
@@ -48,6 +49,9 @@ function App() {
       <Route path="/campaigns/new" element={<NewCampaignPage/>}/>
 
       <Route path="/campaigns/edit/:campaign_id" element={<EditCampaignPage/>}/>
+
+      <Route path="/campaigns/interactions" element={<CampaignInteractions/>}/>
+
 
       <Route path="/devices/:device_id" element={<Devices/>}/>
 

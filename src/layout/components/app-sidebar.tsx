@@ -97,8 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: "All", url: "/campaigns" },
           { title: "Interactions", url: "/campaigns/interactions" },
-          { title: "Billing", url: "/campaigns/billing" },
-          { title: "Limits", url: "/campaigns/limits" },
+          { title: "New", url: "/campaigns/new" },
         ],
       },
     ],
