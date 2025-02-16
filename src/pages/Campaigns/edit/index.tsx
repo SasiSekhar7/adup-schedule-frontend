@@ -25,14 +25,6 @@ export default function EditCampaignPage() {
     const utmParams = `utm_source=qrcode&utm_medium=ad_screen&utm_campaign=qr_in_ads`
     const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}&${utmParams}`
     
-    // QR Code Generation (Fixed)
-    useEffect(() => {
-        QRCode.toDataURL(campaignUrl, { width: 300 }, (err: any, url: string) => {
-            if (!err) setQrCodeUrl(url)
-            else console.error("QR Code Generation Error:", err)
-        })
-    }, [campaign_id])
-    
     // Updated Copy Link (with UTM parameters)
     const handleCopyLink = async () => {
         try {
@@ -75,14 +67,10 @@ export default function EditCampaignPage() {
                 setFormData(campaignResponse.campaign)
 
                 // Generate QR Code
-                const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}`
-                QRCode.toDataURL(campaignUrl, { width: 200 }, (err: any, url: string) => {
-                    if (!err) {
-                        setQrCodeUrl(url)
-                    } else {
-                        console.error("QR Code Generation Error:", err)
-                    }
-                })
+                QRCode.toDataURL(campaignUrl, { width: 300 }, (err: any, url: string) => {
+                  if (!err) setQrCodeUrl(url)
+                  else console.error("QR Code Generation Error:", err)
+              })
             }
         }
         loadCampaign()
