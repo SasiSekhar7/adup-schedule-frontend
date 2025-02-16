@@ -19,39 +19,36 @@ export default function EditCampaignPage() {
     const navigate = useNavigate()
     const [formData, setFormData] = useState<Campaign | null>(null)
     const { campaign_id } = useParams()
-    const baseUrl = "https://feedback.adup.live/" // Replace with actual base URL
     const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
 
+    const utmParams = `utm_source=qrcode&utm_medium=ad_screen&utm_campaign=qr_in_ads`
+    const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}&${utmParams}`
+    
+    // QR Code Generation (Fixed)
     useEffect(() => {
-        const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}&utm_source=qrcode&utm_medium=ad_screen&utm_campaign=qr_in_ads`
         QRCode.toDataURL(campaignUrl, { width: 300 }, (err: any, url: string) => {
             if (!err) setQrCodeUrl(url)
             else console.error("QR Code Generation Error:", err)
         })
     }, [campaign_id])
-
+    
+    // Updated Copy Link (with UTM parameters)
     const handleCopyLink = async () => {
         try {
-            await navigator.clipboard.writeText(`${baseUrl}?campaign_id=${campaign_id}`)
+            await navigator.clipboard.writeText(campaignUrl)
             alert("Link copied to clipboard!")
         } catch (err) {
             console.error("Failed to copy:", err)
         }
     }
-
-    const handleDownload = () => {
-        const link = document.createElement("a")
-        link.href = qrCodeUrl
-        link.download = `campaign-${campaign_id}.png`
-        link.click()
-    }
-
+    
+    // Updated Share Link (with UTM parameters)
     const handleShare = async () => {
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: "Campaign QR Code",
-                    url: `${baseUrl}?campaign_id=${campaign_id}`,
+                    url: campaignUrl,
                 })
             } catch (error) {
                 console.error("Error sharing:", error)
@@ -60,7 +57,9 @@ export default function EditCampaignPage() {
             alert("Sharing is not supported on this browser.")
         }
     }
-
+    
+    // Updated Input (with UTM parameters)
+    
     useEffect(() => {
         const loadCampaign = async () => {
             if (campaign_id) {
@@ -195,8 +194,8 @@ export default function EditCampaignPage() {
                 </Button>
             </div>
 
-            <Input value={`${baseUrl}?campaign_id=${campaign_id}`} readOnly className="text-center" />
-        </div>
+            <Input value={campaignUrl} readOnly className="text-center" />
+            </div>
                
                 </div>
 
