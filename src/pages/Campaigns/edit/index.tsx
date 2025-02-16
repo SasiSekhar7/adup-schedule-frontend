@@ -21,6 +21,7 @@ export default function EditCampaignPage() {
     const { campaign_id } = useParams()
     const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
 
+    const baseUrl = "https://feedback.adup.live"
     const utmParams = `utm_source=qrcode&utm_medium=ad_screen&utm_campaign=qr_in_ads`
     const campaignUrl = `${baseUrl}?campaign_id=${campaign_id}&${utmParams}`
     
