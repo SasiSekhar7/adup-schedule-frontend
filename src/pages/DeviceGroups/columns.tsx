@@ -2,26 +2,21 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
+import MessageCell from "./componets/MessageCell";
 
-// Define types for Group and Device
-interface DeviceGroup {
-  name: string;
-  group_id: string;
-  device_count: number;
-}
 
+// Extend your Group type to include the message from ScrollText.
 export interface Group {
   group_id: string;
   name: string;
   device_count: number;
-  DeviceGroup: DeviceGroup;
+  message: string | null; // will be null if no message exists
 }
 
-export interface GroupsResponse {
-  groups: Group[];
-}
+// Create an inline cell component for the message column.
 
-// Define columns
+
+// Define columns for your DataTable.
 export const columns: ColumnDef<Group>[] = [
   {
     id: "select",
@@ -63,16 +58,12 @@ export const columns: ColumnDef<Group>[] = [
     cell: ({ row }) => row.getValue("device_count"),
     enableSorting: true,
   },
-];
-
-// Sample data based on the provided structure
-const groupsData: GroupsResponse = {
-  groups: [
-    {
-      group_id: "34c49e3a-88b6-4ca2-b591-f859a225c2ae",
-      name: "Main Group",
-      device_count: 1,
-      DeviceGroup: { name: "Main Group", group_id: "34c49e3a-88b6-4ca2-b591-f859a225c2ae", device_count: 1 },
+  {
+    id: "message",
+    header: "Message",
+    cell: ({ row }) => {
+      // Pass the whole row original data to our MessageCell component
+      return <MessageCell group={row.original} />;
     },
-  ],
-};
+  },
+];

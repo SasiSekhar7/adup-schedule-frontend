@@ -60,7 +60,7 @@ function AddToSchedule() {
         priority: 1,
       };
       console.log(data);
-      await api.post("/schedule/add", data);
+      // await api.post("/schedule/add", data);
     }
   };
 

@@ -10,6 +10,7 @@ import {
   GalleryVerticalEnd,
   Map,
   PieChart,
+  QrCode,
   Settings2,
   SquareTerminal,
 } from "lucide-react";
@@ -89,15 +90,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
       {
-        title: "Settings",
-        url: "/settings",
-        icon: Settings2,
-        isActive: location.pathname.startsWith("/settings"), // ✅ Dynamic active state
+        title: "QR Campaign",
+        url: "/campaigns",
+        icon: QrCode,
+        isActive: location.pathname.startsWith("/campaigns"), // ✅ Dynamic active state
         items: [
-          { title: "General", url: "/settings/general" },
-          { title: "Team", url: "/settings/team" },
-          { title: "Billing", url: "/settings/billing" },
-          { title: "Limits", url: "/settings/limits" },
+          { title: "All", url: "/campaigns" },
+          { title: "Interactions", url: "/campaigns/interactions" },
+          { title: "Billing", url: "/campaigns/billing" },
+          { title: "Limits", url: "/campaigns/limits" },
         ],
       },
     ],

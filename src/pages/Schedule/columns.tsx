@@ -86,7 +86,7 @@ export const columns: ColumnDef<Schedule>[] = [
     header: ({column})=>(
       <DataTableColumnHeader column={column} title="Start Time" />
     ),
-    cell: ({ row }) => formatDateWithOrdinal(row.getValue("start_time")),
+    cell: ({ row }) => (row.getValue("start_time")),
   },
   //   accessorKey: "created_at",
   //   header: "Created At",

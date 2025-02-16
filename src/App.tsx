@@ -11,6 +11,9 @@ import AdPage from "./pages/AdPage"
 import Schedule from "./pages/Schedule"
 import Login from "./pages/Login"
 import PrivateRoute from "./routes/PrivateRoute"
+import Campaigns from "./pages/Campaigns"
+import NewCampaignPage from "./pages/Campaigns/new"
+import EditCampaignPage from "./pages/Campaigns/edit"
 
 
 function App() {
@@ -37,6 +40,15 @@ function App() {
       <Route path="/schedule/add" element={<AddToSchedule/>}/>
 
       <Route path="/devices" element={<Devices/>}/>
+      <Route path="/devices/:device_id" element={<Devices/>}/>
+
+      <Route path="/devices/groups" element={<DeviceGroup/>}/>
+
+      <Route path="/campaigns" element={<Campaigns/>}/>
+      <Route path="/campaigns/new" element={<NewCampaignPage/>}/>
+
+      <Route path="/campaigns/edit/:campaign_id" element={<EditCampaignPage/>}/>
+
       <Route path="/devices/:device_id" element={<Devices/>}/>
 
       <Route path="/devices/groups" element={<DeviceGroup/>}/>
