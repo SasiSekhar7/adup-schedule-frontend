@@ -58,7 +58,7 @@ const MessageCell = ({ group }: { group: Group }) => {
             <DialogTrigger asChild>
             {message ? (
           <div>
-            <span className="truncate">{message}</span>
+            <span className="truncate max-w-[10vw]">{message}</span>
             <Button variant='ghost' size="sm" >
               <Edit className="text-sm"/>
             </Button>
