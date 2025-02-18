@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       avatar: "/avatars/shadcn.jpg",
     },
     teams: [
-      { name: "AdUp Console", logo:"https://demokrito.com/wp-content/uploads/2024/12/DWORD-WHITE-300x96.png", plan: "Enterprise" },
+      { name: "AdUp Console", logo:"/logo.png", plan: "Enterprise" },
 
     ],
     navMain: [
