@@ -3,6 +3,9 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import MessageCell from "./componets/MessageCell";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
+import api from "@/api";
 
 
 // Extend your Group type to include the message from ScrollText.
@@ -56,6 +59,25 @@ export const columns: ColumnDef<Group>[] = [
     accessorKey: "device_count",
     header: "Device Count",
     cell: ({ row }) => row.getValue("device_count"),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "group_id",
+    header: "Update Schedule",
+    cell: ({ row }) => {
+      async function handleRefreah(group_id:string) {
+        await api.post(`/device/update-schedule/${group_id}`)
+        
+      }
+      return(
+        <div className="">
+
+        <Button onClick={()=>handleRefreah(row.getValue("group_id"))} variant="ghost">
+          <RefreshCcw size="sm"/>
+        </Button>
+        </div>
+        
+        )},
     enableSorting: true,
   },
   {
