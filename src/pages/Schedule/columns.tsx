@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { formatDateWithOrdinal } from "@/helpers";
 import { ColumnDef } from "@tanstack/react-table";
+import MessageCell from "./components/MessageCell";
 
 // Define types for Ad
 export interface Schedule {
@@ -98,6 +99,13 @@ export const columns: ColumnDef<Schedule>[] = [
       <DataTableColumnHeader column={column} title="Updated At" />
     ),
     cell: ({ row }) => formatDateWithOrdinal(row.getValue("updated_at")),
+  },
+  {
+    accessorKey: "schedule_id",
+    header: ({column})=>(
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
+    cell: ({ row }) => <MessageCell schedule_id={row.getValue('schedule_id')} />,
   },
   
 ];
