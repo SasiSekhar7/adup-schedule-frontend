@@ -15,6 +15,7 @@ import Campaigns from "./pages/Campaigns"
 import NewCampaignPage from "./pages/Campaigns/new"
 import EditCampaignPage from "./pages/Campaigns/edit"
 import CampaignInteractions from "./pages/CampaignInteractions"
+import RegisterDevice from "./pages/RegisterDevice"
 
 
 function App() {
@@ -24,6 +25,8 @@ function App() {
     
     <Routes>
       <Route path="/login" element={<Login/>}/>
+      <Route path="/register-device" element={<RegisterDevice/>}/>
+
       <Route element = {<Layout/>}>
       <Route element = {<PrivateRoute/>}>
 
