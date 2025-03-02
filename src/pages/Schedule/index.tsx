@@ -35,7 +35,6 @@ function Schedule() {
 
   const handleDateChange = (event) => {
     setDate(event.target.value);
-    alert(event.target.value)
     setPage(1); // Reset to first page when date changes
   };
   const filters =  [{label:"Ad Name", value:"ad_name"}];
