@@ -28,6 +28,12 @@
       --chart-3: 197 37% 24%;
       --chart-4: 43 74% 66%;
       --chart-5: 27 87% 67%;
+
+      --sidebar-background: 240 4.8% 96%; /* Light grayish background */
+--sidebar-foreground: 240 5.9% 10%; /* Dark text for readability */
+--sidebar-border: 240 5.9% 85%; /* Subtle border for separation */
+--sidebar-hover: 240 6% 90%; /* Slightly brighter for hover effects */
+--sidebar-active: 240 5% 80%; /* Active item with soft contrast */
     }
   
     .dark {
@@ -55,6 +61,11 @@
       --chart-3: 30 80% 55%;
       --chart-4: 280 65% 60%;
       --chart-2: 340 75% 55%;
+      --sidebar-background: 240 3.7% 12%; /* Dark gray for a sleek look */
+      --sidebar-foreground: 0 0% 98%; /* Light text for contrast */
+      --sidebar-border: 240 3.7% 20%; /* Soft border */
+      --sidebar-hover: 240 5% 25%; /* Slightly brighter for hover effects */
+      --sidebar-active: 240 6% 30%; /* Active item with a muted tone */
       }
   }
   

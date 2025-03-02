@@ -85,6 +85,7 @@ export const adcolumns: ColumnDef<Ad>[] = [
           <DialogTrigger>
             <span className="truncate underline underline-offset-2 text-blue-700">{
               path.split('/').pop()
+            
             }</span>
           </DialogTrigger>
           <DialogContent>

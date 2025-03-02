@@ -130,13 +130,9 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 </Dialog>
          
 
-            {isEditing ? (
-              <Button type="submit" onClick={onSubmit}>
-                Save Changes
-              </Button>
-            ) : (
+            {!isEditing &&
               <Button onClick={() => navigate(`/ads/${formData.ad_id}/edit`)} >Edit</Button>
-            )}
+            }
             </div>
           
           </CardHeader>

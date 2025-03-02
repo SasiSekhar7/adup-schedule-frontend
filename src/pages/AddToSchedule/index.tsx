@@ -23,7 +23,7 @@ import { Ad } from "../Ads/columns";
 // import DateRangePicker from 'react-date-range';
 // import { DateRangePicker } from "@/components/ui/date-range-picker";
 // import { DateRangePicker } from 'react-date-range';
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css"; // Import styles
 import { differenceInDays } from "date-fns";
 import {
@@ -51,6 +51,10 @@ function AddToSchedule() {
   const [plays, setPlays] = useState("360");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [isSingleDay, setIsSingleDay] = useState(true);
+  const totalDays = isSingleDay ? 1 : (startDate && endDate ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0);
+
   const handleScheduleAd = async () => {
     setLoading(true)
     try {
@@ -76,8 +80,8 @@ function AddToSchedule() {
 
   };
 
-  const totalDays =
-    startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0; // Include start date
+  // const totalDays =
+  //   startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0; // Include start date
 
   // ✅ Fetch Ads Data
   useEffect(() => {
@@ -118,6 +122,32 @@ function AddToSchedule() {
     setSelectedDevices(rows);
   }, []);
 
+  const MyDateRangePicker = ({ startDate, setStartDate, endDate, setEndDate, isSingleDay }) => {
+    return (
+      <div className="flex space-x-2">
+        <input
+          type="date"
+          value={startDate ? startDate.toISOString().split("T")[0] : ""}
+          onChange={(e) => {
+            const date = e.target.value ? new Date(e.target.value) : null;
+            setStartDate(date);
+            if (isSingleDay) setEndDate(date); // If single-day mode, endDate = startDate
+          }}
+          className="border rounded-md px-4 py-2"
+        />
+
+        {!isSingleDay && (
+          <input
+            type="date"
+            value={endDate ? endDate.toISOString().split("T")[0] : ""}
+            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+            className="border rounded-md px-4 py-2"
+          />
+        )}
+      </div>
+    );
+  };
+  
   return (
     <div > 
       <h1 className="text-md font-semibold mb-4 ">Ad Scheduling</h1>
@@ -167,76 +197,72 @@ function AddToSchedule() {
 
         {/* ✅ Date Range Picker */}
         <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center w-full ">
-            <CardTitle className="text-md mx-4">Select Date Range</CardTitle>
-            {/* <DateTimeRangePicker onChange={setDateRange} value={dateRange}   /> */}
-            <DatePicker
-              selected={startDate}
-              onChange={(dates: [Date, Date]) => {
-                setStartDate(dates[0]);
-                setEndDate(dates[1]);
+      <CardHeader className="flex flex-row items-center w-full">
+        <CardTitle className="text-md mx-4">Select Date</CardTitle>
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={isSingleDay}
+              onChange={(e) => {
+                setIsSingleDay(e.target.checked);
+                if (e.target.checked && startDate) setEndDate(startDate);
               }}
-              startDate={startDate}
-              endDate={endDate}
-              selectsRange
-              // isClearable
-              placeholderText="Select a date range"
-              dateFormat="MM/dd/yyyy"
-              className="border rounded-md px-4 py-2"
             />
+            <span>Single Day</span>
+          </label>
+        </div>
 
-            <CardTitle className="text-md mx-4">
-              Select No. of plays per day
-            </CardTitle>
-            {/* <DateTimeRangePicker onChange={setDateRange} value={dateRange}   /> */}
-            <Select onValueChange={setPlays}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="No. of Plays" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Plays</SelectLabel>
-                  <SelectItem value="360">360</SelectItem>
-                  <SelectItem value="720">720</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+        <MyDateRangePicker
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          isSingleDay={isSingleDay}
+        />
 
-            <div className="ml-auto space-x-4">
-              <Button
-                size="lg"
-                onClick={handleScheduleAd}
-                disabled={
-                  selectedDevices.length < 1 ||
-                  !selectedAd ||
-                  !startDate ||
-                  !endDate
-                }
-              >
-                Schedule Ad
-              </Button>
+        <CardTitle className="text-md mx-4">Select No. of Plays per Day</CardTitle>
+
+        <Select onValueChange={setPlays}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="No. of Plays" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Plays</SelectLabel>
+              <SelectItem value="360">360</SelectItem>
+              <SelectItem value="720">720</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        <div className="ml-auto space-x-4">
+          <Button
+            size="lg"
+            onClick={handleScheduleAd}
+            disabled={selectedDevices.length < 1 || !selectedAd || !startDate || !endDate}
+          >
+            Schedule Ad
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex">
+        <p className="text-sm text-muted-foreground flex flex-row">
+          {selectedAd?.name ? (
+            <div>
+              <span className="font-extrabold">{selectedAd.name}</span> will be scheduled for{" "}
+              <span className="font-extrabold">{plays}</span> plays per day on the{" "}
+              <span className="font-extrabold">{selectedDevices.length}</span> group(s) selected for{" "}
+              <span className="font-extrabold">{totalDays}</span> {totalDays === 1 ? "day" : "days"}.
             </div>
-          </CardHeader>
-          <CardContent className="flex">
-            <p className="text-sm text-muted-foreground flex flex-row">
-              {selectedAd?.name ? (
-                <div>
-                  <span className="font-extrabold">{selectedAd.name} </span>will
-                  be scheduled for{" "}
-                  <span className="font-extrabold">{plays}</span> plays per day
-                  on the{" "}
-                  <span className="font-extrabold">
-                    {selectedDevices.length}{" "}
-                  </span>
-                  groups(s) selected for{" "}
-                  <span className="font-extrabold">{totalDays} </span>days.
-                </div>
-              ) : (
-                "No Ad Selected."
-              )}
-            </p>
-          </CardContent>
-        </Card>
+          ) : (
+            "No Ad Selected."
+          )}
+        </p>
+      </CardContent>
+    </Card>
       </div>
     </div>
   );

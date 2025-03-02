@@ -1,10 +1,10 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Device, DevicesResponse, columns } from "./columns";
 import { data } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Save } from "lucide-react";
+import { Plus, RefreshCcw, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,14 @@ import { Input } from "@/components/ui/input";
 
 interface DeviceGroup {
   name: string,
+  reg_code: string
 
 }
 function DeviceGroup() {
   const [data, setData] = useState<Device[]>([])
-    const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>()
-    const [loading, setLoading] = useState(false);
+  const [deviceGroup, setDeviceGroup] = useState({ name: "", reg_code: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
     const [open, setOpen] = useState(false);
   
     const fetchDta = async () => {
@@ -37,18 +39,61 @@ function DeviceGroup() {
     fetchDta();
   }, []);
   const handleCreate = async () => {
-    setLoading(true)
+    setLoading(true);
+    setError(null);
     try {
       await api.post('/device/create-group', deviceGroup);
       fetchDta();
       setLoading(false);
       setOpen(false);
 
-    } catch (error) {
-      setLoading(false)
-      console.error(error)
-    }
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong!");
+  } finally {
+      setLoading(false);
   }
+  }
+  function generateShortCode(name) {
+    if (!name) return "";
+    
+    // Remove special characters and convert to uppercase
+    const cleanName = name.replace(/[^a-zA-Z ]/g, "").trim().toUpperCase();
+
+    // Split the name into words
+    const words = cleanName.split(/\s+/);
+
+    // Take the first 6 characters from the first word (pad if needed)
+    let baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
+
+    // Generate a 2-letter hash from the name
+    let hash = (name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 676)
+        .toString(36)  // Convert to base36 (letters+numbers)
+        .toUpperCase()
+        .padStart(2, "A"); // Ensure always 2 characters
+
+    return baseCode + hash; // Always 8 characters
+}
+  useEffect(() => {
+    const handler = setTimeout(() => {
+        if (deviceGroup.name) {
+            setDeviceGroup((prev) => ({
+                ...prev,
+                reg_code: generateShortCode(prev.name),
+            }));
+        }
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(handler); // Cleanup
+}, [deviceGroup.name]);
+
+const regenerateKey = useCallback(() => {
+  if (deviceGroup.name) {
+      setDeviceGroup((prev) => ({
+          ...prev,
+          reg_code: generateShortCode(prev.name),
+      }));
+  }
+}, [deviceGroup.name]);
   return (
     <div className="">
       <div className="flex items-center w-full mb-4">
@@ -70,36 +115,36 @@ function DeviceGroup() {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Group</DialogTitle>
-        </DialogHeader>
+            <DialogHeader>
+                <DialogTitle>Create Group</DialogTitle>
+            </DialogHeader>
 
-    
-   
-        <Label>Name</Label>
-        <Input
-          type="text"
-          value={deviceGroup?.name}
-          onChange={(e) => setDeviceGroup({ ...deviceGroup, name: e.target.value })}
-        />
- 
-        {/* <Label>Duration</Label>
-        <Input
-          type="number"
-          value={ad?.duration}
-          onChange={(e) => setAd({ ...ad,duration: parseInt(e.target.value)})}
-          readOnly
-          defaultValue={10}
-        /> */}
-        {/* {error && <span className="text-red-500 text-sm">{error}</span>} */}
+            <Label>Name</Label>
+            <Input
+                type="text"
+                value={deviceGroup.name}
+                onChange={(e) => setDeviceGroup({ ...deviceGroup, name: e.target.value })}
+                placeholder="Enter Device Group Name"
+            />
 
-        <DialogFooter>
-          <Button onClick={handleCreate} disabled={loading}>
-            <Save />
-            Create
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+            <Label>License Key</Label>
+            <div className="flex items-center gap-2">
+                <Input type="text" value={deviceGroup.reg_code} readOnly />
+                <Button variant="outline" onClick={regenerateKey}>
+                    <RefreshCcw size={16} />
+                </Button>
+            </div>
+
+            {/* Show Error Message */}
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
+            <DialogFooter>
+                <Button onClick={handleCreate} disabled={loading || !deviceGroup.name}>
+                    <Save size={16} />
+                    {loading ? "Creating..." : "Create"}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
     </Dialog>
  
       </div>

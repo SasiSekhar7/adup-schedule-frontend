@@ -84,9 +84,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive: location.pathname.startsWith("/schedule"),
         items: [
           { title: "All", url: "/schedule" },
-          { title: "Schuedule Ad", url: "/schedule/add" },
+          { title: "Add", url: "/schedule/add" },
           { title: "Calendar", url: "/schedule/calendar" },
-          { title: "Changelog", url: "#" },
+          { title: "Placeholder", url: "/schedule/placeholder" },
         ],
       },
       {

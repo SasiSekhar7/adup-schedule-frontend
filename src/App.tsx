@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import RegisterDevice from "./pages/RegisterDevice";
 import Login from "./pages/Login";
 import Loading from "./Laoding";
+import PlaceholderEditor from "./pages/Placeholder";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -80,6 +81,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <Calendar />
+                </Suspense>
+              }
+            />
+             <Route
+              path="/schedule/placeholder"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <PlaceholderEditor />
                 </Suspense>
               }
             />
