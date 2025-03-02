@@ -73,8 +73,9 @@ export const adcolumns: ColumnDef<Ad>[] = [
       const path = row.getValue("url");
       if (!path) return null;
 
+      const filename = path.split('/').pop().split('?')[0];
       // Extract the file extension
-      const fileExtension = path.split(".").pop()?.toLowerCase();
+      const fileExtension = filename.split(".").pop()?.toLowerCase();
     
       // Check if it's a video or image
       const isVideo = fileExtension === "mp4" || fileExtension === "webm" || fileExtension === "ogg";
@@ -84,7 +85,7 @@ export const adcolumns: ColumnDef<Ad>[] = [
         <Dialog>
           <DialogTrigger>
             <span className="truncate underline underline-offset-2 text-blue-700">{
-              path.split('/').pop()
+              filename
             
             }</span>
           </DialogTrigger>

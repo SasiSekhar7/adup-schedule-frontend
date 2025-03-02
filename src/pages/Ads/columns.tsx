@@ -85,7 +85,14 @@ export const columns: ColumnDef<Ad>[] = [
   {
     accessorKey: "url",
     header: "URL",
-    cell: ({ row }) => row.getValue('url')
+    cell: ({ row }) =>  {
+      const path = row.getValue('url');
+      return(
+        path.split('/').pop().split('?')[0]
+
+      )
+    }
+
       
   },
   {
