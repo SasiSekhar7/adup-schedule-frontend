@@ -7,6 +7,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils"; // Utility function for conditional classes
 import { addHours, formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import Loading from "@/Laoding";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -17,6 +19,19 @@ const statusVariants: Record<string, string> = {
 interface DeviceGroup {
   name: string;
 }
+
+async function getAddressFromCoordinates(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.display_name || "Unknown Location";
+  } catch (error) {
+    console.error("Error fetching location:", error);
+    return "Unknown Location";
+  }
+}
+
 
 export interface Device {
   device_id: string;
@@ -82,7 +97,19 @@ export const columns: ColumnDef<Device>[] = [
       <DataTableColumnHeader column={column} title="Location"/>
 
     ),
-    cell: ({ row }) => row.getValue("location"),
+    cell: async({ row }) => {
+      const cords = row.getValue('location')
+      const [lat, lon] = cords.split(",").map(Number);
+      
+      const [loading, setLoading] = useState(true);
+    
+      const location = await getAddressFromCoordinates(lat, lon)
+      
+      setLoading(false)
+      return(
+        loading? <Loading/> : location
+      )
+      },
   },
   {
     accessorKey: "status",
