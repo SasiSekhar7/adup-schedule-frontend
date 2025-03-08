@@ -7,8 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils"; // Utility function for conditional classes
 import { addHours, formatDistanceToNow } from "date-fns";
-import { useState } from "react";
-import Loading from "@/Laoding";
+import { useEffect, useState } from "react";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -20,6 +19,24 @@ interface DeviceGroup {
   name: string;
 }
 
+
+const LocationCell = ({ cords }) => {
+  const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const [lat, lon] = cords.split(",").map(Number);
+      const result = await getAddressFromCoordinates(lat, lon);
+      setLocation(result);
+      setLoading(false);
+    };
+
+    fetchLocation();
+  }, [cords]);
+
+  return <div>{loading ? "Loading..." : location}</div>;
+};
 async function getAddressFromCoordinates(lat, lon) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
@@ -97,19 +114,10 @@ export const columns: ColumnDef<Device>[] = [
       <DataTableColumnHeader column={column} title="Location"/>
 
     ),
-    cell: async({ row }) => {
-      const cords = row.getValue('location')
-      const [lat, lon] = cords.split(",").map(Number);
-      
-      const [loading, setLoading] = useState(true);
-    
-      const location = await getAddressFromCoordinates(lat, lon)
-      
-      setLoading(false)
-      return(
-        loading? <Loading/> : location
-      )
-      },
+    cell: ({ row }) => {
+      const cords = row.getValue("location");
+      return <LocationCell cords={cords} />;
+    },
   },
   {
     accessorKey: "status",

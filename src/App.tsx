@@ -7,6 +7,7 @@ import RegisterDevice from "./pages/RegisterDevice";
 import Login from "./pages/Login";
 import Loading from "./Laoding";
 import PlaceholderEditor from "./pages/Placeholder";
+import ContentEditor from "./pages/Image";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -153,6 +154,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <CampaignInteractions />
+                </Suspense>
+              }
+            />
+             <Route
+              path="/image"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ContentEditor />
                 </Suspense>
               }
             />
