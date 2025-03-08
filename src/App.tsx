@@ -157,14 +157,6 @@ function App() {
                 </Suspense>
               }
             />
-             <Route
-              path="/image"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ContentEditor />
-                </Suspense>
-              }
-            />
           </Route>
         </Route>
       </Routes>
