@@ -65,6 +65,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: "All", url: "/devices" },
           { title: "Device Groups", url: "/devices/groups" },
+          // { title: "Cricket API", url: "/devices/cricket" },
+
         ],
       },
       {

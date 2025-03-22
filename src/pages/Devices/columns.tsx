@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils"; // Utility function for conditional classes
 import { addHours, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { CircleX, X } from "lucide-react";
+import api from "@/api";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -150,5 +153,20 @@ export const columns: ColumnDef<Device>[] = [
         return nextSync.toLocaleString(); // Formats as a readable timestamp
       },
       enableSorting: true,
+    },
+    {
+      accessorKey: "device_id",
+      header: () => "Action",
+      cell: ({ row }) => {
+        const device_id =row.getValue("device_id");
+
+        const handleClick = async () => {
+          await api.post(`/device/exit/${device_id}`);
+
+        }
+        return (<Button onClick={handleClick} variant="ghost">
+          <CircleX/>
+        </Button>) ; // Formats as a readable timestamp
+      },
     },
 ];
