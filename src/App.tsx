@@ -126,14 +126,14 @@ function App() {
                 </Suspense>
               }
             />
-              <Route
+              {/* <Route
               path="/devices/cricket"
               element={
                 <Suspense fallback={<Loading />}>
                   <CricketPage />
                 </Suspense>
               }
-            />
+            /> */}
             <Route
               path="/campaigns"
               element={
