@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cricket Score</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .team { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .team img { width: 50px; height: 50px; }
+    </style>
+</head>
+<body>
+    <h1>Live Cricket Score</h1>
+    <div id="status">Connecting...</div>
+    <div id="score">
+        <div class="team">
+            <img id="team1-img" src="" alt="Team 1 Logo">
+            <span id="team1-name"></span>
+        </div>
+        <p>Score: <span id="team1-score"></span>/<span id="team1-wickets"></span> Overs: <span id="team1-overs"></span></p>
+        <hr>
+        <div class="team">
+            <img id="team2-img" src="" alt="Team 2 Logo">
+            <span id="team2-name"></span>
+        </div>
+        <p>Score: <span id="team2-score"></span>/<span id="team2-wickets"></span> Overs: <span id="team2-overs"></span></p>
+    </div>
+    
+    <script>
+        const client = new Paho.MQTT.Client("console.adup.live", 1883, "clientId-" + Math.random());
+
+        client.onMessageArrived = function(message) {
+            const data = JSON.parse(message.payloadString);
+            document.getElementById("team1-name").textContent = data.inning_1.name + " (" + data.inning_1.code + ")";
+            document.getElementById("team1-img").src = data.inning_1.image_path;
+            document.getElementById("team1-score").textContent = data.inning_1.score;
+            document.getElementById("team1-wickets").textContent = data.inning_1.wickets;
+            document.getElementById("team1-overs").textContent = data.inning_1.overs;
+            
+            document.getElementById("team2-name").textContent = data.inning_2.name + " (" + data.inning_2.code + ")";
+            document.getElementById("team2-img").src = data.inning_2.image_path;
+            document.getElementById("team2-score").textContent = data.inning_2.score;
+            document.getElementById("team2-wickets").textContent = data.inning_2.wickets;
+            document.getElementById("team2-overs").textContent = data.inning_2.overs;
+            
+            document.getElementById("status").textContent = data.status;
+        };
+
+        client.onConnectionLost = function(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                document.getElementById("status").textContent = "Connection lost: " + responseObject.errorMessage;
+            }
+        };
+
+        client.connect({
+            userName: "myuser",
+            password: "adup_2025",
+            onSuccess: function() {
+                document.getElementById("status").textContent = "Connected. Waiting for updates...";
+                client.subscribe("cricket/live");
+            },
+            onFailure: function() {
+                document.getElementById("status").textContent = "Connection failed.";
+            }
+        });
+    </script>
+</body>
+</html>

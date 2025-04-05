@@ -9,8 +9,10 @@ import { cn } from "@/lib/utils"; // Utility function for conditional classes
 import { addHours, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CircleX, X } from "lucide-react";
+import { CircleX, Copy, X } from "lucide-react";
 import api from "@/api";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -155,18 +157,51 @@ export const columns: ColumnDef<Device>[] = [
       enableSorting: true,
     },
     {
-      accessorKey: "device_id",
+      accessorKey: "android_id",
       header: () => "Action",
       cell: ({ row }) => {
         const device_id =row.getValue("device_id");
-
+        const android_id =row.getValue("android_id");
+      //  alert(android_id)
         const handleClick = async () => {
-          await api.post(`/device/exit/${device_id}`);
+          await api.post(`/device/delete/${device_id}`);
+
+          location.reload()
 
         }
-        return (<Button onClick={handleClick} variant="ghost">
+        return (
+        <Dialog >
+          <DialogTrigger>
+          <Button variant="ghost">
           <CircleX/>
-        </Button>) ; // Formats as a readable timestamp
+        </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Delete device record for device ID {device_id}?
+              </DialogTitle>
+              <DialogDescription>
+             This action will exit the application on the device and permanently delete the device record.
+              </DialogDescription>
+              
+            </DialogHeader>
+          Copy exit password incase application fails to exit 
+          <div className="flex flex-row ">
+          <Input readOnly value={android_id} className="w-[200px] "/>
+          {/* <Button variant="secondary" className="h-[20px]">
+            <Copy/>
+          </Button> */}
+          </div>
+  
+            <DialogFooter>
+              <Button onClick={handleClick} >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        )
       },
     },
 ];
