@@ -13,6 +13,7 @@ import { CircleX, Copy, X } from "lucide-react";
 import api from "@/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import LocationCell from "./components/LocationCell";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -22,36 +23,6 @@ const statusVariants: Record<string, string> = {
 
 interface DeviceGroup {
   name: string;
-}
-
-
-const LocationCell = ({ cords }) => {
-  const [location, setLocation] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchLocation = async () => {
-      const [lat, lon] = cords.split(",").map(Number);
-      const result = await getAddressFromCoordinates(lat, lon);
-      setLocation(result);
-      setLoading(false);
-    };
-
-    fetchLocation();
-  }, [cords]);
-
-  return <div>{loading ? "Loading..." : location}</div>;
-};
-async function getAddressFromCoordinates(lat, lon) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.display_name || "Unknown Location";
-  } catch (error) {
-    console.error("Error fetching location:", error);
-    return "Unknown Location";
-  }
 }
 
 
@@ -141,19 +112,16 @@ export const columns: ColumnDef<Device>[] = [
       accessorKey: "last_synced",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Last Synced" />,
       cell: ({ row }) => {
-        const lastSynced = new Date(row.getValue("last_synced"));
-        return formatDistanceToNow(lastSynced, { addSuffix: true }); // e.g., "5 minutes ago"
+        const rawDate = row.getValue("last_synced");
+        const parsedDate = new Date(rawDate);
+      
+        if (isNaN(parsedDate.getTime())) {
+          return "Invalid date";
+        }
+      
+        return formatDistanceToNow(parsedDate, { addSuffix: true });
       },
-      enableSorting: true,
-    },
-    {
-      accessorKey: "next_sync",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Next Sync" />,
-      cell: ({ row }) => {
-        const lastSynced = new Date(row.getValue("last_synced"));
-        const nextSync = addHours(lastSynced, 1); // Assumes next sync is 1 hour after last sync
-        return nextSync.toLocaleString(); // Formats as a readable timestamp
-      },
+
       enableSorting: true,
     },
     {
