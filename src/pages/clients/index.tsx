@@ -118,12 +118,14 @@ function Clients() {
  
       </div>
       </div>
-     <div className="grid gap-8 grid-flow-col grid-cols-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
       {data.map((client)=>{
        
         return(
           
-          <Card>
+          <div>
+
+          <Card className="col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{client.name}</CardTitle>
             <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
@@ -133,6 +135,8 @@ function Clients() {
             <p className="text-xs text-muted-foreground">Total Ads </p>
           </CardContent>
         </Card>
+        </div>
+
 
         )
       })}
