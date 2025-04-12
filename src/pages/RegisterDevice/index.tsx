@@ -1,46 +1,47 @@
-
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import api from "@/api";
 
 export default function InstallPage() {
-  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [apkUrl, setApkUrl] = useState(null);
+  const [wgtUrl, setWgtUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [downloadingApk, setDownloadingApk] = useState(false);
+  const [downloadingWgt, setDownloadingWgt] = useState(false);
 
-  // Fetch APK download URL when component mounts
   useEffect(() => {
-    const fetchDownloadUrl = async () => {
+    const fetchDownloadUrls = async () => {
       try {
-        const response = await api.get("/download-apk");
-        setDownloadUrl(response.url);
-        
+        const [apkRes, wgtRes] = await Promise.all([
+          api.get("/download-apk"),
+          api.get("/download-wgt"),
+        ]);
+
+        setApkUrl(apkRes.url);
+        setWgtUrl(wgtRes.url);
       } catch (error) {
-        console.error("Error fetching APK URL:", error);
+        console.error("Error fetching download URLs:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDownloadUrl();
+    fetchDownloadUrls();
   }, []);
 
-  // Handle APK download
-  const handleDownload = () => {
-    if (!downloadUrl) return;
-    
+  const handleDownload = (url, filename, setDownloading) => {
+    if (!url) return;
+
     setDownloading(true);
-    
-    // Create an invisible link and trigger download
+
     const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.setAttribute("download", "app.apk"); // Optional
+    link.href = url;
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  
+
     setDownloading(false);
   };
 
@@ -50,17 +51,33 @@ export default function InstallPage() {
 
       {loading ? (
         <Loader2 className="w-6 h-6 animate-spin" />
-      ) : downloadUrl ? (
+      ) : apkUrl || wgtUrl ? (
         <div className="flex flex-col items-center gap-4">
-          <Button onClick={handleDownload} disabled={downloading}>
-            {downloading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Install APK"}
-          </Button>
-          <Button variant="outline">Register</Button>
+          {apkUrl && (
+            <Button
+              onClick={() => handleDownload(apkUrl, "app.apk", setDownloadingApk)}
+              disabled={downloadingApk}
+            >
+              {downloadingApk ? <Loader2 className="w-5 h-5 animate-spin" /> : "Install APK"}
+            </Button>
+          )}
+
+          or 
+          
+          {wgtUrl && (
+            <Button
+              onClick={() => handleDownload(wgtUrl, "app.wgt", setDownloadingWgt)}
+              disabled={downloadingWgt}
+            >
+              {downloadingWgt ? <Loader2 className="w-5 h-5 animate-spin" /> : "Install WGT"}
+            </Button>
+          )}
+
+          {/* <Button variant="outline">Register</Button> */}
         </div>
       ) : (
-        <p className="text-red-500">Failed to load APK link.</p>
+        <p className="text-red-500">Failed to load download links.</p>
       )}
     </div>
   );
 }
-
