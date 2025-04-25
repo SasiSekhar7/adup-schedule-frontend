@@ -2,7 +2,6 @@ import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
 import { Device, DevicesResponse, columns } from "./columns";
-import { data } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCcw, Save } from "lucide-react";
 import {
@@ -15,144 +14,202 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getRole } from "@/helpers";
 
 interface DeviceGroup {
-  name: string,
-  reg_code: string
-
+  name: string;
+  reg_code: string;
+  client_id?: string; // Add client_id to the DeviceGroup interface
 }
-function DeviceGroup() {
-  const [data, setData] = useState<Device[]>([])
-  const [deviceGroup, setDeviceGroup] = useState({ name: "", reg_code: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-    const [open, setOpen] = useState(false);
-  
-    const fetchDta = async () => {
-      const response =  await api.get<DevicesResponse>('/device/fetch-groups')
-      setData(response.groups)
-      console.log(typeof response.groups)
-    };
-  useEffect(() => {
 
-    fetchDta();
+function DeviceGroup() {
+  const [data, setData] = useState<Device[]>([]);
+  const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
+    name: "",
+    reg_code: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [clients, setClients] = useState<
+    { client_id: string; name: string }[]
+  >();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const fetchDta = async () => {
+    const response = await api.get<DevicesResponse>("/device/fetch-groups");
+    setData(response.groups);
+  };
+
+  const fetchClients = async () => {
+    try {
+      const data = await api.get("/ads/clients"); // Assuming the same endpoint for clients
+      setClients(data.clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  useEffect(() => {
+    const role = getRole();
+    setUserRole(role);
   }, []);
+
+  useEffect(() => {
+    fetchDta();
+    if (userRole === "Admin") {
+      fetchClients();
+    }
+  }, [userRole]);
+
   const handleCreate = async () => {
     setLoading(true);
     setError(null);
     try {
-      await api.post('/device/create-group', deviceGroup);
+      await api.post("/device/create-group", deviceGroup);
       fetchDta();
       setLoading(false);
       setOpen(false);
-
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong!");
-  } finally {
+    } finally {
       setLoading(false);
-  }
-  }
-  function generateShortCode(name) {
+    }
+  };
+
+  function generateShortCode(name: string): string {
     if (!name) return "";
-    
-    // Remove special characters and convert to uppercase
+
     const cleanName = name.replace(/[^a-zA-Z ]/g, "").trim().toUpperCase();
-
-    // Split the name into words
     const words = cleanName.split(/\s+/);
-
-    // Take the first 6 characters from the first word (pad if needed)
     let baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
+    let hash = (
+      name
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 676
+    )
+      .toString(36)
+      .toUpperCase()
+      .padStart(2, "A");
 
-    // Generate a 2-letter hash from the name
-    let hash = (name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 676)
-        .toString(36)  // Convert to base36 (letters+numbers)
-        .toUpperCase()
-        .padStart(2, "A"); // Ensure always 2 characters
+    return baseCode + hash;
+  }
 
-    return baseCode + hash; // Always 8 characters
-}
   useEffect(() => {
     const handler = setTimeout(() => {
-        if (deviceGroup.name) {
-            setDeviceGroup((prev) => ({
-                ...prev,
-                reg_code: generateShortCode(prev.name),
-            }));
-        }
-    }, 500); // Debounce for 500ms
-
-    return () => clearTimeout(handler); // Cleanup
-}, [deviceGroup.name]);
-
-const regenerateKey = useCallback(() => {
-  if (deviceGroup.name) {
-      setDeviceGroup((prev) => ({
+      if (deviceGroup.name) {
+        setDeviceGroup((prev) => ({
           ...prev,
           reg_code: generateShortCode(prev.name),
+        }));
+      }
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [deviceGroup.name]);
+
+  const regenerateKey = useCallback(() => {
+    if (deviceGroup.name) {
+      setDeviceGroup((prev) => ({
+        ...prev,
+        reg_code: generateShortCode(prev.name),
       }));
-  }
-}, [deviceGroup.name]);
+    }
+  }, [deviceGroup.name]);
+
   return (
     <div className="">
       <div className="flex items-center w-full mb-4">
-      <div className="">
-      <p className="text-md font-semibold ">
-        Device Groups 
-        </p>
-        <p className="text-sm text-muted-foreground">
-          list of all adup display groups 
-        </p>
-      </div>
+        <div className="">
+          <p className="text-md font-semibold ">Device Groups</p>
+          <p className="text-sm text-muted-foreground">
+            list of all adup display groups
+          </p>
+        </div>
 
-      <div className="ml-auto">
-      <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-      <Button >
-          Create Device Group 
-          <Plus className="h-4 w-4"/>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-            <DialogHeader>
+        <div className="ml-auto">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger>
+              <Button>
+                Create Device Group
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
                 <DialogTitle>Create Group</DialogTitle>
-            </DialogHeader>
+              </DialogHeader>
 
-            <Label>Name</Label>
-            <Input
+              {userRole === "Admin" && (
+                <div>
+                  <Label>Client</Label>
+                  <Select
+                    onValueChange={(client_id) =>
+                      setDeviceGroup({ ...deviceGroup, client_id })
+                    }
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {clients?.map((client) => (
+                          <SelectItem
+                            key={client.client_id}
+                            value={client.client_id}
+                          >
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <Label>Name</Label>
+              <Input
                 type="text"
                 value={deviceGroup.name}
-                onChange={(e) => setDeviceGroup({ ...deviceGroup, name: e.target.value })}
+                onChange={(e) =>
+                  setDeviceGroup({ ...deviceGroup, name: e.target.value })
+                }
                 placeholder="Enter Device Group Name"
-            />
+              />
 
-            <Label>License Key</Label>
-            <div className="flex items-center gap-2">
+              <Label>License Key</Label>
+              <div className="flex items-center gap-2">
                 <Input type="text" value={deviceGroup.reg_code} readOnly />
                 <Button variant="outline" onClick={regenerateKey}>
-                    <RefreshCcw size={16} />
+                  <RefreshCcw size={16} />
                 </Button>
-            </div>
+              </div>
 
-            {/* Show Error Message */}
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-            <DialogFooter>
-                <Button onClick={handleCreate} disabled={loading || !deviceGroup.name}>
-                    <Save size={16} />
-                    {loading ? "Creating..." : "Create"}
+              <DialogFooter>
+                <Button
+                  onClick={handleCreate}
+                  disabled={loading || !deviceGroup.name}
+                >
+                  <Save size={16} />
+                  {loading ? "Creating..." : "Create"}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
- 
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-      </div>
-     
 
-      {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3"> */}
-     <DataTable data={data}  columns={columns}/>
+      <DataTable data={data} columns={columns} />
     </div>
   );
 }

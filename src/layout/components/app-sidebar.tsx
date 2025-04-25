@@ -2,21 +2,14 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  QrCode,
-  Settings2,
   SquareTerminal,
+  Bot,
+  BookOpen,
+  QrCode,
+  // Add any other icons you use here
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
-import { NavProjects } from "./nav-projects";
 import { NavUser } from "./nav-user";
 import { TeamSwitcher } from "./team-switcher";
 import {
@@ -29,99 +22,92 @@ import {
 import { useLocation } from "react-router-dom";
 import api from "@/api";
 
-interface User {
-  name: string,
-  email: string
-}
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const location = useLocation(); // ✅ Move inside the component
-  const [user, setUser] = React.useState<User>()
-  React.useEffect(()=>{fetchData()},[])
+// Maps icon string names from backend to actual React components
+const iconMap: Record<string, React.ElementType> = {
+  SquareTerminal,
+  Bot,
+  BookOpen,
+  QrCode,
+  // Add additional icon mappings here as needed
+};
 
-  const fetchData = async () => {
-    try {
-      const response = await api.get('/user/data')
-      setUser(response.user)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-  const data = {
-    user: {
-      name: user?.name,
-      email: user?.email,
-      avatar: "/avatars/shadcn.jpg",
-    },
-    teams: [
-      { name: "AdUp Console", logo:"/logo.png", plan: "Enterprise" },
-
-    ],
-    navMain: [
-      {
-        title: "Devices",
-        url: "/devices",
-        icon: SquareTerminal,
-        isActive: location.pathname.startsWith("/devices"), // ✅ Dynamic active state
-        items: [
-          { title: "All", url: "/devices" },
-          { title: "Device Groups", url: "/devices/groups" },
-          // { title: "Cricket API", url: "/devices/cricket" },
-
-        ],
-      },
-      {
-        title: "Ads",
-        url: "/ads",
-        icon: Bot,
-        isActive: location.pathname.startsWith("/ads"), // ✅ Dynamic active state
-        items: [
-          { title: "All", url: "/ads" },
-          { title: "Clients", url: "/ads/clients" },
-        ],
-      },
-      {
-        title: "Schedule",
-        url: "/schedule",
-        icon: BookOpen,
-        isActive: location.pathname.startsWith("/schedule"),
-        items: [
-          { title: "All", url: "/schedule" },
-          { title: "Add", url: "/schedule/add" },
-          { title: "Calendar", url: "/schedule/calendar" },
-          { title: "Placeholder", url: "/schedule/placeholder" },
-        ],
-      },
-      {
-        title: "QR Campaign",
-        url: "/campaigns",
-        icon: QrCode,
-        isActive: location.pathname.startsWith("/campaigns"), // ✅ Dynamic active state
-        items: [
-          { title: "All", url: "/campaigns" },
-          { title: "Interactions", url: "/campaigns/interactions" },
-          { title: "New", url: "/campaigns/new" },
-        ],
-      },
-    ],
-    projects: [
-      { name: "Design Engineering", url: "#", icon: Frame },
-      { name: "Sales & Marketing", url: "#", icon: PieChart },
-      { name: "Travel", url: "#", icon: Map },
-    ],
+interface SidebarData {
+  user: {
+    name: string;
+    email: string;
+    avatar: string;
   };
+  teams: Array<{ name: string; logo: string; plan: string }>;
+  navMain: Array<{
+    title: string;
+    url: string;
+    icon: string;
+    items: Array<{ title: string; url: string }>;
+  }>;
+}
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const location = useLocation();
+  const [rawData, setRawData] = React.useState<SidebarData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get("/user/data");
+        setRawData(response);
+      } catch (error) {
+        console.error("Failed to fetch sidebar data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Convert string icon names from backend to actual components and compute isActive
+  const navMain = React.useMemo(() => {
+    if (!rawData || !Array.isArray(rawData.navMain)) return [];
+    return rawData.navMain.map((item) => ({
+      ...item,
+      isActive: location.pathname.startsWith(item.url),
+      icon: iconMap[item.icon] || SquareTerminal,
+    }));
+  }, [rawData, location.pathname]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        {loading ? (
+          <div className="px-4 py-2 font-medium">Loading teams...</div>
+        ) : rawData?.teams ? (
+          <TeamSwitcher teams={rawData.teams} />
+        ) : (
+          <div className="px-4 py-2 text-destructive">No teams found</div>
+        )}
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        {loading ? (
+          <div className="px-4 text-muted-foreground">Loading menu...</div>
+        ) : navMain.length > 0 ? (
+          <NavMain items={navMain} />
+        ) : (
+          <div className="px-4 py-2 text-destructive">No menu items</div>
+        )}
       </SidebarContent>
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {loading ? (
+          <div className="px-4 py-2">Loading user...</div>
+        ) : rawData?.user ? (
+          <NavUser user={rawData.user} />
+        ) : (
+          <div className="px-4 py-2 text-destructive">No user data</div>
+        )}
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

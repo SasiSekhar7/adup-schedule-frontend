@@ -7,8 +7,6 @@ import RegisterDevice from "./pages/RegisterDevice";
 import Login from "./pages/Login";
 import Loading from "./Laoding";
 import PlaceholderEditor from "./pages/Placeholder";
-import ContentEditor from "./pages/Image";
-import CricketPage from "./pages/Cricket";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
