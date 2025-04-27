@@ -40,18 +40,42 @@ function Clients() {
 
 
   const handleCreate = async () => {
-    setLoading(true)
+    setLoading(true);
+    const { name, email, phoneNumber } = client;
+  
+    // Email validation (basic format check)
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      alert("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+  
+    // Phone number validation (should be 10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phoneNumber.toString())) {
+      alert("Please enter a valid 10-digit phone number.");
+      setLoading(false);
+      return;
+    }
+  
+    if (!name || !email || !phoneNumber) {
+      alert("All fields are required.");
+      setLoading(false);
+      return;
+    }
+  
     try {
       await api.post('/ads/create-client', client);
       fetchDta();
       setLoading(false);
       setOpen(false);
-
     } catch (error) {
-      setLoading(false)
-      console.error(error)
+      setLoading(false);
+      console.error(error);
     }
-  }
+  };
+  
   return (
     <div className="">
       <div className="flex items-center w-full mb-4">
@@ -93,7 +117,7 @@ function Clients() {
         />
         <Label>Phone</Label>
         <Input
-          type="tel"
+          type="number"
           value={client?.phoneNumber}
           onChange={(e) => setClient({ ...client, phoneNumber: parseInt(e.target.value) })}
         />
