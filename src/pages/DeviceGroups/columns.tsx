@@ -4,23 +4,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import MessageCell from "./componets/MessageCell";
 import { Button } from "@/components/ui/button";
-import { Check, Clipboard, Copy, RefreshCcw } from "lucide-react";
+import { Check, Copy, RefreshCcw } from "lucide-react";
 import api from "@/api";
 import { useState } from "react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { getRole } from "@/helpers";
 
-
-// Extend your Group type to include the message from ScrollText.
+// Extend your Group type to include client information.
 export interface Group {
   group_id: string;
   name: string;
   reg_code: string;
   device_count: number;
-  message: string | null; // will be null if no message exists
+  message: string | null;
+  Client?: {
+    client_id: string;
+    name: string;
+  } | null;
 }
-
-// Create an inline cell component for the message column.
-
 
 // Define columns for your DataTable.
 export const columns: ColumnDef<Group>[] = [
@@ -46,7 +47,6 @@ export const columns: ColumnDef<Group>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-
   {
     accessorKey: "group_id",
     header: "Group ID",
@@ -54,11 +54,13 @@ export const columns: ColumnDef<Group>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const value = row.getValue("group_id");
-  
+
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="truncate max-w-[80px] inline-block cursor-pointer">{value}</span>
+            <span className="truncate max-w-[80px] inline-block cursor-pointer">
+              {value}
+            </span>
           </TooltipTrigger>
           <TooltipContent>{value}</TooltipContent>
         </Tooltip>
@@ -70,19 +72,30 @@ export const columns: ColumnDef<Group>[] = [
     header: "Group Name",
     cell: ({ row }) => row.getValue("name"),
   },
+    // Conditionally add the Client column for Admin users
+    {
+      id: "client",
+      header: "Client",
+      cell: ({ row }) => row.original.Client?.name || "-",
+      enableSorting: true,
+      enableHiding: true,
+      meta: {
+        isAdminOnly: true, // Custom meta to identify admin-only columns
+      },
+    },
   {
     accessorKey: "reg_code",
     header: "License Key",
     cell: ({ row }) => {
       const [copied, setCopied] = useState(false);
       const value = row.getValue("reg_code");
-  
+
       const handleCopy = () => {
         navigator.clipboard.writeText(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500); // Reset icon after 1.5s
       };
-  
+
       return (
         <div className="flex items-center gap-2">
           <span>{value}</span>
@@ -92,7 +105,7 @@ export const columns: ColumnDef<Group>[] = [
         </div>
       );
     },
-  },  
+  },
   {
     accessorKey: "device_count",
     header: "Device Count",
@@ -103,27 +116,27 @@ export const columns: ColumnDef<Group>[] = [
     accessorKey: "group_id",
     header: "Update Schedule",
     cell: ({ row }) => {
-      async function handleRefreah(group_id:string) {
-        await api.post(`/device/update-schedule/${group_id}`)
-        
+      async function handleRefreah(group_id: string) {
+        await api.post(`/device/update-schedule/${group_id}`);
       }
-      return(
+      return (
         <div className="">
-
-        <Button onClick={()=>handleRefreah(row.getValue("group_id"))} variant="ghost">
-          <RefreshCcw size="sm"/>
-        </Button>
+          <Button onClick={() => handleRefreah(row.getValue("group_id"))} variant="ghost">
+            <RefreshCcw size="sm" />
+          </Button>
         </div>
-        
-        )},
+      );
+    },
     enableSorting: true,
   },
   {
     id: "message",
     header: "Message",
-    cell: ({ row }) => {
-      // Pass the whole row original data to our MessageCell component
-      return <MessageCell group={row.original} />;
-    },
+    cell: ({ row }) => <MessageCell group={row.original} />,
   },
-];
+
+].filter((column) => {
+  // Filter out admin-only columns if the user is not an admin
+  const role = getRole();
+  return column.meta?.isAdminOnly ? role === "Admin" : true;
+});

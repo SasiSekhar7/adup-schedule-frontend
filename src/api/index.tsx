@@ -21,9 +21,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response.data,
     (error) => {
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        if (error.response?.status === 401) {
             window.location.href = "/login"; // Redirect to login page
         }
+        if (error.response?.status === 403) {
+            window.location.href = "/forbidden"; // Redirect to dashboard
+        }
+
         return Promise.reject(error.response?.data || error.message);
     }
 );

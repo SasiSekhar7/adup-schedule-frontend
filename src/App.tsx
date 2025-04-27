@@ -7,6 +7,8 @@ import RegisterDevice from "./pages/RegisterDevice";
 import Login from "./pages/Login";
 import Loading from "./Laoding";
 import PlaceholderEditor from "./pages/Placeholder";
+import NotFoundPage from "./pages/Forbidden_403";
+import NotFound from "./pages/Notfound_404";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -21,6 +23,7 @@ const Campaigns = lazy(() => import("./pages/Campaigns"));
 const NewCampaignPage = lazy(() => import("./pages/Campaigns/new"));
 const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
+const Users = lazy(() => import("./pages/Users"));
 
 // Loading Fallback Component
 
@@ -41,6 +44,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <Ads />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/user/all"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <Users />
                 </Suspense>
               }
             />
@@ -165,6 +176,22 @@ function App() {
               }
             />
           </Route>
+          <Route
+            path="/forbidden"
+            element={
+              <Suspense fallback={<Loading />}>
+                <NotFoundPage/>
+              </Suspense>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<Loading />}>
+                <NotFound />
+              </Suspense>
+            }
+          />
         </Route>
       </Routes>
     </Router>
