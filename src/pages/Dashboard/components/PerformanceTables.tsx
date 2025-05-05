@@ -30,7 +30,7 @@ import type {
 import { AlertTriangleIcon } from "lucide-react";
 import api from "@/api";
 
-const API_BASE_URL = "http://localhost:8080/api/dashboard"; // Your API base path
+const API_BASE_URL = `${import.meta.env.VITE_BASE_URL}/dashboard`; // Your API base path
 
 // --- Helper function to format dates for API query ---
 function formatDateForApi(date: Date | undefined): string | undefined {
