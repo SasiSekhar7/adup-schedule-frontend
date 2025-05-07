@@ -13,7 +13,7 @@ function Schedule() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const limit = 10; // Number of items per page
+  const [limit, setLimit] = useState(10); // Use state for limit
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +31,7 @@ function Schedule() {
       }
     };
     fetchData();
-  }, [page, date]);
+  }, [page, date, limit]);
 
   const handleDateChange = (event) => {
     setDate(event.target.value);
@@ -39,6 +39,10 @@ function Schedule() {
   };
   const filters =  [{label:"Ad Name", value:"ad_name"}];
 
+  const handlePaginationChange = (newPage: number, newLimit: number) => {
+    setPage(newPage);
+    setLimit(newLimit);
+  };
   return (
     <div className="">
       <div className="flex items-center w-full mb-4">
@@ -72,6 +76,8 @@ function Schedule() {
           limit,
           onPageChange: setPage,
         }}
+        onPaginationChange={handlePaginationChange} // ✅ Pass the new callback
+
       />
     </div>
   );

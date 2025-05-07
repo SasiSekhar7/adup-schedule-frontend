@@ -34,6 +34,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filters: filter[];
   maxHeight?: string; // ✅ New prop
+  onPaginationChange: (page: number, pageSize: number) => void; // ✅ New prop
   onRowSelectionChange?: (selectedRows: any) => void;
 }
 type filter = {
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   filters,
+  onPaginationChange, // ✅ Destructure the callback
   maxHeight = "80vh", // ✅ Default maxHeight
   onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
@@ -143,7 +145,7 @@ export function DataTable<TData, TValue>({
       </div>
       
       {/* Pagination */}
-      <DataTablePagination table={table} />
+      <DataTablePagination table={table} onPaginationChange={onPaginationChange} /> {/* ✅ Pass the callback */}
     </div>
   );
 }
