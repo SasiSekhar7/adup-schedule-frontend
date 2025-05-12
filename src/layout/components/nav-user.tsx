@@ -1,5 +1,5 @@
 "use client"
-
+import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   Bell,
@@ -46,6 +46,13 @@ export function NavUser({
     sessionStorage.clear();
     window.location.href = "/login";
   }
+
+
+  const navigate = useNavigate();
+  const handleUser = () => {
+    navigate("/account");
+  };
+
 
   return (
     <SidebarMenu>
@@ -94,9 +101,9 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleUser}>
                 <BadgeCheck />
-                Account
+                Account 
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
