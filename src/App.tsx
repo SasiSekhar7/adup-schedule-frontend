@@ -9,6 +9,7 @@ import Loading from "./Laoding";
 import PlaceholderEditor from "./pages/Placeholder";
 import NotFoundPage from "./pages/Forbidden_403";
 import NotFound from "./pages/Notfound_404";
+import Account from "./pages/Account";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -25,6 +26,7 @@ const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
 const Users = lazy(() => import("./pages/Users"));
 
+
 // Loading Fallback Component
 
 function App() {
@@ -37,6 +39,16 @@ function App() {
         <Route element={<Layout />}>
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/account"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <Account />
+                </Suspense>
+              }
+            />
+
+
 
             {/* Wrap each lazy-loaded route inside Suspense */}
             <Route
