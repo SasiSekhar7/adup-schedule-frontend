@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { CircleX } from "lucide-react";
 import api from "@/api";
+import { useState } from "react";
 
 export interface User {
   user_id: string;
@@ -90,39 +91,81 @@ export const userColumns: ColumnDef<User>[] = [
     header: () => "Action",
     cell: ({ row }) => {
       const user = row.original;
+      const [newPassword, setNewPassword] = useState("");
 
       const handleDelete = async () => {
         await api.delete(`/user/${user.user_id}`);
         location.reload(); // Or refresh table state
       };
 
+      const handleResetPassword = async () => {
+        if (!newPassword || newPassword.length < 8) {
+          alert("Password must be at least 8 characters.");
+          return;
+        }
+
+        try {
+          await api.post(`/user/reset/${user.user_id}`, { newPassword });
+          alert("Password reset successfully.");
+        } catch (error) {
+          alert("Failed to reset password.");
+        }
+      };
+
       return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost">
-              <CircleX />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Delete user {user.name}?
-              </DialogTitle>
-              <DialogDescription>
-                This action will permanently remove the user from the system.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-2">
-              <p className="text-sm text-muted-foreground">
-                You can copy the user's email for your reference before deleting:
-              </p>
-              <Input readOnly value={user.email} className="w-[250px] mt-2" />
-            </div>
-            <DialogFooter>
-              <Button onClick={handleDelete}>Delete</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+<div className="flex space-x-2">
+      {/* Delete Button */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="ghost">
+            <CircleX />
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete user {user.name}?</DialogTitle>
+            <DialogDescription>
+              This action will permanently remove the user from the system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2">
+            <p className="text-sm text-muted-foreground">
+              You can copy the user's email for your reference before deleting:
+            </p>
+            <Input readOnly value={user.email} className="w-[250px] mt-2" />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Button */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline">Reset</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password for {user.name}</DialogTitle>
+            <DialogDescription>
+              Enter a new password for this user.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="mt-2"
+          />
+          <DialogFooter>
+            <Button onClick={handleResetPassword}>Reset Password</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+        
       );
     },
   },

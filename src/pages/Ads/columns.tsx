@@ -98,7 +98,7 @@ export const columns: ColumnDef<Ad>[] = [
   {
     accessorKey: "duration",
     header: ({column})=>(
-      <DataTableColumnHeader column={column} title="Duartion" />
+      <DataTableColumnHeader column={column} title="Duration" />
     ),
     cell: ({ row }) => row.getValue("duration"),
   },
