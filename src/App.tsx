@@ -10,6 +10,7 @@ import PlaceholderEditor from "./pages/Placeholder";
 import NotFoundPage from "./pages/Forbidden_403";
 import NotFound from "./pages/Notfound_404";
 import Account from "./pages/Account";
+import ApkVersionsPage from "./pages/ApkVersions";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -155,6 +156,15 @@ function App() {
                 </Suspense>
               }
             /> */}
+
+              <Route
+              path="/apkVersion"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ApkVersionsPage />
+                </Suspense>
+              }
+            />
             <Route
               path="/campaigns"
               element={

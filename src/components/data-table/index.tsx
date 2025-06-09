@@ -34,7 +34,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filters: filter[];
   maxHeight?: string; // ✅ New prop
-  onPaginationChange: (page: number, pageSize: number) => void; // ✅ New prop
+  onPaginationChange?: (page: number, pageSize: number) => void; // ✅ New prop
   onRowSelectionChange?: (selectedRows: any) => void;
 }
 type filter = {
