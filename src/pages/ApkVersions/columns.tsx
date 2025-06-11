@@ -1,11 +1,11 @@
-// src/pages/ApkVersions/columns.tsx
-"use client"; // Important for ShadCN UI components
+"use client";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { MoreHorizontal, Download, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner"; // IMPORT SONNER TOAST HERE
 
-import { DataTableColumnHeader } from "@/components/data-table/components/data-table-column-header"; // Your existing component
+import { DataTableColumnHeader } from "@/components/data-table/components/data-table-column-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -16,10 +16,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge"; // For status badges
-// import { toast } from "@/components/ui/use-toast"; // Your toast notification
-import api from "@/api"; // Your API client
-import EditApkComponent from "./components/EditApkComponent"; // Dialog for editing
+import { Badge } from "@/components/ui/badge";
+import api from "@/api";
+import EditApkComponent from "./components/EditApkComponent";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -30,12 +29,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 
-// Define the TypeScript interface for your ApkVersion data
-// This should match your backend model closely
 export interface ApkVersion {
   id: number;
   version_code: number;
@@ -47,12 +43,11 @@ export interface ApkVersion {
   is_mandatory: boolean;
   is_active: boolean;
   checksum_sha256: string;
-  uploaded_at: string; // ISO string date
+  uploaded_at: string;
   created_at: string;
   updated_at: string;
 }
 
-// Helper to format file size
 const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -62,8 +57,6 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-// Define columns for the APK versions table
-// The onDataChange callback is passed to trigger a re-fetch of data after edits/deletes
 export const columns : ColumnDef<ApkVersion>[] =[
   {
     id: "select",
@@ -103,11 +96,11 @@ export const columns : ColumnDef<ApkVersion>[] =[
     },
   },
   {
-    accessorKey: "file_name",
+    accessorKey: "s3_key",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="File Name" />
+      <DataTableColumnHeader column={column} title="S3 Key" />
     ),
-    cell: ({ row }) => row.getValue("file_name"),
+    cell: ({ row }) => row.getValue("s3_key"),
   },
   {
     accessorKey: "file_size_bytes",
@@ -135,7 +128,7 @@ export const columns : ColumnDef<ApkVersion>[] =[
     cell: ({ row }) => (
       <Checkbox
         checked={row.original.is_mandatory}
-        readOnly // This checkbox is for display only; editing happens via the dialog
+        readOnly
       />
     ),
   },
@@ -144,35 +137,40 @@ export const columns : ColumnDef<ApkVersion>[] =[
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Uploaded At" />
     ),
-    cell: ({ row }) => format(new Date(row.original.uploaded_at), "PPP"), // e.g., Jan 1, 2023
+    cell: ({ row }) => format(new Date(row.original.uploaded_at), "PPP"),
   },
   {
     id: "actions",
-    header: "Actions", // No sorting on actions column
+    header: "Actions",
     cell: ({ row }) => {
       const apk = row.original;
-      const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // State for delete confirmation dialog
+      const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+      const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+      const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
       const handleDelete = async () => {
         try {
-          await api.delete(`/api/v1/apk_versions/${apk.id}`);
-        //   toast({
-        //     title: "APK Version Deleted",
-        //     description: `Version ${apk.version_name} (${apk.version_code}) has been deleted successfully.`,
-        //   });
-          setIsDeleteDialogOpen(false); // Close the dialog
+          // Use toast.promise for better UX during async operations
+          await toast.promise(api.delete(`/apk_versions/${apk.id}`), {
+            loading: `Deleting version ${apk.version_name}...`,
+            success: () => {
+              setIsDeleteDialogOpen(false);
+              // Call onDataChange() here if it's passed via cell context
+              return `Version ${apk.version_name} (${apk.version_code}) has been deleted.`;
+            },
+            error: (error) => {
+              console.error("Failed to delete APK version:", error);
+              return `Error deleting version: ${error?.message || "An unexpected error occurred."}`;
+            },
+          });
         } catch (error: any) {
-          console.error("Failed to delete APK version:", error);
-        //   toast({
-        //     title: "Error Deleting APK Version",
-        //     description: error.response?.data?.message || "An unexpected error occurred while deleting.",
-        //     variant: "destructive",
-        //   });
+          // This catch block is mostly for unhandled errors, toast.promise handles API errors
+          console.error("Caught error outside toast.promise:", error);
         }
       };
 
       return (
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -184,58 +182,70 @@ export const columns : ColumnDef<ApkVersion>[] =[
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(apk.checksum_sha256);
-                // toast({
-                //   title: "Checksum Copied!",
-                //   description: "SHA-256 checksum copied to clipboard.",
-                // });
+                // Sonner toast for copy action
+                toast.info("Checksum Copied!", {
+                  description: "SHA-256 checksum copied to clipboard.",
+                });
               }}
             >
               Copy Checksum
-              <Button variant="outline">⌘C</Button> {/* Example shortcut */}
+              <Button variant="outline">⌘C</Button>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
 
-            {/* Edit Action using EditApkComponent */}
-            <DropdownMenuItem asChild> {/* Use asChild to render the Button inside DropdownMenuItem */}
-              <EditApkComponent apk={apk} >
-                <Button variant="ghost" className="w-full justify-start p-0 h-auto">
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                </Button>
-              </EditApkComponent>
+            {/* Edit Action */}
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setIsEditDialogOpen(true);
+                setIsDropdownOpen(false);
+              }}
+            >
+                <Edit className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
             
-            {/* Delete Action using AlertDialog */}
-            <DropdownMenuItem asChild> {/* Use asChild to render the AlertDialogTrigger inside DropdownMenuItem */}
-                <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 p-0 h-auto">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            <Button variant="ghost">⌘D</Button> {/* Example shortcut */}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the APK version{" "}
-                                <span className="font-bold">{apk.version_name} (Code: {apk.version_code})</span> from your records.
-                                {apk.is_active && (
-                                    <p className="text-red-500 mt-2 font-semibold">
-                                        Note: This version is currently marked as active. Deleting it might affect device updates if no other version is active.
-                                    </p>
-                                )}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
-                                Delete
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+            {/* Delete Action */}
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setIsDeleteDialogOpen(true);
+                setIsDropdownOpen(false);
+              }}
+              className="text-red-500 hover:text-red-600"
+            >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
+
+          <EditApkComponent
+              apk={apk}
+              isOpen={isEditDialogOpen}
+              onClose={() => setIsEditDialogOpen(false)}
+              // onApkUpdated={onDataChange} // If you're passing onDataChange, make sure EditApkComponent also calls toast.success
+          />
+
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the APK version{" "}
+                          <span className="font-bold">{apk.version_name} (Code: {apk.version_code})</span> from your records.
+                          {apk.is_active && (
+                              <p className="text-red-500 mt-2 font-semibold">
+                                  Note: This version is currently marked as active. Deleting it might affect device updates if no other version is active.
+                              </p>
+                          )}
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
+                          Delete
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
         </DropdownMenu>
       );
     },

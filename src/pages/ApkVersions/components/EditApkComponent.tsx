@@ -1,4 +1,3 @@
-// src/pages/ApkVersions/components/EditApkComponent.tsx
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +6,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Save } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -15,45 +13,52 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import api from "@/api";
-// import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner"; // IMPORT SONNER TOAST HERE
 import { ApkVersion } from "../columns"; // Import ApkVersion interface
+
+// Helper to format file size (if not global)
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
 
 function EditApkComponent({
   apk, // The existing ApkVersion object to edit
-  // onApkUpdated, // Callback to refetch data after update
-  children // To allow custom trigger (e.g., a Button from columns)
+  isOpen, // Controls dialog visibility
+  onClose, // Callback to close dialog
+  onApkUpdated, // Callback to signal successful update to parent
 }: {
   apk: ApkVersion;
-  onApkUpdated: () => void;
-  children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  onApkUpdated?: () => void; // Made optional as it might not always be used
 }) {
   const [editedApk, setEditedApk] = useState<Partial<ApkVersion>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Initialize editedApk with the current apk data when dialog opens
-    // or when the prop changes.
-    if (dialogOpen) {
+    if (isOpen) {
         setEditedApk({
             version_name: apk.version_name,
             release_notes: apk.release_notes,
             is_mandatory: apk.is_mandatory,
             is_active: apk.is_active,
-            // Other fields like version_code, file_name, s3_key, checksum_sha256 are usually not editable
-            // unless you have a specific use case to re-upload. For now, they are read-only.
         });
+        setError(null); // Clear any previous errors
     }
-  }, [apk, dialogOpen]);
+  }, [apk, isOpen]);
 
   const handleUpdateApk = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Send only the fields that are allowed to be updated.
-      // version_code, file_name, s3_key, checksum_sha256 are typically not mutable via edit.
       const dataToUpdate = {
         version_name: editedApk.version_name,
         release_notes: editedApk.release_notes,
@@ -61,27 +66,37 @@ function EditApkComponent({
         is_active: editedApk.is_active,
       };
 
-      await api.put(`/apk_versions/${apk.id}`, dataToUpdate);
+      // Filter out undefined values to ensure only changed/valid fields are sent
+      const filteredData = Object.fromEntries(
+        Object.entries(dataToUpdate).filter(([, value]) => value !== undefined)
+      );
 
-      // toast({
-      //   title: "APK Version Updated",
-      //   description: `Version ${apk.version_name} (${apk.version_code}) has been updated.`,
-      // });
-      setDialogOpen(false); // Close dialog
-      // onApkUpdated(); // Notify parent to refetch data
+      // Use toast.promise for better UX during async operations
+      await toast.promise(api.put(`/apk_versions/${apk.id}`, filteredData), {
+        loading: `Updating version ${apk.version_name}...`,
+        success: () => {
+          onClose(); // Close dialog on success
+          onApkUpdated?.(); // Notify parent of update
+          return `Version ${apk.version_name} (${apk.version_code}) updated successfully!`;
+        },
+        error: (err) => {
+          console.error("Failed to update APK version:", err);
+          const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+          setError(errorMessage); // Set internal error for form
+          return `Error updating version: ${errorMessage}`; // Toast error message
+        },
+      });
+
     } catch (err: any) {
-      console.error("Failed to update APK version:", err);
-      setError(err.response?.data?.message || "An unexpected error occurred.");
+      // This catch block is mostly for unhandled errors, toast.promise handles API errors
+      console.error("Caught error outside toast.promise:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        {children} {/* This will be the button from your columns */}
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit APK Version: {apk.version_name} ({apk.version_code})</DialogTitle>
@@ -99,7 +114,7 @@ function EditApkComponent({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">File Size</Label>
-            <Input value={apk.file_size_bytes ? apk.file_size_bytes.toLocaleString() + ' bytes' : ''} readOnly className="col-span-3 bg-gray-100 dark:bg-gray-800" />
+            <Input value={apk.file_size_bytes ? formatBytes(apk.file_size_bytes) : ''} readOnly className="col-span-3 bg-gray-100 dark:bg-gray-800" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">SHA-256 Checksum</Label>

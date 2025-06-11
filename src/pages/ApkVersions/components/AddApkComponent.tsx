@@ -1,4 +1,6 @@
 // src/pages/ApkVersions/components/AddApkComponent.tsx
+"use client";
+
 import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import api from "@/api";
-// import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner"; // IMPORT SONNER TOAST HERE
 import { ApkVersion } from "../columns"; // Import ApkVersion interface
 
 // Helper to format file size for display
@@ -72,9 +74,9 @@ function AddApkComponent({ onApkAdded }: { onApkAdded: () => void }) {
   useEffect(() => {
     const fetchLatestVersion = async () => {
       try {
-        const response = await api.get<{ latestVersionCode: number, latestVersionName: string }>('apk_versions/latest');
-        const nextCode = response.latestVersionCode + 1;
-        const nextName = suggestNextVersionName(response.latestVersionName);
+        const response = await api.get<{ latestVersionCode: number, latestVersionName: string }>('/apk_versions/latest'); // Assuming this API endpoint
+        const nextCode = response.latestVersionCode + 1; // Access data from response.data
+        const nextName = suggestNextVersionName(response.latestVersionName); // Access data from response.data
 
         setApkData(prev => ({
           ...prev,
@@ -119,42 +121,60 @@ function AddApkComponent({ onApkAdded }: { onApkAdded: () => void }) {
 
     try {
       if (!file) {
-        throw new Error("Please select an APK file to upload.");
+        setError("Please select an APK file to upload.");
+        toast.error("Validation Error", { description: "Please select an APK file to upload." });
+        return; // Exit early
       }
-      if (!apkData.version_code || apkData.version_name === "" || apkData.file_name === "") { // Check for empty string on name/filename
-        throw new Error("Please fill in all required APK details (Version Code, Version Name, File Name).");
+      if (!apkData.version_code || apkData.version_name === "" || apkData.file_name === "") {
+        setError("Please fill in all required APK details (Version Code, Version Name, File Name).");
+        toast.error("Validation Error", { description: "Please fill in all required APK details." });
+        return; // Exit early
       }
       if (isNaN(apkData.version_code) || apkData.version_code <= 0) {
-        throw new Error("Version Code must be a positive integer.");
+        setError("Version Code must be a positive integer.");
+        toast.error("Validation Error", { description: "Version Code must be a positive integer." });
+        return; // Exit early
       }
 
-
       const formData = new FormData();
-      formData.append("apk_file", file); // The actual APK file
-      formData.append("version_code", apkData.version_code.toString()); // Manual input
-      formData.append("version_name", apkData.version_name); // Manual input
-      formData.append("file_name", apkData.file_name); // Manual input (usually from selected file name)
-      formData.append("release_notes", apkData.release_notes || ""); // Manual input
-      formData.append("is_mandatory", apkData.is_mandatory.toString()); // Manual input
-      formData.append("is_active", apkData.is_active.toString()); // Manual input
+      formData.append("apk_file", file);
+      formData.append("version_code", apkData.version_code.toString());
+      formData.append("version_name", apkData.version_name);
+      formData.append("file_name", apkData.file_name);
+      formData.append("release_notes", apkData.release_notes || "");
+      formData.append("is_mandatory", apkData.is_mandatory.toString());
+      formData.append("is_active", apkData.is_active.toString());
 
-      // Send all data in one API call
-      const response = await api.post<ApkVersion>('/apk_versions', formData, {
+      // Use toast.promise for the API call
+      await toast.promise(api.post<ApkVersion>('/apk_versions', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
+      }), {
+        loading: `Adding version ${apkData.version_name}...`,
+        success: (response) => { // 'response' here is the result of the promise (the axios response object)
+          setDialogOpen(false); // Close dialog
+          onApkAdded(); // Notify parent to refetch data
+          resetForm();
+          return `Version ${response.data.version_name} (Code: ${response.data.version_code}) has been added successfully.`;
+        },
+        error: (err) => {
+          console.error("Failed to add new APK version:", err);
+          const errorMessage = err.response?.data?.message || "An unexpected error occurred while adding APK.";
+          setError(errorMessage); // Set internal error for form
+          return `Error adding APK: ${errorMessage}`; // Toast error message
+        },
       });
 
-      // toast({
-      //   title: "APK Version Added",
-      //   description: `Version ${response.version_name} (Code: ${response.version_code}) has been added.`,
-      // });
-      setDialogOpen(false); // Close dialog
-      onApkAdded(); // Notify parent to refetch data
-      resetForm();
     } catch (err: any) {
-      console.error("Failed to add new APK version:", err);
-      setError(err.response?.data?.message || "An unexpected error occurred.");
+      // This catch block is for errors thrown synchronously *before* the API call
+      // or if toast.promise isn't used for the initial validation errors.
+      // Now, validation errors are handled by toast.error directly.
+      console.error("Caught synchronous error during form submission:", err);
+      // If `err.message` is from our custom `throw new Error`, display it.
+      if (err.message) {
+         setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -163,7 +183,9 @@ function AddApkComponent({ onApkAdded }: { onApkAdded: () => void }) {
   const resetForm = () => {
     setFile(null);
     setApkData(prev => ({
-      ...prev, // Keep suggested version from fetch, unless reset
+      ...prev,
+      version_code: 0, // Reset version code as it will be fetched on next open
+      version_name: "", // Reset version name too
       file_name: "",
       release_notes: "",
       is_mandatory: false,
@@ -208,8 +230,8 @@ function AddApkComponent({ onApkAdded }: { onApkAdded: () => void }) {
             </Label>
             <Input
               id="versionCode"
-              type="number" // Ensure this is type number
-              value={apkData.version_code} // Make sure it's a number
+              type="number"
+              value={apkData.version_code}
               onChange={(e) => setApkData((prev) => ({ ...prev, version_code: parseInt(e.target.value) || 0 }))}
               className="col-span-3"
               required
@@ -221,7 +243,7 @@ function AddApkComponent({ onApkAdded }: { onApkAdded: () => void }) {
             </Label>
             <Input
               id="versionName"
-              type="text" // This should be type text for 0.0.1, 1.0.0-beta etc.
+              type="text"
               value={apkData.version_name || ""}
               onChange={(e) => setApkData((prev) => ({ ...prev, version_name: e.target.value }))}
               className="col-span-3"
