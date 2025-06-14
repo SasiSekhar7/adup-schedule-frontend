@@ -2,9 +2,7 @@ import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useEffect, useState } from "react";
 import { Device, DevicesResponse, columns } from "./columns";
-import { data } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+
 import AddAdComponent from "./components/AddAds";
 
 function Ads() {
