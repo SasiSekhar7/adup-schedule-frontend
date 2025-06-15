@@ -6,6 +6,10 @@ import { Device, DevicesResponse, columns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/pages/Dashboard/components/DateRangePicker"; // Adjust path as needed
+
+
 
 function Schedule() {
   const [data, setData] = useState<Device[]>([]);
@@ -14,30 +18,43 @@ function Schedule() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(10); // Use state for limit
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  from: new Date(),
+  to: new Date(),
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get<DevicesResponse>("/schedule/all", {
-          params: { page, limit, date },
-        });
-        setData(response.schedules);
-        setTotal(response.total);
-      } catch (error) {
-        console.error("Error fetching schedules:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get<DevicesResponse>("/schedule/all", {
+        params: {
+          page,
+          limit,
+          from: dateRange?.from?.toISOString().split("T")[0],
+          to: dateRange?.to?.toISOString().split("T")[0],
+        },
+      });
+      setData(response.schedules);
+      setTotal(response.total);
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  if (dateRange?.from && dateRange?.to) {
     fetchData();
-  }, [page, date, limit]);
+  }
+}, [page, limit, dateRange]);
+
 
   const handleDateChange = (event) => {
     setDate(event.target.value);
     setPage(1); // Reset to first page when date changes
   };
-  const filters =  [{label:"Ad Name", value:"ad_name"}];
+  const filters =  [{label:"Ad Name", value:"ad_name" }, {label:"Group Name", value:"group_name"}];
+  
 
   const handlePaginationChange = (newPage: number, newLimit: number) => {
     setPage(newPage);
@@ -51,13 +68,8 @@ function Schedule() {
           <p className="text-sm text-muted-foreground">List of all Ads and Devices</p>
         </div>
         <div className=" ml-auto">
-        <Input
-          type="date"
-          value={date}
+    <DateRangePicker date={dateRange} setDate={setDateRange} />
 
-          onChange={handleDateChange}
-          className="border rounded p-2 w-[150px]"
-        />
       </div>
 
       </div>
