@@ -84,31 +84,24 @@ function DeviceGroup() {
       setLoading(false);
     }
   };
+function generateUniqueCode(name: string): string {
+  const cleanName = name.replace(/[^a-zA-Z ]/g, "").trim().toUpperCase();
+  const words = cleanName.split(/\s+/);
+  const  baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
 
-  function generateShortCode(name: string): string {
-    if (!name) return "";
+  // Random 4-digit alphanumeric string
+  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    const cleanName = name.replace(/[^a-zA-Z ]/g, "").trim().toUpperCase();
-    const words = cleanName.split(/\s+/);
-    let baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
-    let hash = (
-      name
-        .split("")
-        .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 676
-    )
-      .toString(36)
-      .toUpperCase()
-      .padStart(2, "A");
+  return `${baseCode}${randomPart}`;
+}
 
-    return baseCode + hash;
-  }
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (deviceGroup.name) {
         setDeviceGroup((prev) => ({
           ...prev,
-          reg_code: generateShortCode(prev.name),
+          reg_code: generateUniqueCode(prev.name),
         }));
       }
     }, 500);
@@ -120,7 +113,7 @@ function DeviceGroup() {
     if (deviceGroup.name) {
       setDeviceGroup((prev) => ({
         ...prev,
-        reg_code: generateShortCode(prev.name),
+        reg_code: generateUniqueCode(prev.name),
       }));
     }
   }, [deviceGroup.name]);
