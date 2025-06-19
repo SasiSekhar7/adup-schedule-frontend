@@ -73,7 +73,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     setIsUploading(false)
     console.log("Upload completed")
   }
-  const cleanUrl = formData.url.split("?")[0]; // Remove query parameters
+  const cleanUrl = formData?.url?.split("?")[0]; // Remove query parameters
 
   const isVideo = /\.(mp4|webm|ogg)$/i.test(cleanUrl);
   const isImage = /\.(jpeg|jpg|gif|png)$/i.test(cleanUrl);

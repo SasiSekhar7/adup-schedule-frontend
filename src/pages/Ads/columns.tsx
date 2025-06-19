@@ -88,7 +88,7 @@ export const columns: ColumnDef<Ad>[] = [
     cell: ({ row }) =>  {
       const path = row.getValue('url');
       return(
-        path.split('/').pop().split('?')[0]
+        path?.split('/')?.pop()?.split('?')[0]
 
       )
     }
