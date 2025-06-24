@@ -23,6 +23,12 @@ import api from "@/api";
 import { getRole } from "@/helpers";
 import { cn } from "@/lib/utils"; // Assuming you have a utility for class merging (from shadcn/ui)
 
+// Define allowed file types
+const ALLOWED_VIDEO_TYPES = ["video/mp4"];
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg"]; // image/jpeg covers both .jpg and .jpeg
+const ALL_ALLOWED_FILE_TYPES = [...ALLOWED_VIDEO_TYPES, ...ALLOWED_IMAGE_TYPES];
+const ALLOWED_FILE_EXTENSIONS = ".mp4, .png, .jpg, .jpeg";
+
 // Helper function to format bytes into a readable string (KB, MB, GB)
 const formatBytes = (bytes: number, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
@@ -86,17 +92,37 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
   // Handler for file input and drag/drop
   const handleFileSelection = useCallback((selectedFile: File | null) => {
+    setError(undefined); // Clear previous errors
+
+    if (!selectedFile) {
+      setFile(null);
+      // Crucial: Clear the file input's value when a file is removed or changed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setUploadProgress(0);
+      setUploadStatus('');
+      setUploadSpeed('0 B/s');
+      setTimeLeft('calculating...');
+      return;
+    }
+
+    // Validate file type
+    if (!ALL_ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
+      setError(`Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`);
+      setFile(null); // Clear the file if it's invalid
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Ensure input value is cleared for invalid files
+      }
+      return;
+    }
+
     setFile(selectedFile);
-    setError(undefined);
     setUploadProgress(0);
     setUploadStatus('');
     setUploadSpeed('0 B/s');
     setTimeLeft('calculating...');
 
-    // Crucial: Clear the file input's value when a file is removed or changed
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   }, []);
 
   // Drag & Drop Handlers
@@ -137,6 +163,12 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
     try {
       if (!file) throw new Error("No File uploaded. Please select or drag a file.");
+
+      // Double-check file type validity right before upload
+      if (!ALL_ALLOWED_FILE_TYPES.includes(file.type)) {
+        throw new Error(`Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`);
+      }
+
       const { name, duration, client_id } = ad;
 
       if (!name || !duration || (userRole === "Admin" && !client_id)) {
@@ -221,11 +253,12 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
     }
 
     const updateDuration = async () => {
-      if (file.type.startsWith("video/")) {
+      // Only get duration for video files
+      if (ALLOWED_VIDEO_TYPES.includes(file.type)) {
         const duration = await getDuration(file);
         setAd((prev) => ({ ...prev, duration: Math.round(duration) || 10 }));
       } else {
-        setAd((prev) => ({ ...prev, duration: 10 }));
+        setAd((prev) => ({ ...prev, duration: 10 })); // Default duration for image files
       }
     };
 
@@ -371,12 +404,16 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
                           </>
                       )}
                   </p>
+                  <p className="text-xs text-gray-500 text-center mt-1">
+                      Allowed formats: {ALLOWED_FILE_EXTENSIONS}
+                  </p>
                   <Input
                       id="file-upload-input"
                       type="file"
                       className="hidden" // Hide the actual input
                       ref={fileInputRef} // Attach ref here
                       onChange={(e) => handleFileSelection(e.target.files?.[0] || null)}
+                      accept={ALL_ALLOWED_FILE_TYPES.join(',')} // Add accept attribute for native file dialog filtering
                   />
                   {file && (
                       <Button
@@ -423,7 +460,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
         )}
 
         <DialogFooter className="mt-6">
-          <Button onClick={handleCreate} disabled={loading || !file || !ad.name || (userRole === "Admin" && !ad.client_id)}>
+          <Button onClick={handleCreate} disabled={loading || !file || !ad.name || (userRole === "Admin" && !ad.client_id) || !!error}>
             <Save className="mr-2 h-4 w-4" />
             {loading ? "Uploading..." : "Create Ad"}
           </Button>
