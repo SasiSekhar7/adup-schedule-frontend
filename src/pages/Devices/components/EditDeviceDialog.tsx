@@ -42,7 +42,7 @@ const EditDeviceDialog = ({
   const [step, setStep] = useState(1);
   const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>([]);
   const [deviceData, setDeviceData] = useState<{
-    deviceName: string;
+    device_name: string;
     tags: string[];
     group_id: string | null;
     location: { lat: number; lng: number; address: string } | null;
@@ -50,7 +50,7 @@ const EditDeviceDialog = ({
   }>(() => {
     const [lat, lng] = device.location.split(",").map(Number);
     return {
-      deviceName: device.group_name,
+      device_name: device.device_name,
       tags: (device as any).tags || [],
       group_id: device.group_id,
       location: { lat, lng, address: "" },
@@ -58,7 +58,7 @@ const EditDeviceDialog = ({
     };
   });
   const [errors, setErrors] = useState<{
-    deviceName?: boolean;
+    device_name?: boolean;
     group_id?: boolean;
   }>({});
 
@@ -84,9 +84,9 @@ const EditDeviceDialog = ({
   };
 
   const handleNext = async () => {
-    const newErrors: { deviceName?: boolean; group_id?: boolean } = {};
-    if (!deviceData.deviceName) {
-      newErrors.deviceName = true;
+    const newErrors: { device_name?: boolean; group_id?: boolean } = {};
+    if (!deviceData.device_name) {
+      newErrors.device_name = true;
     }
     if (!deviceData.group_id) {
       newErrors.group_id = true;
@@ -128,7 +128,7 @@ const EditDeviceDialog = ({
     setOpen(false);
     const [lat, lng] = device.location.split(",").map(Number);
     setDeviceData({
-      deviceName: device.group_name,
+      device_name: device.group_name,
       tags: (device as any).tags || [],
       group_id: device.group_id,
       location: { lat, lng, address: "" },
@@ -154,7 +154,7 @@ const EditDeviceDialog = ({
           <Edit />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90vw] h-[90vh]">
+      <DialogContent className="w-[100vw] h-[90vh] overflow-x-auto">
         <DialogHeader>
           <DialogTitle>Edit Device</DialogTitle>
         </DialogHeader>
@@ -184,18 +184,18 @@ const EditDeviceDialog = ({
         {step === 1 ? (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="deviceName">Device Name</Label>
+              <Label htmlFor="device_name">Device Name</Label>
               <Input
-                id="deviceName"
-                value={deviceData.deviceName}
+                id="device_name"
+                value={deviceData.device_name}
                 onChange={(e) => {
-                  setDeviceData({ ...deviceData, deviceName: e.target.value });
-                  if (errors.deviceName) {
-                    setErrors((prev) => ({ ...prev, deviceName: false }));
+                  setDeviceData({ ...deviceData, device_name: e.target.value });
+                  if (errors.device_name) {
+                    setErrors((prev) => ({ ...prev, device_name: false }));
                   }
                 }}
                 required
-                className={errors.deviceName ? "border-red-500" : ""}
+                className={errors.device_name ? "border-red-500" : ""}
               />
             </div>
             <div>
@@ -268,7 +268,7 @@ const EditDeviceDialog = ({
               onClick={() => handleNext()}
               className="w-full"
               disabled={
-                !deviceData.deviceName ||
+                !deviceData.device_name ||
                 !deviceData.group_id ||
                 deviceData.tags.length == 0
               }

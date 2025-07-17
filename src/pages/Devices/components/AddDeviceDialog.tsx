@@ -37,14 +37,14 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
   const [isVerified, setIsVerified] = useState(false);
   const [deviceData, setDeviceData] = useState<{
     pairingCode: string;
-    deviceName: string;
+    device_name: string;
     tags: string[];
     group_id: string | null;
     location: { lat: number; lng: number; address: string } | null;
     deviceId: string | null;
   }>({
     pairingCode: "",
-    deviceName: "",
+    device_name: "",
     tags: [],
     group_id: null,
     location: null,
@@ -52,7 +52,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
   });
   const [errors, setErrors] = useState<{
     pairingCode?: boolean;
-    deviceName?: boolean;
+    device_name?: boolean;
     group_id?: boolean;
   }>({});
 
@@ -88,7 +88,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
           const { device_name, tags, device_id } = response;
           setDeviceData((prev) => ({
             ...prev,
-            deviceName: device_name || "",
+            device_name: device_name || "",
             tags,
             deviceId: device_id,
           }));
@@ -112,14 +112,14 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
   const handleNext = async () => {
     const newErrors: {
       pairingCode?: boolean;
-      deviceName?: boolean;
+      device_name?: boolean;
       group_id?: boolean;
     } = {};
     if (!deviceData.pairingCode) {
       newErrors.pairingCode = true;
     }
-    if (!deviceData.deviceName) {
-      newErrors.deviceName = true;
+    if (!deviceData.device_name) {
+      newErrors.device_name = true;
     }
     if (!deviceData.group_id) {
       newErrors.group_id = true;
@@ -167,7 +167,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
     setOpen(false);
     setDeviceData({
       pairingCode: "",
-      deviceName: "",
+      device_name: "",
       tags: [],
       group_id: null,
       location: null,
@@ -194,7 +194,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
           <Plus className="h-4 w-4 ml-2" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90vw] h-[90vh]">
+      <DialogContent className="w-[100vw] h-[90vh] overflow-x-auto">
         <DialogHeader>
           <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
@@ -249,18 +249,18 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               </div>
             </div>
             <div>
-              <Label htmlFor="deviceName">Device Name</Label>
+              <Label htmlFor="device_name">Device Name</Label>
               <Input
-                id="deviceName"
-                value={deviceData.deviceName}
+                id="device_name"
+                value={deviceData.device_name}
                 onChange={(e) => {
-                  setDeviceData({ ...deviceData, deviceName: e.target.value });
-                  if (errors.deviceName) {
-                    setErrors((prev) => ({ ...prev, deviceName: false }));
+                  setDeviceData({ ...deviceData, device_name: e.target.value });
+                  if (errors.device_name) {
+                    setErrors((prev) => ({ ...prev, device_name: false }));
                   }
                 }}
                 required
-                className={errors.deviceName ? "border-red-500" : ""}
+                className={errors.device_name ? "border-red-500" : ""}
               />
             </div>
             <div>
@@ -333,7 +333,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               className="w-full"
               disabled={
                 !deviceData.pairingCode ||
-                !deviceData.deviceName ||
+                !deviceData.device_name ||
                 !deviceData.group_id ||
                 deviceData.tags.length <= 0
               }
