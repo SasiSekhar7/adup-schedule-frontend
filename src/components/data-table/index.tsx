@@ -38,9 +38,9 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (selectedRows: any) => void;
 }
 type filter = {
-  label: string; 
-  value: string 
-}
+  label: string;
+  value: string;
+};
 
 export function DataTable<TData, TValue>({
   columns,
@@ -86,23 +86,26 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-row items-center space-x-4">
-
-      {filters?.map((filter) => (
-        <div className="flex items-center " key={filter.value}>
-          <Input
-            placeholder={`Filter ${filter.label}...`}
-            type={filter.value ==="start_time"?"date":"text"}
-            value={(table.getColumn(`${filter.value}`)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(`${filter.value}`)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-      ))}
+        {filters?.map((filter) => (
+          <div className="flex items-center " key={filter.value}>
+            <Input
+              placeholder={`Filter ${filter.label}...`}
+              type={filter.value === "start_time" ? "date" : "text"}
+              value={
+                (table
+                  .getColumn(`${filter.value}`)
+                  ?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table
+                  .getColumn(`${filter.value}`)
+                  ?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          </div>
+        ))}
       </div>
-
-
       {/* Table Container with maxHeight */}
       <div
         className="rounded-md border overflow-auto"
@@ -116,7 +119,10 @@ export function DataTable<TData, TValue>({
                   <TableHead key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -125,17 +131,26 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -143,9 +158,12 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      
       {/* Pagination */}
-      <DataTablePagination table={table} onPaginationChange={onPaginationChange} /> {/* ✅ Pass the callback */}
+      <DataTablePagination
+        table={table}
+        onPaginationChange={onPaginationChange}
+      />{" "}
+      {/* ✅ Pass the callback */}
     </div>
   );
 }

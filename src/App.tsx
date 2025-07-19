@@ -27,7 +27,6 @@ const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
 const Users = lazy(() => import("./pages/Users"));
 
-
 // Loading Fallback Component
 
 function App() {
@@ -48,8 +47,6 @@ function App() {
                 </Suspense>
               }
             />
-
-
 
             {/* Wrap each lazy-loaded route inside Suspense */}
             <Route
@@ -108,7 +105,7 @@ function App() {
                 </Suspense>
               }
             />
-             <Route
+            <Route
               path="/schedule/placeholder"
               element={
                 <Suspense fallback={<Loading />}>
@@ -148,7 +145,7 @@ function App() {
                 </Suspense>
               }
             />
-              {/* <Route
+            {/* <Route
               path="/devices/cricket"
               element={
                 <Suspense fallback={<Loading />}>
@@ -157,7 +154,7 @@ function App() {
               }
             /> */}
 
-              <Route
+            <Route
               path="/apkVersion"
               element={
                 <Suspense fallback={<Loading />}>
@@ -202,7 +199,7 @@ function App() {
             path="/forbidden"
             element={
               <Suspense fallback={<Loading />}>
-                <NotFoundPage/>
+                <NotFoundPage />
               </Suspense>
             }
           />
