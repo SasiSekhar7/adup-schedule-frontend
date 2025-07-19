@@ -24,7 +24,6 @@ export interface Schedule {
   group_name: string;
 }
 
-
 export interface ScheduleResponse {
   schedules: Schedule[];
 }
@@ -62,29 +61,26 @@ export const columns: ColumnDef<Schedule>[] = [
   // },
   {
     accessorKey: "ad_name",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Ad Name" />
     ),
     cell: ({ row }) => row.getValue("ad_name"),
   },
   {
     accessorKey: "group_name",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Device Group" />
     ),
-    cell: ({ row }) => (<div>
-        {row.getValue("group_name")}
-
-    </div>),
+    cell: ({ row }) => <div>{row.getValue("group_name")}</div>,
   },
   {
     accessorKey: "total_duration",
     header: "Total Plays",
-    cell: ({ row }) => (row.getValue("total_duration"))
+    cell: ({ row }) => row.getValue("total_duration"),
   },
   {
     accessorKey: "start_time",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Start Time" />
     ),
     cell: ({ row }) => formatDateWithOrdinal(row.getValue("start_time")),
@@ -95,17 +91,18 @@ export const columns: ColumnDef<Schedule>[] = [
   // },
   {
     accessorKey: "updated_at",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Updated At" />
     ),
     cell: ({ row }) => formatDateWithOrdinal(row.getValue("updated_at")),
   },
   {
     accessorKey: "schedule_id",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Actions" />
     ),
-    cell: ({ row }) => <MessageCell schedule_id={row.getValue('schedule_id')} />,
+    cell: ({ row }) => (
+      <MessageCell schedule_id={row.getValue("schedule_id")} />
+    ),
   },
-  
 ];
