@@ -49,7 +49,7 @@ function Schedule() {
     if (dateRange?.from && dateRange?.to) {
       fetchData();
     }
-  }, [page, limit, dateRange]);
+  }, [limit, dateRange]);
 
   const handleDateChange = (event) => {
     setDate(event.target.value);
