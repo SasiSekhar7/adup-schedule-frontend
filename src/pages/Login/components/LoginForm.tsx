@@ -1,50 +1,52 @@
-import React, { useState } from 'react';
-import { 
-  Monitor, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
+import React, { useState } from "react";
+import {
+  Monitor,
+  Eye,
+  EyeOff,
+  ArrowRight,
   Shield,
   Users,
-  BarChart3
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+  BarChart3,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface LoginFormProps {
   className?: string;
 }
 
-export function LoginForm({ className = '' }: LoginFormProps) {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+export function LoginForm({ className = "" }: LoginFormProps) {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await fetch(`${import.meta.env.VITE_BASE_URL}/login`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-      
+
       if (!response.ok) {
-        throw new Error("Login failed");
+        let errorLog = await response.json();
+        throw new Error(errorLog?.message || "Login failed");
       }
-      
+
       const data = await response.json();
       const token = data.token;
-      
-      sessionStorage.setItem('token', token);
-      // Navigate to dashboard (you'll need to implement navigation)
-      navigate('/')
 
+      sessionStorage.setItem("token", token);
+      // Navigate to dashboard (you'll need to implement navigation)
+      navigate("/");
     } catch (error) {
+      toast.error(error?.message);
       console.log(error);
     } finally {
       setIsLoading(false);
@@ -56,16 +58,16 @@ export function LoginForm({ className = '' }: LoginFormProps) {
       {/* Left side - Hero Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')`
+            backgroundImage: `url('https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')`,
           }}
         >
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-purple-900/80 to-indigo-900/90"></div>
         </div>
-        
+
         {/* Content overlay */}
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="max-w-md">
@@ -73,9 +75,11 @@ export function LoginForm({ className = '' }: LoginFormProps) {
               Manage Your Digital Presence
             </h1>
             <p className="text-xl mb-8 text-blue-100 leading-relaxed">
-              Control indoor and outdoor displays, manage advertising content, and monitor your digital signage network from one powerful console.
+              Control indoor and outdoor displays, manage advertising content,
+              and monitor your digital signage network from one powerful
+              console.
             </p>
-            
+
             {/* Feature highlights */}
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
@@ -84,33 +88,39 @@ export function LoginForm({ className = '' }: LoginFormProps) {
                 </div>
                 <div>
                   <h3 className="font-semibold">Multi-Screen Management</h3>
-                  <p className="text-sm text-blue-100">Control hundreds of displays simultaneously</p>
+                  <p className="text-sm text-blue-100">
+                    Control hundreds of displays simultaneously
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Real-time Analytics</h3>
-                  <p className="text-sm text-blue-100">Track engagement and performance metrics</p>
+                  <p className="text-sm text-blue-100">
+                    Track engagement and performance metrics
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Enterprise Security</h3>
-                  <p className="text-sm text-blue-100">Bank-level encryption and access controls</p>
+                  <p className="text-sm text-blue-100">
+                    Bank-level encryption and access controls
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-20 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl"></div>
@@ -127,16 +137,17 @@ export function LoginForm({ className = '' }: LoginFormProps) {
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back
             </h2>
-            <p className="text-gray-600">
-              Sign in to your CMS console
-            </p>
+            <p className="text-gray-600">Sign in to your CMS console</p>
           </div>
 
           {/* Login form */}
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Email field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email address
               </label>
               <input
@@ -152,7 +163,10 @@ export function LoginForm({ className = '' }: LoginFormProps) {
 
             {/* Password field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -170,7 +184,11 @@ export function LoginForm({ className = '' }: LoginFormProps) {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-blue-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -184,7 +202,10 @@ export function LoginForm({ className = '' }: LoginFormProps) {
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   Remember me
                 </label>
               </div>
