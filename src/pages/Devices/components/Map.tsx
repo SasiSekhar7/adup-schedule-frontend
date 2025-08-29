@@ -64,12 +64,13 @@ const SearchControl = ({
 
 const Map = ({
   onLocationSelect,
+  initialPosition,
 }: {
   onLocationSelect: (pos: LatLngLiteral) => void;
 }) => {
   const [position, setPosition] = useState<LatLngLiteral>({
-    lat: 20.5937,
-    lng: 78.9629,
+    lat: initialPosition?.lat || 20.5937,
+    lng: initialPosition?.lng || 78.9629,
   });
 
   const handlePositionChange = (pos: LatLngLiteral) => {

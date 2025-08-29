@@ -132,6 +132,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import api from "@/api";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface ApiGroup {
   groupId: string;
@@ -702,7 +703,11 @@ export default function Schedule() {
             <Grid3X3 className="h-4 w-4 text-accent" />
           </div>
           <div>
-            <p className="font-medium text-foreground">{schedule.name}</p>
+            <Link to={`/ads/${schedule.id}`}>
+              <p className="font-medium text-foreground cursor-pointer">
+                {schedule.name}
+              </p>
+            </Link>
             <div className="flex items-center gap-1 mt-1">
               <Badge variant="outline" className="text-xs">
                 {schedule.type}
@@ -714,7 +719,7 @@ export default function Schedule() {
       <td className="p-4">
         <DeviceGroupsCell groups={schedule.deviceGroups} />
       </td>
-      <td className="p-4">
+      {/* <td className="p-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge
@@ -726,11 +731,11 @@ export default function Schedule() {
               {schedule.status}
             </Badge>
           </div>
-          {/* <div className="w-24">
+          <div className="w-24">
             <Progress value={schedule.progress} className="h-2" />
-          </div> */}
+          </div>
         </div>
-      </td>
+      </td> */}
       {/* SCHEDULE COLUMN - Displays duration and start date information */}
       <td className="p-4">
         {/* Duration Display Section */}
@@ -780,7 +785,7 @@ export default function Schedule() {
     <div className="flex-1 flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b border-border bg-background flex-shrink-0">
-        <div className="p-6">
+        <div className="px-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-semibold text-foreground">
@@ -802,14 +807,14 @@ export default function Schedule() {
               >
                 <List className="h-4 w-4" />
               </Button>
-              <Button
+              {/* <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setViewMode("grid")}
                 className="transition-colors"
               >
                 <Grid3X3 className="h-4 w-4" />
-              </Button>
+              </Button> */}
               <div className="relative">
                 <Button
                   variant="outline"
@@ -906,19 +911,45 @@ export default function Schedule() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-4">
-            <Input
-              placeholder="Filter Ad Name..."
-              value={filters.adName}
-              onChange={(e) => handleFilterChange("adName", e.target.value)}
-              className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
-            />
-            <Input
-              placeholder="Filter Group Name..."
-              value={filters.groupName}
-              onChange={(e) => handleFilterChange("groupName", e.target.value)}
-              className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
-            />
+          <div className="flex gap-4 justify-between">
+            <div className="flex gap-4">
+              <Input
+                placeholder="Filter Ad Name..."
+                value={filters.adName}
+                onChange={(e) => handleFilterChange("adName", e.target.value)}
+                className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
+              />
+              <Input
+                placeholder="Filter Group Name..."
+                value={filters.groupName}
+                onChange={(e) =>
+                  handleFilterChange("groupName", e.target.value)
+                }
+                className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Show:</span>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">per page</span>
+            </div>
             {/* <Select
               value={filters.status}
               onValueChange={(value) => handleFilterChange("status", value)}
@@ -953,7 +984,7 @@ export default function Schedule() {
       <div className="flex-1 overflow-auto p-6">
         {paginatedSchedules.length > 0 ? (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-medium text-foreground">
                   All Schedules
@@ -981,7 +1012,7 @@ export default function Schedule() {
                 </Select>
                 <span className="text-sm text-muted-foreground">per page</span>
               </div>
-            </div>
+            </div> */}
 
             <div className="bg-card rounded-lg border border-border overflow-hidden shadow-sm">
               <table className="w-full">
@@ -993,9 +1024,9 @@ export default function Schedule() {
                     <th className="text-left p-4 font-medium text-muted-foreground text-sm">
                       DEVICE GROUPS
                     </th>
-                    <th className="text-left p-4 font-medium text-muted-foreground text-sm">
+                    {/* <th className="text-left p-4 font-medium text-muted-foreground text-sm">
                       STATUS
-                    </th>
+                    </th> */}
                     {/* SCHEDULE Column Header - Contains duration and start date information */}
                     <th className="text-left p-4 font-medium text-muted-foreground text-sm">
                       SCHEDULE
@@ -1015,7 +1046,7 @@ export default function Schedule() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-center pt-6">
+              <div className="flex items-center justify-center pt-1">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
