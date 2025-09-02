@@ -116,7 +116,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ExternalLinkIcon,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -646,41 +648,50 @@ export default function Schedule() {
   const DeviceGroupsCell = ({ groups }: { groups: string[] }) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
-    const firstGroup = groups[0];
-    const remainingCount = groups.length - 1;
+    if (!groups || groups.length === 0) {
+      return null;
+    }
 
-    if (groups.length <= 1) {
+    if (groups.length === 1) {
       return (
         <div className="flex flex-wrap gap-1">
           <Badge variant="secondary" className="text-xs">
-            {firstGroup}
+            {groups[0]}
           </Badge>
         </div>
       );
     }
 
+    const visibleGroups = groups.slice(0, 5); // show only first 3
+    const remainingCount = groups.length - visibleGroups.length;
+
     return (
       <div className="relative">
         <div
-          className="flex flex-wrap gap-1 cursor-pointer"
+          className="flex flex-wrap gap-1 cursor-pointer max-w-60"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <Badge variant="secondary" className="text-xs">
-            {firstGroup}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            +{remainingCount}
-          </Badge>
+          {visibleGroups.map((val, index) => (
+            <Badge key={index} variant="secondary" className="text-xs">
+              {val}
+            </Badge>
+          ))}
+
+          {remainingCount > 0 && (
+            <Badge variant="outline" className="text-xs">
+              +{remainingCount}
+            </Badge>
+          )}
         </div>
 
-        {showTooltip && (
-          <div className="absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg shadow-lg p-3 z-20 min-w-[200px] animate-in fade-in-0 zoom-in-95 duration-200">
+        {showTooltip && groups.length > 5 && (
+          <div className="absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg shadow-lg p-3 z-1 min-w-[200px] animate-in fade-in-0 zoom-in-95 duration-200">
             <p className="text-xs font-medium text-popover-foreground mb-2">
               All Device Groups:
             </p>
-            <div className="space-y-1">
-              {groups.map((group, index) => (
+            <div className="space-y-1 max-h-48 overflow-auto">
+              {groups?.slice(5).map((group, index) => (
                 <div key={index} className="text-xs text-muted-foreground">
                   • {group}
                 </div>
@@ -703,13 +714,17 @@ export default function Schedule() {
             <Grid3X3 className="h-4 w-4 text-accent" />
           </div>
           <div>
-            <Link to={`/ads/${schedule.id}`}>
-              <p className="font-medium text-foreground cursor-pointer">
-                {schedule.name}
+            <Link
+              to={`/ads/${schedule.id}`}
+              className="flex items-center gap-1"
+            >
+              <p className="font-medium text-foreground cursor-pointer flex justify-center align-middle gap-1 ">
+                {schedule.name}{" "}
               </p>
+              <ExternalLinkIcon className="h-4 w-4 text-center text-blue-900 " />
             </Link>
             <div className="flex items-center gap-1 mt-1">
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className=" text-muted-foreground">
                 {schedule.type}
               </Badge>
             </div>
