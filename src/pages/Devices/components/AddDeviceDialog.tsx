@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle, Plus, XCircle } from "lucide-react";
+import { CheckCircle, Plus, XCircle, X } from "lucide-react";
 import Map from "./Map";
 
 interface DeviceGroup {
@@ -35,6 +35,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
   const [step, setStep] = useState(1);
   const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>([]);
   const [isVerified, setIsVerified] = useState(false);
+  const [currentTagInput, setCurrentTagInput] = useState("");
   const [deviceData, setDeviceData] = useState<{
     pairingCode: string;
     device_name: string;
@@ -104,6 +105,31 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       };
     }
   }, [deviceData.pairingCode]);
+
+  const handleAddTag = (tagName: string) => {
+    const trimmedTag = tagName.trim();
+    if (trimmedTag && !deviceData.tags.includes(trimmedTag)) {
+      setDeviceData({
+        ...deviceData,
+        tags: [...deviceData.tags, trimmedTag],
+      });
+    }
+    setCurrentTagInput("");
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setDeviceData({
+      ...deviceData,
+      tags: deviceData.tags.filter((tag) => tag !== tagToRemove),
+    });
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag(currentTagInput);
+    }
+  };
 
   const handleBack = () => {
     setStep(1);
@@ -175,6 +201,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
     });
     setErrors({});
     setStep(1);
+    setCurrentTagInput("");
   };
 
   return (
@@ -302,16 +329,36 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
             </div>
             <div>
               <Label htmlFor="tags">Tags</Label>
-              <Input
-                id="tags"
-                value={deviceData.tags.join(", ")}
-                onChange={(e) =>
-                  setDeviceData({
-                    ...deviceData,
-                    tags: e.target.value.split(","),
-                  })
-                }
-              />
+              <div className="space-y-2 py-1">
+                {/* Display existing tags */}
+                {deviceData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {deviceData.tags.map((tag, index) => (
+                      <div
+                        key={index}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-black-800 rounded-full text-sm"
+                      >
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Input for adding new tags */}
+                <Input
+                  id="tags"
+                  placeholder="Type a tag and press Enter to add"
+                  value={currentTagInput}
+                  onChange={(e) => setCurrentTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                />
+              </div>
             </div>
           </div>
         ) : (
@@ -323,6 +370,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                   location: { ...location, address: "" },
                 });
               }}
+              initialPosition={deviceData.location}
             />
           </div>
         )}
