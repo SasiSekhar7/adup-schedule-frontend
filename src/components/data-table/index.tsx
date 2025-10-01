@@ -36,6 +36,7 @@ interface DataTableProps<TData, TValue> {
   maxHeight?: string; // ✅ New prop
   onPaginationChange?: (page: number, pageSize: number) => void; // ✅ New prop
   onRowSelectionChange?: (selectedRows: any) => void;
+  onRowClick?: (row: TData) => void; // ✅ New prop for row click
 }
 type filter = {
   label: string;
@@ -49,6 +50,7 @@ export function DataTable<TData, TValue>({
   onPaginationChange, // ✅ Destructure the callback
   maxHeight = "80vh", // ✅ Default maxHeight
   onRowSelectionChange,
+  onRowClick, // ✅ Destructure the row click callback
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -134,6 +136,10 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onRowClick?.(row.original)}
+                  className={
+                    onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

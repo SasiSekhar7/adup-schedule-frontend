@@ -26,6 +26,7 @@ const NewCampaignPage = lazy(() => import("./pages/Campaigns/new"));
 const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
 const Users = lazy(() => import("./pages/Users"));
+const DevicePage = lazy(() => import("./pages/DevicePage"));
 
 // Loading Fallback Component
 
@@ -133,7 +134,7 @@ function App() {
               path="/devices/:device_id"
               element={
                 <Suspense fallback={<Loading />}>
-                  <Devices />
+                  <DevicePage />
                 </Suspense>
               }
             />
