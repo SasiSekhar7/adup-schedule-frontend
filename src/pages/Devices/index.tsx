@@ -1,14 +1,21 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Device, DevicesResponse, columns } from "./columns";
 import AddDeviceDialog from "./components/AddDeviceDialog";
 
 function Home() {
+  const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
+
   const fetchDta = async () => {
-    const response = await api.get<DevicesResponse>("/device/all");
+    const response: DevicesResponse = await api.get("/device/all");
     setData(response.devices);
+  };
+
+  const handleRowClick = (device: Device) => {
+    navigate(`/devices/${device.device_id}`);
   };
 
   useEffect(() => {
@@ -34,6 +41,7 @@ function Home() {
       <DataTable
         data={data}
         columns={columns(fetchDta)}
+        onRowClick={handleRowClick}
         filters={[
           { label: "Locations", value: "location" },
           // { label: "Created At", value: "created_at" },

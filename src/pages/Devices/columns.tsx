@@ -6,10 +6,10 @@ import { ColumnDef } from "@tanstack/react-table";
 // import { Checkbox } from "@components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils"; // Utility function for conditional classes
-import { addHours, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CircleX, Copy, X } from "lucide-react";
+import { CircleX, Eye } from "lucide-react";
 import api from "@/api";
 import {
   Dialog,
@@ -48,9 +48,169 @@ export interface Device {
   group_name: string;
 }
 
+export interface DeviceMetrics {
+  device_id: string;
+  timestamp: Date;
+  cpu_usage: number;
+  ram_free_mb: number;
+  storage_free_mb: number;
+  network_type: string;
+  app_version_code: number;
+}
+
+export interface DeviceTelemetry {
+  id: string;
+  device_id: string;
+  timestamp: string;
+  cpu_usage: number;
+  ram_free_mb: number;
+  storage_free_mb: number | null;
+  network_type: string | null;
+  app_version_code: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedResponse<T> {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  data: T[];
+}
+
 export interface DevicesResponse {
   devices: Device[];
 }
+
+// DevicePreviewDialog Component
+const DevicePreviewDialog = ({ device }: { device: Device }) => {
+  const [telemetry, setTelemetry] = useState<DeviceTelemetry | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const fetchLatestTelemetry = async () => {
+    if (!open) return;
+
+    setLoading(true);
+    try {
+      // Fetch only the latest telemetry entry (page=1, limit=1)
+      const response: PaginatedResponse<DeviceTelemetry> = await api.get(
+        `/device/${device.device_id}/telemetry-logs?page=1&limit=1`
+      );
+
+      // Get the latest telemetry entry
+      if (response.data && response.data.length > 0) {
+        setTelemetry(response.data[0]);
+      } else {
+        setTelemetry(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch device telemetry:", error);
+      setTelemetry(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestTelemetry();
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Eye className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Device Telemetry</DialogTitle>
+          <DialogDescription>
+            Latest telemetry data for device {device.device_id}
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-muted-foreground">
+              Loading latest telemetry...
+            </div>
+          </div>
+        ) : telemetry ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Device ID
+                </label>
+                <p className="text-sm text-gray-900">{telemetry.device_id}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Timestamp
+                </label>
+                <p className="text-sm text-gray-900">
+                  {formatDistanceToNow(new Date(telemetry.timestamp), {
+                    addSuffix: true,
+                  })}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  CPU Usage
+                </label>
+                <p className="text-sm text-gray-900">
+                  {(telemetry.cpu_usage * 100).toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  RAM Free
+                </label>
+                <p className="text-sm text-gray-900">
+                  {telemetry.ram_free_mb} MB
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Storage Free
+                </label>
+                <p className="text-sm text-gray-900">
+                  {telemetry.storage_free_mb || "N/A"}{" "}
+                  {telemetry.storage_free_mb ? "MB" : ""}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Network Type
+                </label>
+                <p className="text-sm text-gray-900">
+                  {telemetry.network_type || "N/A"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-medium text-gray-700">
+                  App Version Code
+                </label>
+                <p className="text-sm text-gray-900">
+                  {telemetry.app_version_code || "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-muted-foreground">
+              No telemetry data available
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
   {
@@ -66,12 +226,28 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
       />
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      </div>
     ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    id: "preview",
+    header: "Preview",
+    cell: ({ row }) => {
+      const device = row.original;
+      return (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DevicePreviewDialog device={device} />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -165,7 +341,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
         location.reload();
       };
       return (
-        <div className="flex">
+        <div className="flex" onClick={(e) => e.stopPropagation()}>
           <EditDeviceDialog device={device} fetchDta={fetchDta} />
           <Dialog>
             <DialogTrigger>
