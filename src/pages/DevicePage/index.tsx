@@ -621,13 +621,25 @@ function DevicePage() {
                               <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-20">
                                 {(() => {
                                   try {
+                                    // If payload is already an object, stringify it
+                                    if (typeof log.payload === "object") {
+                                      return JSON.stringify(
+                                        log.payload,
+                                        null,
+                                        2
+                                      );
+                                    }
+                                    // If payload is a string, try to parse and format it
                                     return JSON.stringify(
                                       JSON.parse(log.payload),
                                       null,
                                       2
                                     );
                                   } catch {
-                                    return log.payload;
+                                    // If all else fails, convert to string
+                                    return typeof log.payload === "string"
+                                      ? log.payload
+                                      : JSON.stringify(log.payload);
                                   }
                                 })()}
                               </pre>
