@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  X,
+} from "lucide-react";
 import api from "@/api";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -135,6 +142,67 @@ function DevicePage() {
   const [terminologyTotal, setTerminologyTotal] = useState(0);
   const [terminologyTotalPages, setTerminologyTotalPages] = useState(0);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedDevice, setEditedDevice] = useState(device);
+
+  const handleChange = (field, value) => {
+    setEditedDevice({ ...editedDevice, [field]: value });
+  };
+
+  const handleCancel = () => {
+    setEditedDevice(device);
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    handleUpdateDeviceData();
+  };
+
+  const handleUpdateDeviceData = async () => {
+    try {
+      setLoading(true);
+
+      // Collect editable fields
+      const editableFields = [
+        "device_on_time",
+        "device_off_time",
+        "device_resolution",
+        "device_orientation",
+      ];
+
+      // Compare old (device) vs new (editedDevice)
+      const updatedData = {};
+      editableFields.forEach((field) => {
+        if (editedDevice[field] !== device[field]) {
+          updatedData[field] = editedDevice[field];
+        }
+      });
+
+      // If nothing changed, skip request
+      if (Object.keys(updatedData).length === 0) {
+        console.log("No changes detected, skipping update");
+        setIsEditing(false);
+        return;
+      }
+
+      // Send only changed fields
+      const response = await api.post(
+        `/device/update/location/${device?.device_id}`,
+        updatedData
+      );
+
+      // Update local data and exit edit mode
+      // setEditedDevice(response.data);
+      setIsEditing(false);
+
+      console.log("✅ Device updated successfully:", response.data);
+    } catch (error) {
+      console.error("❌ Failed to update device data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!device_id) return;
 
@@ -145,6 +213,7 @@ function DevicePage() {
         const deviceDetailsResponse: DeviceDetailsResponse = await api.get(
           `/device/${device_id}?page=${schedulesPage}&limit=${schedulesLimit}`
         );
+        setEditedDevice(deviceDetailsResponse.device);
         setDevice(deviceDetailsResponse.device);
         setSchedules(deviceDetailsResponse.schedules.data || []);
         setSchedulesTotal(deviceDetailsResponse.schedules.total);
@@ -232,39 +301,48 @@ function DevicePage() {
 
       {/* Device Information Card - Fixed at top */}
       {device && (
-        <Card className="mb-6">
+        <Card className="mb-6 shadow-sm border border-gray-200">
           <CardHeader>
-            <CardTitle>Device Information</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              Device Overview
+            </CardTitle>
           </CardHeader>
+
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Section — Basic Info */}
+              <div className="space-y-5 bg-gray-50 p-4 rounded-xl">
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
+                  <h4 className="text-sm font-medium text-gray-500">
                     Device Name
                   </h4>
-                  <p className="text-lg">{device.device_name}</p>
+                  <p className="text-base font-semibold text-gray-900">
+                    {device.device_name}
+                  </p>
                 </div>
+
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
+                  <h4 className="text-sm font-medium text-gray-500">
                     Device ID
                   </h4>
-                  <p className="text-sm font-mono">{device.device_id}</p>
+                  <p className="text-sm font-mono text-gray-800">
+                    {device.device_id}
+                  </p>
                 </div>
+
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Android ID
-                  </h4>
-                  <p className="text-sm font-mono">{device.android_id}</p>
+                  <h4 className="text-sm font-medium text-gray-500">Group</h4>
+                  <p className="text-base font-semibold text-gray-900">
+                    {device.DeviceGroup?.name || "—"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Code: {device.DeviceGroup?.reg_code || "—"}
+                  </p>
                 </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Status
-                  </h4>
+
+                <div className="flex flex-wrap gap-2">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       device.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
@@ -272,13 +350,8 @@ function DevicePage() {
                   >
                     {device.status}
                   </span>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Registration Status
-                  </h4>
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       device.registration_status === "pending"
                         ? "bg-yellow-100 text-yellow-800"
                         : device.registration_status === "approved"
@@ -289,53 +362,207 @@ function DevicePage() {
                     {device.registration_status}
                   </span>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Device Group
-                  </h4>
-                  <p className="text-lg">{device.DeviceGroup.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Code: {device.DeviceGroup.reg_code}
-                  </p>
-                </div>
+
+                {device.tags?.length ? (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Tags</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {device.tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
-              <div className="space-y-4">
+
+              {/* Right Section — Technical Specs */}
+              <div className="relative space-y-5 bg-gray-50 p-4 rounded-xl">
+                {/* Edit Icon */}
+                <div className="absolute top-3 right-3">
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-gray-500 hover:text-gray-800"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCancel}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Grid 1 — Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Type</h4>
+                    <p className="text-sm text-gray-900 capitalize">
+                      {device.device_type}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Model</h4>
+                    <p className="text-sm text-gray-900">
+                      {device.device_model || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">OS</h4>
+                    <p className="text-sm text-gray-900 capitalize">
+                      {device.device_os || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      OS Version
+                    </h4>
+                    <p className="text-sm text-gray-900">
+                      {device.device_os_version || "—"}
+                    </p>
+                  </div>
+
+                  {/* Orientation — Editable Dropdown */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Orientation
+                    </h4>
+                    {isEditing ? (
+                      <select
+                        value={editedDevice.device_orientation || ""}
+                        onChange={(e) =>
+                          handleChange("device_orientation", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-1 text-sm text-gray-900 capitalize"
+                      >
+                        <option value="">Select orientation</option>
+                        <option value="landscape">Landscape</option>
+                        <option value="portrait">Portrait</option>
+                        <option value="auto">Auto</option>
+                      </select>
+                    ) : (
+                      <p className="text-sm text-gray-900 capitalize">
+                        {device.device_orientation}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Resolution — Editable Input */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Resolution
+                    </h4>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedDevice.device_resolution || ""}
+                        onChange={(e) =>
+                          handleChange("device_resolution", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-1 text-sm text-gray-900"
+                        placeholder="e.g. 1920x1080"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {device.device_resolution || "—"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Grid 2 — On/Off Times */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      On Time
+                    </h4>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={editedDevice.device_on_time || ""}
+                        onChange={(e) =>
+                          handleChange("device_on_time", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-1 text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {device.device_on_time}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Off Time
+                    </h4>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={editedDevice.device_off_time || ""}
+                        onChange={(e) =>
+                          handleChange("device_off_time", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-1 text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {device.device_off_time}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location */}
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
+                  <h4 className="text-sm font-medium text-gray-500">
                     Location
                   </h4>
-                  <p className="text-sm">{device.location}</p>
+                  <p className="text-sm text-gray-900">{device.location}</p>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Last Synced
-                  </h4>
-                  <p className="text-sm">
-                    {new Date(device.last_synced).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Created At
-                  </h4>
-                  <p className="text-sm">
-                    {new Date(device.created_at).toLocaleString()}
-                  </p>
-                </div>
-                {device.tags && (
+
+                {/* Timestamps */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">
-                      Tags
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Last Synced
                     </h4>
-                    <p className="text-sm">{device.tags}</p>
+                    <p className="text-xs text-gray-700">
+                      {new Date(device.last_synced).toLocaleString()}
+                    </p>
                   </div>
-                )}
-                {device.pairing_code && (
                   <div>
-                    <h4 className="font-medium text-sm text-muted-foreground">
-                      Pairing Code
+                    <h4 className="text-sm font-medium text-gray-500">
+                      Created At
                     </h4>
-                    <p className="text-sm font-mono">{device.pairing_code}</p>
+                    <p className="text-xs text-gray-700">
+                      {new Date(device.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Save / Cancel Buttons */}
+                {isEditing && (
+                  <div className="flex justify-end gap-2 pt-3">
+                    <button
+                      onClick={handleCancel}
+                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center gap-1"
+                    >
+                      <Check size={16} /> Save
+                    </button>
                   </div>
                 )}
               </div>

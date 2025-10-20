@@ -4,11 +4,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 import MessageCell from "./componets/MessageCell";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, RefreshCcw } from "lucide-react";
+import { Check, Copy, RefreshCcw, Edit } from "lucide-react";
 import api from "@/api";
 import { useState } from "react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { getRole } from "@/helpers";
+import EditGroup from "./componets/EditGroup";
 
 // Extend your Group type to include client information.
 export interface Group {
@@ -72,17 +77,17 @@ export const columns: ColumnDef<Group>[] = [
     header: "Group Name",
     cell: ({ row }) => row.getValue("name"),
   },
-    // Conditionally add the Client column for Admin users
-    {
-      id: "client",
-      header: "Client",
-      cell: ({ row }) => row.original.Client?.name || "-",
-      enableSorting: true,
-      enableHiding: true,
-      meta: {
-        isAdminOnly: true, // Custom meta to identify admin-only columns
-      },
+  // Conditionally add the Client column for Admin users
+  {
+    id: "client",
+    header: "Client",
+    cell: ({ row }) => row.original.Client?.name || "-",
+    enableSorting: true,
+    enableHiding: true,
+    meta: {
+      isAdminOnly: true, // Custom meta to identify admin-only columns
     },
+  },
   {
     accessorKey: "reg_code",
     header: "License Key",
@@ -99,8 +104,17 @@ export const columns: ColumnDef<Group>[] = [
       return (
         <div className="flex items-center gap-2">
           <span>{value}</span>
-          <Button variant="ghost" size="icon" onClick={handleCopy} className="p-1">
-            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleCopy}
+            className="p-1"
+          >
+            {copied ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <Copy size={16} />
+            )}
           </Button>
         </div>
       );
@@ -121,7 +135,10 @@ export const columns: ColumnDef<Group>[] = [
       }
       return (
         <div className="">
-          <Button onClick={() => handleRefreah(row.getValue("group_id"))} variant="ghost">
+          <Button
+            onClick={() => handleRefreah(row.getValue("group_id"))}
+            variant="ghost"
+          >
             <RefreshCcw size="sm" />
           </Button>
         </div>
@@ -134,7 +151,11 @@ export const columns: ColumnDef<Group>[] = [
     header: "Message",
     cell: ({ row }) => <MessageCell group={row.original} />,
   },
-
+  {
+    id: "action",
+    header: "Action",
+    cell: ({ row }) => <EditGroup group={row.original} />,
+  },
 ].filter((column) => {
   // Filter out admin-only columns if the user is not an admin
   const role = getRole();
