@@ -8,7 +8,7 @@ const PlaceholderEditor = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null)
+  const [file, setFile] = useState(null);
 
   const fetchImage = async () => {
     try {
@@ -22,29 +22,27 @@ const PlaceholderEditor = () => {
   };
   // Fetch the latest placeholder image URL
   useEffect(() => {
-
     fetchImage();
   }, []);
 
-
   // Handle image upload
   const handleImageUpload = async () => {
-        setUploading(true)
+    setUploading(true);
     try {
-        const fileData = new FormData();
-        if(!file) throw('No FIle')
-        fileData.append('file', file);
+      const fileData = new FormData();
+      if (!file) throw "No FIle";
+      fileData.append("file", file);
+      fileData.append("isMultipartUpload", "false");
 
-       await api.post(`/schedule/change-placeholder`, fileData)
-        fetchImage();
+      await api.post(`/schedule/change-placeholder`, fileData);
+      fetchImage();
     } catch (error) {
-    setUploading(false)
-        console.log(error);
+      setUploading(false);
+      console.log(error);
     }
-    setUploading(false)
-    console.log("Upload completed")
-
-}
+    setUploading(false);
+    console.log("Upload completed");
+  };
 
   return (
     <Card className="p-4 max-w-md mx-auto">
@@ -57,14 +55,21 @@ const PlaceholderEditor = () => {
           <img
             src={imageUrl}
             alt="Placeholder"
-            
             className="rounded-lg w-48 h-80 object-cover border"
-            />
+          />
         )}
 
-        <Input type="file" accept="image/*" onChange={(e)=>setFile(e.target.files?.[0])}/>
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0])}
+        />
 
-        <Button disabled={uploading} className="w-full" onClick={handleImageUpload}>
+        <Button
+          disabled={uploading}
+          className="w-full"
+          onClick={handleImageUpload}
+        >
           {uploading ? "Uploading..." : "Change Image"}
         </Button>
       </CardContent>
