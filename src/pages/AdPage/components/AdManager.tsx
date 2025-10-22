@@ -277,6 +277,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
       }, 3000);
     } finally {
       setIsUploading(false);
+      setFile(null);
     }
   };
   const cleanUrl = formData?.url?.split("?")[0]; // Remove query parameters
