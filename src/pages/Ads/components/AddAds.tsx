@@ -39,6 +39,112 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 };
 
+// Helper function to get file extension
+const getFileExtension = (filename: string): string => {
+  const lastDotIndex = filename.lastIndexOf(".");
+  return lastDotIndex !== -1 ? filename.substring(lastDotIndex) : "";
+};
+
+// Multipart upload function for large files
+async function uploadLargeFile(
+  file: File,
+  onProgress?: (
+    progress: number,
+    status: string,
+    speed: string,
+    timeLeft: string
+  ) => void
+) {
+  // Generate filename in the format: ad-{timestamp}{extension}
+  const fileExtension = getFileExtension(file.name);
+  const generatedFileName = `ad-${Date.now()}${fileExtension}`;
+
+  // 1️⃣ Initialize upload
+  const createResponse = await api.post("/s3/create-multipart-upload", {
+    fileName: generatedFileName,
+    fileType: file.type,
+  });
+
+  const { uploadId } = createResponse as any;
+
+  // 2️⃣ Split file into 5MB parts
+  const partSize = 5 * 1024 * 1024;
+  const partsCount = Math.ceil(file.size / partSize);
+
+  // 3️⃣ Get pre-signed URLs from backend
+  const urlsResponse = await api.post("/s3/generate-upload-urls", {
+    fileName: generatedFileName,
+    uploadId,
+    partsCount,
+  });
+
+  const { urls } = urlsResponse as any;
+
+  // 4️⃣ Upload each part directly to S3
+  const uploadedParts = [];
+  let uploadedBytes = 0;
+  const startTime = Date.now();
+
+  for (let i = 0; i < urls.length; i++) {
+    const start = i * partSize;
+    const end = Math.min(start + partSize, file.size);
+    const blobPart = file.slice(start, end);
+
+    const res = await fetch(urls[i].signedUrl, {
+      method: "PUT",
+      body: blobPart,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to upload part ${i + 1}: ${res.statusText}`);
+    }
+
+    const etag = res.headers.get("ETag")?.replace(/"/g, "");
+    if (!etag) {
+      throw new Error(`No ETag received for part ${i + 1}`);
+    }
+
+    uploadedParts.push({ ETag: etag, PartNumber: urls[i].partNumber });
+    uploadedBytes += blobPart.size;
+
+    // Calculate progress and speed
+    const progress = Math.round((uploadedBytes / file.size) * 100);
+    const elapsedTime = Date.now() - startTime;
+    const speed = uploadedBytes / (elapsedTime / 1000); // bytes per second
+    const remainingBytes = file.size - uploadedBytes;
+    const estimatedTimeLeft = remainingBytes / speed; // seconds
+
+    const speedFormatted = `${formatBytes(speed)}/s`;
+    const timeLeftFormatted =
+      estimatedTimeLeft > 0 && isFinite(estimatedTimeLeft)
+        ? `${Math.floor(estimatedTimeLeft / 60)}m ${Math.round(
+            estimatedTimeLeft % 60
+          )}s left`
+        : "calculating...";
+
+    onProgress?.(
+      progress,
+      `Uploading part ${i + 1}/${urls.length}... ${formatBytes(
+        uploadedBytes
+      )} / ${formatBytes(file.size)}`,
+      speedFormatted,
+      timeLeftFormatted
+    );
+
+    console.log(`Uploaded part ${i + 1}/${urls.length}`);
+  }
+
+  // 5️⃣ Complete upload
+  const completeResponse = await api.post("/s3/complete-multipart-upload", {
+    fileName: generatedFileName,
+    uploadId,
+    parts: uploadedParts,
+  });
+
+  console.log("✅ File uploaded successfully:", completeResponse);
+  return { response: completeResponse, url: generatedFileName };
+}
+
 interface AdToSubmit {
   client_id?: string;
   name?: string;
@@ -67,11 +173,6 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
   // Ref to the actual hidden file input element
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Refs for tracking upload speed and time
-  const lastLoadedRef = useRef(0);
-  const lastTimeRef = useRef(0);
-  const uploadStartTimeRef = useRef(0);
-
   useEffect(() => {
     const role = getRole();
     setUserRole(role);
@@ -80,8 +181,8 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const { clients } = await api.get("/ads/clients");
-        setClients(clients);
+        const response = await api.get("/ads/clients");
+        setClients((response as any).clients);
       } catch (err) {
         console.error(err);
       }
@@ -162,9 +263,6 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
     setUploadStatus("Preparing upload...");
     setUploadSpeed("0 B/s");
     setTimeLeft("calculating...");
-    lastLoadedRef.current = 0;
-    lastTimeRef.current = Date.now();
-    uploadStartTimeRef.current = Date.now();
 
     try {
       if (!file)
@@ -183,55 +281,69 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
         throw new Error("Missing Parameters. Please fill all required fields.");
       }
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("name", name);
-      formData.append("duration", duration.toString());
-      if (client_id) formData.append("client_id", client_id);
+      const fileSizeInMB = file.size / (1024 * 1024); // Convert to MB
+      const useMultipart = fileSizeInMB > 50;
 
-      await api.post("/ads/add", formData, {
-        onUploadProgress: (progressEvent: any) => {
-          const { loaded, total } = progressEvent;
-          const currentTime = Date.now();
+      let adData;
 
-          const bytesTransferred = loaded - lastLoadedRef.current;
-          const timeElapsed = currentTime - lastTimeRef.current;
+      if (useMultipart) {
+        // Use multipart upload for files > 50MB
+        setUploadStatus("Using multipart upload for large file...");
 
-          if (timeElapsed > 0) {
-            const speedBps = (bytesTransferred / timeElapsed) * 1000;
-            setUploadSpeed(`${formatBytes(speedBps)}/s`);
+        const uploadResult = await uploadLargeFile(
+          file,
+          (progress, status, speed, timeLeft) => {
+            setUploadProgress(progress);
+            setUploadStatus(status);
+            setUploadSpeed(speed);
+            setTimeLeft(timeLeft);
+          }
+        );
 
-            const bytesRemaining = total - loaded;
-            const estimatedSecondsLeft = bytesRemaining / speedBps;
+        // After successful multipart upload, create the ad record
+        setUploadStatus("Creating ad record...");
 
-            if (isFinite(estimatedSecondsLeft) && estimatedSecondsLeft > 0) {
-              const minutes = Math.floor(estimatedSecondsLeft / 60);
-              const seconds = Math.round(estimatedSecondsLeft % 60);
-              setTimeLeft(
-                `${minutes > 0 ? minutes + "m " : ""}${seconds}s left`
+        adData = {
+          name,
+          duration: duration.toString(),
+          file_url: uploadResult.url,
+          isMultipartUpload: true,
+          ...(client_id && { client_id }),
+        };
+
+        await api.post("/ads/add", adData, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      } else {
+        // Use regular FormData upload for files ≤ 50MB
+        setUploadStatus("Using regular upload for small file...");
+
+        const fileData = new FormData();
+        fileData.append("file", file);
+        fileData.append("name", name);
+        fileData.append("duration", duration.toString());
+        fileData.append("isMultipartUpload", "false");
+        if (client_id) {
+          fileData.append("client_id", client_id);
+        }
+
+        await api.post("/ads/add", fileData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const progress = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
               );
-            } else {
-              setTimeLeft("calculating...");
+              setUploadProgress(progress);
+              setUploadStatus(`Uploading... ${progress}%`);
             }
-          }
-
-          lastLoadedRef.current = loaded;
-          lastTimeRef.current = currentTime;
-
-          const percentCompleted = Math.round((loaded * 100) / total);
-          setUploadProgress(percentCompleted);
-
-          if (percentCompleted < 100) {
-            setUploadStatus(
-              `Uploading file... ${formatBytes(loaded)} / ${formatBytes(total)}`
-            );
-          } else {
-            setUploadStatus("File uploaded. Processing on server...");
-            setUploadSpeed("0 B/s");
-            setTimeLeft("Done.");
-          }
-        },
-      });
+          },
+        });
+      }
 
       setUploadStatus("Upload complete!");
       setUploadProgress(100);
@@ -454,17 +566,39 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
                 accept={ALL_ALLOWED_FILE_TYPES.join(",")} // Add accept attribute for native file dialog filtering
               />
               {file && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 text-red-500 hover:text-red-700"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent dialog from closing or drag-drop area click
-                    handleFileSelection(null); // Clear file state and input value via callback
-                  }}
-                >
-                  Remove file
-                </Button>
+                <div className="mt-2 space-y-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent dialog from closing or drag-drop area click
+                      handleFileSelection(null); // Clear file state and input value via callback
+                    }}
+                  >
+                    Remove file
+                  </Button>
+
+                  {/* File info and upload method */}
+                  <div className="text-sm text-gray-600 space-y-1 p-2 bg-gray-50 rounded">
+                    <div>File: {file.name}</div>
+                    <div>Size: {formatBytes(file.size)}</div>
+                    <div className="flex items-center gap-2">
+                      <span>Upload method:</span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          file.size > 50 * 1024 * 1024
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {file.size > 50 * 1024 * 1024
+                          ? "Multipart (>50MB)"
+                          : "Regular (≤50MB)"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
