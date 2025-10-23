@@ -140,7 +140,7 @@ const EditDeviceDialog = ({
       let payload = {
         ...deviceData,
       };
-      await api.post(`/device/update/matadata/${deviceData.deviceId}`, payload);
+      await api.post(`/device/update/metadata/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
       fetchDta();
       handleClose();

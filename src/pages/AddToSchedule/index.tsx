@@ -11,13 +11,16 @@ import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 // ✅ Data Table & Columns
 import { DataTable } from "@/components/data-table";
-import { adcolumns } from "./components/ad-columns";
-import { devicecolumns, DeviceGroup, DevicesGroupsResponse } from "./components/device-columns";
+import { adcolumns, Ad } from "./components/ad-columns";
+import {
+  devicecolumns,
+  DeviceGroup,
+  DevicesGroupsResponse,
+} from "./components/device-columns";
 
 // ✅ API & Types
 import api from "@/api";
 import { Device, DevicesResponse } from "../Devices/columns";
-import { Ad } from "../Ads/columns";
 // import DateRangePicker from 'react-date-range';
 // import { DateRangePicker } from "@/components/ui/date-range-picker";
 // import { DateRangePicker } from 'react-date-range';
@@ -50,10 +53,14 @@ function AddToSchedule() {
   const navigate = useNavigate();
 
   const [isSingleDay, setIsSingleDay] = useState(true);
-  const totalDays = isSingleDay ? 1 : (startDate && endDate ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1 : 0);
+  const totalDays = isSingleDay
+    ? 1
+    : startDate && endDate
+    ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+    : 0;
 
   const handleScheduleAd = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       if (startDate && endDate && selectedAd && selectedDevices) {
         // You can proceed with the scheduling logic here
@@ -67,14 +74,13 @@ function AddToSchedule() {
         };
         console.log(data);
         await api.post("/schedule/add", data);
-        navigate('/schedule')
-        setLoading(false)
+        navigate("/schedule");
+        setLoading(false);
       }
     } catch (error) {
-      console.error(error)
-      setLoading(false)
+      console.error(error);
+      setLoading(false);
     }
-
   };
 
   // const totalDays =
@@ -94,7 +100,9 @@ function AddToSchedule() {
 
     const fetchDevicesData = async () => {
       try {
-        const response = await api.get<DevicesGroupsResponse>("/device/fetch-groups");
+        const response = await api.get<DevicesGroupsResponse>(
+          "/device/fetch-groups"
+        );
         setDevicesData(response.groups);
       } catch (error) {
         console.error("Error fetching devices:", error);
@@ -119,7 +127,13 @@ function AddToSchedule() {
     setSelectedDevices(rows);
   }, []);
 
-  const MyDateRangePicker = ({ startDate, setStartDate, endDate, setEndDate, isSingleDay }) => {
+  const MyDateRangePicker = ({
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    isSingleDay,
+  }) => {
     return (
       <div className="flex space-x-2">
         <input
@@ -137,27 +151,29 @@ function AddToSchedule() {
           <input
             type="date"
             value={endDate ? endDate.toISOString().split("T")[0] : ""}
-            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+            onChange={(e) =>
+              setEndDate(e.target.value ? new Date(e.target.value) : null)
+            }
             className="border rounded-md px-4 py-2"
           />
         )}
       </div>
     );
   };
-  
+
   return (
-    <div > 
+    <div>
       <h1 className="text-md font-semibold mb-4 ">Ad Scheduling</h1>
 
       <div className="grid gap-6 md:grid-cols-2 max-h-[100vh]">
         {/* ✅ Select Ad */}
-      {/* <div className="col-span-2 grid grid-cols-2 gap-6 h-[60vh]"> */}
+        {/* <div className="col-span-2 grid grid-cols-2 gap-6 h-[60vh]"> */}
 
         <Card>
           {/* <CardHeader>
             <CardTitle className="text-md p-0">Select Ad</CardTitle>
           </CardHeader> */}
-      <h1 className="text-md font-semibold p-4">Select Ad</h1>
+          <h1 className="text-md font-semibold p-4">Select Ad</h1>
 
           <CardContent className="max-h-[70vh]">
             {/* <div className="h-[50vh]"> */}
@@ -168,25 +184,29 @@ function AddToSchedule() {
               filters={[{ label: "Ad Name", value: "name" }]}
               onRowSelectionChange={handleSelectedAd}
               maxHeight="40vh"
+              getRowCanSelect={(row) => {
+                const ad = row as Ad;
+                return ad.status !== "pending" && ad.status !== "processing";
+              }}
             />
             {/* </div> */}
-
           </CardContent>
         </Card>
 
         {/* ✅ Select Device */}
         <Card>
-        <h1 className="text-md font-semibold p-4">Select Group</h1>
+          <h1 className="text-md font-semibold p-4">Select Group</h1>
 
           <CardContent className="max-h-[70vh]">
-          {/* <div className="h-[30vh]"> */}
+            {/* <div className="h-[30vh]"> */}
 
             <DataTable
               data={devicesData}
               columns={devicecolumns}
               filters={[{ label: "Name", value: "name" }]}
               onRowSelectionChange={handleSelectedDevices}
-            maxHeight="40vh"/>
+              maxHeight="40vh"
+            />
             {/* </div> */}
           </CardContent>
         </Card>
@@ -194,72 +214,85 @@ function AddToSchedule() {
 
         {/* ✅ Date Range Picker */}
         <Card className="md:col-span-2">
-      <CardHeader className="flex flex-row items-center w-full">
-        <CardTitle className="text-md mx-4">Select Date</CardTitle>
+          <CardHeader className="flex flex-row items-center w-full">
+            <CardTitle className="text-md mx-4">Select Date</CardTitle>
 
-        <div className="flex items-center space-x-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={isSingleDay}
-              onChange={(e) => {
-                setIsSingleDay(e.target.checked);
-                if (e.target.checked && startDate) setEndDate(startDate);
-              }}
-            />
-            <span>Single Day</span>
-          </label>
-        </div>
-
-        <MyDateRangePicker
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          isSingleDay={isSingleDay}
-        />
-
-        <CardTitle className="text-md mx-4">Select No. of Plays per Day</CardTitle>
-
-        <Select onValueChange={setPlays}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="No. of Plays" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Plays</SelectLabel>
-              <SelectItem value="360">360</SelectItem>
-              <SelectItem value="720">720</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-
-        <div className="ml-auto space-x-4">
-          <Button
-            size="lg"
-            onClick={handleScheduleAd}
-            disabled={selectedDevices.length < 1 || !selectedAd || !startDate || !endDate}
-          >
-            Schedule Ad
-          </Button>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex">
-        <p className="text-sm text-muted-foreground flex flex-row">
-          {selectedAd?.name ? (
-            <div>
-              <span className="font-extrabold">{selectedAd.name}</span> will be scheduled for{" "}
-              <span className="font-extrabold">{plays}</span> plays per day on the{" "}
-              <span className="font-extrabold">{selectedDevices.length}</span> group(s) selected for{" "}
-              <span className="font-extrabold">{totalDays}</span> {totalDays === 1 ? "day" : "days"}.
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={isSingleDay}
+                  onChange={(e) => {
+                    setIsSingleDay(e.target.checked);
+                    if (e.target.checked && startDate) setEndDate(startDate);
+                  }}
+                />
+                <span>Single Day</span>
+              </label>
             </div>
-          ) : (
-            "No Ad Selected."
-          )}
-        </p>
-      </CardContent>
-    </Card>
+
+            <MyDateRangePicker
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              isSingleDay={isSingleDay}
+            />
+
+            <CardTitle className="text-md mx-4">
+              Select No. of Plays per Day
+            </CardTitle>
+
+            <Select onValueChange={setPlays}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="No. of Plays" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Plays</SelectLabel>
+                  <SelectItem value="360">360</SelectItem>
+                  <SelectItem value="720">720</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <div className="ml-auto space-x-4">
+              <Button
+                size="lg"
+                onClick={handleScheduleAd}
+                disabled={
+                  selectedDevices.length < 1 ||
+                  !selectedAd ||
+                  !startDate ||
+                  !endDate
+                }
+              >
+                Schedule Ad
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex">
+            <p className="text-sm text-muted-foreground flex flex-row">
+              {selectedAd?.name ? (
+                <div>
+                  <span className="font-extrabold">{selectedAd.name}</span> will
+                  be scheduled for{" "}
+                  <span className="font-extrabold">{plays}</span> plays per day
+                  on the{" "}
+                  <span className="font-extrabold">
+                    {selectedDevices.length}
+                  </span>{" "}
+                  group(s) selected for{" "}
+                  <span className="font-extrabold">{totalDays}</span>{" "}
+                  {totalDays === 1 ? "day" : "days"}.
+                </div>
+              ) : (
+                "No Ad Selected."
+              )}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
