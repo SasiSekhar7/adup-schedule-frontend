@@ -139,6 +139,7 @@ export interface AdData {
   url: string;
   duration: number;
   client_id: string;
+  status?: string;
 }
 
 interface AdManagerProps {
@@ -171,15 +172,23 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Helper function to prepare data for API calls (excludes status field)
+  const getApiData = (data: AdData) => {
+    const { status, ...apiData } = data;
+    return apiData;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      //   const result = await handleAdSubmit(formData)
-      //   if (result.success) {
-      //     router.push(`/ads/${result.ad_id}`)
-      //   } else {
-      //     console.error(result.error)
-      //   }
+      // When implementing the update API call, use getApiData to exclude status field
+      // const apiData = getApiData(formData);
+      // const result = await api.put(`/ads/update/${formData.ad_id}`, apiData);
+      // if (result.success) {
+      //   router.push(`/ads/${result.ad_id}`)
+      // } else {
+      //   console.error(result.error)
+      // }
     } catch (error) {
       console.error("Failed to submit ad", error);
     }
@@ -384,6 +393,28 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                   readOnly
                 />
               </div>
+              {formData.status && (
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <div className="mt-1">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                        formData.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : formData.status === "processing"
+                          ? "bg-blue-100 text-blue-800 border-blue-200"
+                          : formData.status === "completed"
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : formData.status === "failed"
+                          ? "bg-red-100 text-red-800 border-red-200"
+                          : "bg-gray-100 text-gray-800 border-gray-200"
+                      }`}
+                    >
+                      {formData.status}
+                    </span>
+                  </div>
+                </div>
+              )}
             </form>
           </CardContent>
           <CardFooter className="flex justify-end">
