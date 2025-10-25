@@ -40,6 +40,41 @@ const getFileExtension = (filename: string): string => {
   return lastDotIndex !== -1 ? filename.substring(lastDotIndex) : "";
 };
 
+// Single part upload function for files ≤ 50MB using signed URL
+async function uploadSingleFile(
+  file: File,
+  onProgress?: (progress: number, status: string) => void
+) {
+  // Generate filename in the format: ad-{timestamp}{extension}
+  const fileExtension = getFileExtension(file.name);
+  const generatedFileName = `ad-${Date.now()}${fileExtension}`;
+
+  // 1️⃣ Get signed URL from backend
+  onProgress?.(10, "Getting upload URL...");
+  const signedUrlResponse = await api.post("/s3/single-part-upload", {
+    fileName: generatedFileName,
+    fileType: file.type,
+  });
+
+  const { uploadUrl } = signedUrlResponse as any;
+
+  // 2️⃣ Upload file directly to S3 using signed URL
+  onProgress?.(20, "Uploading file to S3...");
+
+  await fetch(uploadUrl, {
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type,
+    },
+  });
+
+  onProgress?.(100, "Upload completed!");
+
+  console.log("✅ File uploaded successfully via signed URL");
+  return { url: generatedFileName };
+}
+
 // Multipart upload function for large files
 async function uploadLargeFile(
   file: File,
@@ -232,37 +267,30 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
           isMultipartUpload: true,
         });
       } else {
-        // Use regular FormData upload for files ≤ 50MB
-        setUploadStatus("Using regular upload for small file...");
+        // Use signed URL upload for files ≤ 50MB
+        setUploadStatus("Using signed URL upload for file...");
 
-        const fileData = new FormData();
-        fileData.append("file", file);
-        fileData.append("isMultipartUpload", "false");
+        const uploadResult = await uploadSingleFile(
+          file,
+          (progress, status) => {
+            setUploadProgress(progress);
+            setUploadStatus(status);
+          }
+        );
 
-        // Simulate progress for regular upload
-        setUploadProgress(50);
-        setUploadStatus("Uploading file...");
+        // After successful upload, update the ad record
+        setUploadStatus("Updating ad record...");
 
-        await api.post(`/ads/file/edit/${formData.ad_id}`, fileData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const progress = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setUploadProgress(progress);
-              setUploadStatus(`Uploading... ${progress}%`);
-            }
-          },
+        await api.post(`/ads/file/edit/${formData.ad_id}`, {
+          file_url: uploadResult.url,
+          isMultipartUpload: false,
         });
       }
 
       setUploadStatus("Upload completed successfully!");
       console.log(
         `Upload completed successfully using ${
-          useMultipart ? "multipart" : "regular"
+          useMultipart ? "multipart" : "signed URL"
         } method`
       );
 
@@ -454,7 +482,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                         >
                           {file.size > 50 * 1024 * 1024
                             ? "Multipart (>50MB)"
-                            : "Regular (≤50MB)"}
+                            : "Signed URL (≤50MB)"}
                         </span>
                       </div>
                     </div>
