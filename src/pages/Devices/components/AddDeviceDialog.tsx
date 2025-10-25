@@ -511,7 +511,8 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                     <SelectGroup>
                       <SelectItem value="tv">TV</SelectItem>
                       <SelectItem value="tablet">Tablet</SelectItem>
-                      <SelectItem value="phone">Phone</SelectItem>
+                      <SelectItem value="laptop">Laptop</SelectItem>
+                      <SelectItem value="mobile">Mobile</SelectItem>
                       <SelectItem value="display">Display</SelectItem>
                     </SelectGroup>
                   </SelectContent>
