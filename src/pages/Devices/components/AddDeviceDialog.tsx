@@ -99,32 +99,70 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
 
   useEffect(() => {
     setIsVerified(false);
+
     if (deviceData.pairingCode.length > 5) {
       const handler = setTimeout(async () => {
         try {
-          const response = await api.get<{
-            device_name: string;
-            tags: string[];
-            device_id: string;
-          }>(`/device/new-register/${deviceData.pairingCode}`);
-          console.log("Device details:", response);
-          const { device_name, tags, device_id } = response as any;
+          const response = await api.get(
+            `/device/new-register/${deviceData.pairingCode}`
+          );
+          const data = (response as any) || {};
+
+          console.log("Device details:", data);
+          console.log("Device metadata fields:", {
+            android_id: data.android_id,
+            device_model: data.device_model,
+            device_os: data.device_os,
+            device_os_version: data.device_os_version,
+            device_resolution: data.device_resolution,
+            device_type: data.device_type,
+          });
+
+          const {
+            device_name,
+            tags,
+            device_id,
+            android_id,
+            device_model,
+            device_off_time,
+            device_on_time,
+            device_orientation,
+            device_os,
+            device_os_version,
+            device_resolution,
+            device_type,
+            registration_status,
+            status,
+          } = data;
+
+          // ✅ Safely update device data
           setDeviceData((prev) => ({
             ...prev,
-            device_name: device_name || "",
-            tags,
-            deviceId: device_id,
+            device_name: device_name ?? "",
+            tags: tags ?? [],
+            deviceId: device_id ?? prev.deviceId,
+            android_id: android_id ?? prev.android_id,
+            device_model: device_model ?? prev.device_model,
+            device_off_time: device_off_time ?? prev.device_off_time,
+            device_on_time: device_on_time ?? prev.device_on_time,
+            device_orientation: device_orientation ?? prev.device_orientation,
+            device_os: device_os ?? prev.device_os,
+            device_os_version: device_os_version ?? prev.device_os_version,
+            device_resolution: device_resolution ?? prev.device_resolution,
+            device_type: device_type ?? prev.device_type,
+            registration_status:
+              registration_status ?? prev.registration_status,
+            status: status ?? prev.status,
           }));
+
           setIsVerified(true);
         } catch (error) {
-          console.error("Failed to fetch device details", error);
+          console.error("❌ Failed to fetch device details:", error);
           setIsVerified(false);
         }
       }, 500);
 
-      return () => {
-        clearTimeout(handler);
-      };
+      return () => clearTimeout(handler);
     }
   }, [deviceData.pairingCode]);
 
