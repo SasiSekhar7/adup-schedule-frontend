@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Download,
   Pencil,
   X,
 } from "lucide-react";
@@ -12,6 +13,16 @@ import api from "@/api";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -145,6 +156,13 @@ function DevicePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDevice, setEditedDevice] = useState(device);
 
+  // Export dialog state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportFilter, setExportFilter] = useState("today");
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleChange = (field, value) => {
     setEditedDevice({ ...editedDevice, [field]: value });
   };
@@ -200,6 +218,81 @@ function DevicePage() {
       console.error("❌ Failed to update device data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Export function
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+
+      let url = "device/proof-of-play/export";
+      const params = new URLSearchParams();
+
+      // Handle different filter types
+      if (
+        exportFilter === "today" ||
+        exportFilter === "yesterday" ||
+        exportFilter === "full"
+      ) {
+        params.append("filter", exportFilter);
+      } else if (exportFilter === "date_range") {
+        // Date range export
+        if (exportStartDate) params.append("start_date", exportStartDate);
+        if (exportEndDate) params.append("end_date", exportEndDate);
+      }
+
+      // Always add the current device_id since it's mandatory
+      if (device_id) {
+        params.append("device_id", device_id);
+      }
+
+      // Build final URL
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      // Make API call to download file
+      const response = await api.get(url, {
+        responseType: "blob",
+      });
+
+      // Create download link
+      const blob = new Blob([response as any], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Generate filename based on filter
+      let filename = "proof-of-play-export";
+      if (exportFilter === "today") filename += "-today";
+      else if (exportFilter === "yesterday") filename += "-yesterday";
+      else if (exportFilter === "full") filename += "-full";
+      else if (exportFilter === "date_range")
+        filename += `-${exportStartDate}-to-${exportEndDate}`;
+
+      if (device_id) filename += `-device-${device_id}`;
+      filename += ".xlsx";
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      setExportDialogOpen(false);
+
+      // Reset form
+      setExportFilter("today");
+      setExportStartDate("");
+      setExportEndDate("");
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -692,6 +785,106 @@ function DevicePage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Proof of Play Log</CardTitle>
               <div className="flex items-center gap-2">
+                <Dialog
+                  open={exportDialogOpen}
+                  onOpenChange={setExportDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Export Proof of Play Data</DialogTitle>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        Exporting data for:{" "}
+                        <span className="font-medium text-foreground">
+                          {device?.device_name || "Unknown Device"}
+                        </span>
+                      </div>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="filter">Export Filter</Label>
+                        <Select
+                          value={exportFilter}
+                          onValueChange={setExportFilter}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select filter type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="today">Today's Data</SelectItem>
+                            <SelectItem value="yesterday">
+                              Yesterday's Data
+                            </SelectItem>
+                            <SelectItem value="full">
+                              All Historical Data
+                            </SelectItem>
+                            <SelectItem value="date_range">
+                              Custom Date Range
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {exportFilter === "date_range" && (
+                        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="text-sm font-medium">
+                            Date Range Selection
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="start_date">Start Date</Label>
+                              <Input
+                                id="start_date"
+                                type="date"
+                                value={exportStartDate}
+                                onChange={(e) =>
+                                  setExportStartDate(e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="end_date">End Date</Label>
+                              <Input
+                                id="end_date"
+                                type="date"
+                                value={exportEndDate}
+                                onChange={(e) =>
+                                  setExportEndDate(e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setExportDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleExport}
+                        disabled={
+                          isExporting ||
+                          (exportFilter === "date_range" &&
+                            (!exportStartDate || !exportEndDate))
+                        }
+                      >
+                        {isExporting ? "Exporting..." : "Export"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
                 <Select
                   value={proofOfPlayLimit.toString()}
                   onValueChange={(value) => {
