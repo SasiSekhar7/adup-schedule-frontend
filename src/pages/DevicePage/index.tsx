@@ -156,12 +156,29 @@ function DevicePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedDevice, setEditedDevice] = useState(device);
 
-  // Export dialog state
+  // Export dialog state for Proof of Play
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFilter, setExportFilter] = useState("today");
   const [exportStartDate, setExportStartDate] = useState("");
   const [exportEndDate, setExportEndDate] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+
+  // Export dialog state for Event Logs
+  const [eventLogsExportDialogOpen, setEventLogsExportDialogOpen] =
+    useState(false);
+  const [eventLogsExportFilter, setEventLogsExportFilter] = useState("today");
+  const [eventLogsExportStartDate, setEventLogsExportStartDate] = useState("");
+  const [eventLogsExportEndDate, setEventLogsExportEndDate] = useState("");
+  const [isEventLogsExporting, setIsEventLogsExporting] = useState(false);
+
+  // Export state for Full Device Details
+  const [fullDeviceExportDialogOpen, setFullDeviceExportDialogOpen] =
+    useState(false);
+  const [fullDeviceExportFilter, setFullDeviceExportFilter] = useState("today");
+  const [fullDeviceExportStartDate, setFullDeviceExportStartDate] =
+    useState("");
+  const [fullDeviceExportEndDate, setFullDeviceExportEndDate] = useState("");
+  const [isFullDeviceExporting, setIsFullDeviceExporting] = useState(false);
 
   const handleChange = (field, value) => {
     setEditedDevice({ ...editedDevice, [field]: value });
@@ -296,6 +313,158 @@ function DevicePage() {
     }
   };
 
+  // Handle Event Logs export
+  const handleEventLogsExport = async () => {
+    try {
+      setIsEventLogsExporting(true);
+
+      let url = "/device/event-logs/export";
+      const params = new URLSearchParams();
+
+      // Handle different filter types
+      if (
+        eventLogsExportFilter === "today" ||
+        eventLogsExportFilter === "yesterday" ||
+        eventLogsExportFilter === "full"
+      ) {
+        params.append("filter", eventLogsExportFilter);
+      } else if (eventLogsExportFilter === "date_range") {
+        // Date range export
+        if (eventLogsExportStartDate)
+          params.append("start_date", eventLogsExportStartDate);
+        if (eventLogsExportEndDate)
+          params.append("end_date", eventLogsExportEndDate);
+      }
+
+      // Always add the current device_id since it's mandatory
+      if (device_id) {
+        params.append("device_id", device_id);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await api.get(url, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response as any], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Generate filename based on filter
+      let filename = "event-logs-export";
+      if (eventLogsExportFilter === "today") filename += "-today";
+      else if (eventLogsExportFilter === "yesterday") filename += "-yesterday";
+      else if (eventLogsExportFilter === "full") filename += "-full";
+      else if (eventLogsExportFilter === "date_range")
+        filename += `-${eventLogsExportStartDate}-to-${eventLogsExportEndDate}`;
+
+      if (device_id) filename += `-device-${device_id}`;
+      filename += ".xlsx";
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      setEventLogsExportDialogOpen(false);
+
+      // Reset form
+      setEventLogsExportFilter("today");
+      setEventLogsExportStartDate("");
+      setEventLogsExportEndDate("");
+    } catch (error) {
+      console.error("Event Logs export failed:", error);
+      alert("Event Logs export failed. Please try again.");
+    } finally {
+      setIsEventLogsExporting(false);
+    }
+  };
+
+  // Handle Full Device Details export
+  const handleFullDeviceExport = async () => {
+    try {
+      setIsFullDeviceExporting(true);
+
+      let url = `/device/${device_id}/export-full-details`;
+      const params = new URLSearchParams();
+
+      // Handle different filter types
+      if (
+        fullDeviceExportFilter === "today" ||
+        fullDeviceExportFilter === "yesterday" ||
+        fullDeviceExportFilter === "week" ||
+        fullDeviceExportFilter === "month" ||
+        fullDeviceExportFilter === "year" ||
+        fullDeviceExportFilter === "all"
+      ) {
+        params.append("filter", fullDeviceExportFilter);
+      } else if (fullDeviceExportFilter === "date_range") {
+        // Date range export
+        if (fullDeviceExportStartDate)
+          params.append("start_date", fullDeviceExportStartDate);
+        if (fullDeviceExportEndDate)
+          params.append("end_date", fullDeviceExportEndDate);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await api.get(url, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response as any], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Generate filename based on filter
+      let filename = "full-device-details";
+      if (fullDeviceExportFilter === "today") filename += "-today";
+      else if (fullDeviceExportFilter === "yesterday") filename += "-yesterday";
+      else if (fullDeviceExportFilter === "week") filename += "-week";
+      else if (fullDeviceExportFilter === "month") filename += "-month";
+      else if (fullDeviceExportFilter === "year") filename += "-year";
+      else if (fullDeviceExportFilter === "all") filename += "-all";
+      else if (fullDeviceExportFilter === "date_range")
+        filename += `-${fullDeviceExportStartDate}-to-${fullDeviceExportEndDate}`;
+
+      const deviceName = device?.device_name || "unknown-device";
+      const sanitizedDeviceName = deviceName.replace(/[^a-zA-Z0-9-_]/g, "-");
+      filename += `-${sanitizedDeviceName}.xlsx`;
+
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      setFullDeviceExportDialogOpen(false);
+
+      // Reset form
+      setFullDeviceExportFilter("today");
+      setFullDeviceExportStartDate("");
+      setFullDeviceExportEndDate("");
+
+      console.log("✅ Full device details exported successfully");
+    } catch (error) {
+      console.error("Full device details export failed:", error);
+      alert("Full device details export failed. Please try again.");
+    } finally {
+      setIsFullDeviceExporting(false);
+    }
+  };
+
   useEffect(() => {
     if (!device_id) return;
 
@@ -381,7 +550,7 @@ function DevicePage() {
   return (
     <div className="container mx-auto p-1">
       {/* Header */}
-      <div className="flex items-center mb-1">
+      <div className="flex items-center justify-between mb-1">
         <Button
           variant="ghost"
           onClick={() => navigate("/devices")}
@@ -390,6 +559,104 @@ function DevicePage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Devices
         </Button>
+
+        {/* Global Export Button */}
+        <Dialog
+          open={fullDeviceExportDialogOpen}
+          onOpenChange={setFullDeviceExportDialogOpen}
+        >
+          <DialogTrigger asChild>
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
+              <Download className="w-4 h-4 mr-2" />
+              Export Full Device Details
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Export Full Device Details</DialogTitle>
+              <div className="text-sm text-muted-foreground mt-2">
+                Exporting comprehensive data for:{" "}
+                <span className="font-medium text-foreground">
+                  {device?.device_name || "Unknown Device"}
+                </span>
+              </div>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullDeviceFilter">Export Filter</Label>
+                <Select
+                  value={fullDeviceExportFilter}
+                  onValueChange={setFullDeviceExportFilter}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select filter type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="today">Today's Data</SelectItem>
+                    <SelectItem value="yesterday">Yesterday's Data</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
+                    <SelectItem value="all">All Historical Data</SelectItem>
+                    <SelectItem value="date_range">
+                      Custom Date Range
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {fullDeviceExportFilter === "date_range" && (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-medium">Date Range Selection</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullDeviceStartDate">Start Date</Label>
+                      <Input
+                        id="fullDeviceStartDate"
+                        type="date"
+                        value={fullDeviceExportStartDate}
+                        onChange={(e) =>
+                          setFullDeviceExportStartDate(e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullDeviceEndDate">End Date</Label>
+                      <Input
+                        id="fullDeviceEndDate"
+                        type="date"
+                        value={fullDeviceExportEndDate}
+                        onChange={(e) =>
+                          setFullDeviceExportEndDate(e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setFullDeviceExportDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleFullDeviceExport}
+                disabled={
+                  isFullDeviceExporting ||
+                  (fullDeviceExportFilter === "date_range" &&
+                    (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
+                }
+              >
+                {isFullDeviceExporting ? "Exporting..." : "Export"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Device Information Card - Fixed at top */}
@@ -992,6 +1259,108 @@ function DevicePage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Device Event Log</CardTitle>
               <div className="flex items-center gap-2">
+                <Dialog
+                  open={eventLogsExportDialogOpen}
+                  onOpenChange={setEventLogsExportDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Export Event Logs Data</DialogTitle>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        Exporting data for:{" "}
+                        <span className="font-medium text-foreground">
+                          {device?.device_name || "Unknown Device"}
+                        </span>
+                      </div>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="eventLogsFilter">Export Filter</Label>
+                        <Select
+                          value={eventLogsExportFilter}
+                          onValueChange={setEventLogsExportFilter}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select filter type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="today">Today's Data</SelectItem>
+                            <SelectItem value="yesterday">
+                              Yesterday's Data
+                            </SelectItem>
+                            <SelectItem value="full">
+                              All Historical Data
+                            </SelectItem>
+                            <SelectItem value="date_range">
+                              Custom Date Range
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {eventLogsExportFilter === "date_range" && (
+                        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="text-sm font-medium">
+                            Date Range Selection
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="eventLogsStartDate">
+                                Start Date
+                              </Label>
+                              <Input
+                                id="eventLogsStartDate"
+                                type="date"
+                                value={eventLogsExportStartDate}
+                                onChange={(e) =>
+                                  setEventLogsExportStartDate(e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="eventLogsEndDate">End Date</Label>
+                              <Input
+                                id="eventLogsEndDate"
+                                type="date"
+                                value={eventLogsExportEndDate}
+                                onChange={(e) =>
+                                  setEventLogsExportEndDate(e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEventLogsExportDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleEventLogsExport}
+                        disabled={
+                          isEventLogsExporting ||
+                          (eventLogsExportFilter === "date_range" &&
+                            (!eventLogsExportStartDate ||
+                              !eventLogsExportEndDate))
+                        }
+                      >
+                        {isEventLogsExporting ? "Exporting..." : "Export"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 <Select
                   value={eventLogsLimit.toString()}
                   onValueChange={(value) => {

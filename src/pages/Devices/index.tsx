@@ -44,6 +44,7 @@ function Home() {
         onRowClick={handleRowClick}
         filters={[
           { label: "Locations", value: "location" },
+          { label: "Device ID", value: "device_id" },
           // { label: "Created At", value: "created_at" },
           { label: "Group Name", value: "group_name" },
           { label: "Device Name", value: "device_name" },
