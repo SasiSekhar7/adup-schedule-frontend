@@ -138,7 +138,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
           // ✅ Safely update device data
           setDeviceData((prev) => ({
             ...prev,
-            device_name: device_name ?? "",
+            device_name: device_name ?? prev.device_name,
             tags: tags ?? [],
             deviceId: device_id ?? prev.deviceId,
             android_id: android_id ?? prev.android_id,
@@ -220,6 +220,14 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       toast.error("Invalid pairing code.");
       return; // Exit the function early if not verified
     }
+
+    let payload = {
+      device_name: deviceData.device_name,
+      tags: deviceData.tags,
+      group_id: deviceData.group_id,
+    };
+
+    await api.post(`device/update/${deviceData.deviceId}`, payload);
 
     // Step 1 -> Step 2: No API call, just validation and move to next step
     setStep(2);
