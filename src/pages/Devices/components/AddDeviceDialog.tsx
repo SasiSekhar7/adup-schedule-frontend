@@ -243,19 +243,27 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       return;
     }
     try {
-      // Step 2: Save group_id and location (mandatory fields)
+      // Final Step: Save all device data including location, group, type, and orientation
       let payload = {
         group_id: deviceData.group_id,
         location: deviceData.location,
+        device_orientation: deviceData.device_orientation,
+        device_resolution: deviceData.device_resolution,
+        device_type: deviceData.device_type,
       };
       await api.post(`/device/update/location/${deviceData.deviceId}`, payload);
-      setStep(3);
+      toast.success("Device saved successfully!");
+      fetchDta();
+      handleClose();
+      setStep(1);
     } catch (error) {
-      console.error("Failed to save device location", error);
-      toast.error("Failed to save device location.");
+      console.error("Failed to save device", error);
+      toast.error("Failed to save device.");
     }
   };
 
+  // Step 3 functionality commented out for later use
+  /*
   const handleSave = async () => {
     try {
       // Step 3: Save only editable metadata
@@ -276,6 +284,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       toast.error("Failed to save device configuration.");
     }
   };
+  */
 
   const handleClose = () => {
     setOpen(false);
@@ -333,7 +342,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
             >
               1
             </div>
-            <span>Device Info</span>
+            <span>Device Info & Settings</span>
           </div>
           <div className="flex-1 h-px bg-gray-200"></div>
           <div className="flex items-center space-x-2">
@@ -346,6 +355,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
             </div>
             <span>Location</span>
           </div>
+          {/* Step 3 commented out for later use
           <div className="flex-1 h-px bg-gray-200"></div>
           <div className="flex items-center space-x-2">
             <div
@@ -357,6 +367,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
             </div>
             <span>Configuration</span>
           </div>
+          */}
         </div>
         {step === 1 ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -470,6 +481,53 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                 />
               </div>
             </div>
+
+            {/* Device Type and Orientation */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="device_type">Device Type</Label>
+                <Select
+                  value={deviceData.device_type}
+                  onValueChange={(value) =>
+                    setDeviceData({ ...deviceData, device_type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select device type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="tv">TV</SelectItem>
+                      <SelectItem value="tablet">Tablet</SelectItem>
+                      <SelectItem value="laptop">Laptop</SelectItem>
+                      <SelectItem value="mobile">Mobile</SelectItem>
+                      <SelectItem value="display">Display</SelectItem>
+                      <SelectItem value="signage">Signage</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="device_orientation">Device Orientation</Label>
+                <Select
+                  value={deviceData.device_orientation}
+                  onValueChange={(value) =>
+                    setDeviceData({ ...deviceData, device_orientation: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select orientation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="portrait">Portrait</SelectItem>
+                      <SelectItem value="landscape">Landscape</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         ) : step === 2 ? (
           <div className="h-full">
@@ -482,7 +540,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               }}
             />
           </div>
-        ) : (
+        ) : step === 3 ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             {/* Additional Device Fields - Step 3 */}
             <div className="grid grid-cols-2 gap-4">
@@ -638,7 +696,8 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
+
         <DialogFooter className="mt-4">
           {step === 1 ? (
             <Button
@@ -659,23 +718,10 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                 Back
               </Button>
               <Button onClick={handleLocationSave} className="w-1/2">
-                Next
+                Save Device
               </Button>
             </div>
-          ) : (
-            <div className="flex w-full space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setStep(2)}
-                className="w-1/2"
-              >
-                Back
-              </Button>
-              <Button onClick={handleSave} className="w-1/2">
-                Save
-              </Button>
-            </div>
-          )}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

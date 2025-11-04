@@ -652,13 +652,43 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
             <div className="grid gap-2">
               <Label htmlFor="duration">Duration (seconds)</Label>
-              <Input
-                id="duration"
-                type="number"
-                value={ad.duration}
-                readOnly
-                className="bg-gray-100 cursor-not-allowed"
-              />
+              {file && ALLOWED_IMAGE_TYPES.includes(file.type) ? (
+                // Dropdown for image files
+                <Select
+                  value={ad.duration?.toString() || "10"}
+                  onValueChange={(value) =>
+                    setAd((prev) => ({
+                      ...prev,
+                      duration: parseInt(value) || 10,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 seconds</SelectItem>
+                    <SelectItem value="20">20 seconds</SelectItem>
+                    <SelectItem value="30">30 seconds</SelectItem>
+                    <SelectItem value="45">45 seconds</SelectItem>
+                    <SelectItem value="60">60 seconds</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                // Read-only input for video files or when no file is selected
+                <Input
+                  id="duration"
+                  type="number"
+                  value={ad.duration}
+                  readOnly
+                  className="bg-gray-100 cursor-not-allowed"
+                  placeholder={
+                    file && ALLOWED_VIDEO_TYPES.includes(file.type)
+                      ? "Auto-detected from video"
+                      : "Select a file first"
+                  }
+                />
+              )}
             </div>
 
             {error && (
