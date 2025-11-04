@@ -743,7 +743,7 @@ function DevicePage() {
               {/* Right Section — Technical Specs */}
               <div className="relative space-y-5 bg-gray-50 p-4 rounded-xl">
                 {/* Edit Icon */}
-                <div className="absolute top-3 right-3">
+                {/* <div className="absolute top-3 right-3">
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
@@ -759,7 +759,7 @@ function DevicePage() {
                       <X size={18} />
                     </button>
                   )}
-                </div>
+                </div> */}
 
                 {/* Grid 1 — Basic Info */}
                 <div className="grid grid-cols-2 gap-4">
