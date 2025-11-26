@@ -16,12 +16,14 @@ import api from "@/api";
 import { Edit } from "lucide-react";
 
 const EditGroup = ({ group }: { group: Group }) => {
-  const { group_id, name, rcs_enabled, placeholder_enabled } = group;
+  const { group_id, name, rcs_enabled, placeholder_enabled, logo_enabled } =
+    group;
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [groupName, setGroupName] = useState(name || "");
   const [rcsEnable, setRcsEnable] = useState(rcs_enabled || false);
+  const [logoEnabled, setLogoEnabled] = useState(logo_enabled || false);
   const [placeholderEnabled, setplaceholderEnabled] = useState(
     placeholder_enabled || false
   );
@@ -33,6 +35,7 @@ const EditGroup = ({ group }: { group: Group }) => {
         name: groupName,
         rcs_enabled: rcsEnable,
         placeholder_enabled: placeholderEnabled,
+        logo_enabled: logoEnabled,
       });
 
       setOpen(false);
@@ -67,6 +70,14 @@ const EditGroup = ({ group }: { group: Group }) => {
                 value={groupName}
                 // onChange={(e) => setGroupName(e.target.value)}
                 placeholder="Enter group name"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="logo">Logo Enable</Label>
+              <Switch
+                id="logo"
+                checked={logoEnabled}
+                onCheckedChange={setLogoEnabled}
               />
             </div>
 
