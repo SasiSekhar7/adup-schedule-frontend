@@ -800,20 +800,20 @@ export default function Schedule() {
     <div className="flex-1 flex flex-col h-full min-h-0">
       {/* Header */}
       <div className="border-b border-border bg-background flex-shrink-0">
-        <div className="px-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-4 md:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">
+              <h1 className="text-xl md:text-2xl font-semibold text-foreground">
                 Schedules
               </h1>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <Users className="h-4 w-4" />
-                <span>
+                <span className="text-xs sm:text-sm">
                   {filteredSchedules.length} scheduled items across all devices
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="sm"
@@ -821,6 +821,7 @@ export default function Schedule() {
                 className="transition-colors"
               >
                 <List className="h-4 w-4" />
+                <span className="hidden sm:inline ml-2">List</span>
               </Button>
               {/* <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
@@ -835,15 +836,16 @@ export default function Schedule() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowDatePicker(!showDatePicker)}
-                  className="transition-colors hover:bg-accent/10"
+                  className="transition-colors hover:bg-accent/10 text-xs sm:text-sm"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {selectedDate}
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">{selectedDate}</span>
+                  <span className="sm:hidden">Date</span>
+                  <ChevronDown className="h-4 w-4 ml-1 sm:ml-2" />
                 </Button>
                 {showDatePicker && (
                   <div
-                    className="absolute top-full mt-2 right-0 bg-popover border border-border rounded-lg shadow-lg p-4 z-50 min-w-[300px] animate-in fade-in-0 zoom-in-95 duration-200"
+                    className="absolute top-full mt-2 right-0 sm:right-0 left-0 sm:left-auto bg-popover border border-border rounded-lg shadow-lg p-4 z-50 w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[300px] animate-in fade-in-0 zoom-in-95 duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <p className="text-sm font-medium text-popover-foreground mb-3">
@@ -926,13 +928,13 @@ export default function Schedule() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-4 justify-between">
-            <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 sm:justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <Input
                 placeholder="Filter Ad Name..."
                 value={filters.adName}
                 onChange={(e) => handleFilterChange("adName", e.target.value)}
-                className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
+                className="w-full sm:max-w-xs transition-colors focus:ring-2 focus:ring-accent"
               />
               <Input
                 placeholder="Filter Group Name..."
@@ -940,11 +942,11 @@ export default function Schedule() {
                 onChange={(e) =>
                   handleFilterChange("groupName", e.target.value)
                 }
-                className="max-w-xs transition-colors focus:ring-2 focus:ring-accent"
+                className="w-full sm:max-w-xs transition-colors focus:ring-2 focus:ring-accent"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-between sm:justify-end">
               <span className="text-sm text-muted-foreground">Show:</span>
               <Select
                 value={itemsPerPage.toString()}
@@ -953,7 +955,7 @@ export default function Schedule() {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-20">
+                <SelectTrigger className="w-16 sm:w-20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -996,7 +998,7 @@ export default function Schedule() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 md:p-6">
         {paginatedSchedules.length > 0 ? (
           <div className="space-y-6">
             {/* <div className="flex items-center justify-between">
@@ -1029,7 +1031,8 @@ export default function Schedule() {
               </div>
             </div> */}
 
-            <div className="bg-card rounded-lg border border-border overflow-hidden shadow-sm">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-card rounded-lg border border-border overflow-hidden shadow-sm">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -1060,9 +1063,74 @@ export default function Schedule() {
               </table>
             </div>
 
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {paginatedSchedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className="bg-card rounded-lg border border-border p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-8 h-8 bg-accent/10 rounded flex items-center justify-center flex-shrink-0">
+                        <Grid3X3 className="h-4 w-4 text-accent" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to={`/ads/${schedule.id}`}
+                          className="flex items-center gap-1"
+                        >
+                          <p className="font-medium text-foreground cursor-pointer flex items-center gap-1 truncate">
+                            {schedule.name}
+                            <ExternalLinkIcon className="h-4 w-4 text-blue-900 flex-shrink-0" />
+                          </p>
+                        </Link>
+                        <Badge
+                          variant="outline"
+                          className="text-muted-foreground mt-1"
+                        >
+                          {schedule.type}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDeleteModal(schedule)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        DEVICE GROUPS
+                      </p>
+                      <DeviceGroupsCell groups={schedule.deviceGroups} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        SCHEDULE
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{schedule.duration}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {schedule.startDate}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {totalPages > 1 && (
               <div className="flex items-center justify-center pt-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1071,32 +1139,49 @@ export default function Schedule() {
                     className="transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      let page;
-                      if (totalPages <= 7) {
-                        page = i + 1;
-                      } else if (currentPage <= 4) {
-                        page = i + 1;
-                      } else if (currentPage >= totalPages - 3) {
-                        page = totalPages - 6 + i;
-                      } else {
-                        page = currentPage - 3 + i;
+                    {Array.from(
+                      {
+                        length: Math.min(
+                          totalPages,
+                          window.innerWidth < 640 ? 3 : 7
+                        ),
+                      },
+                      (_, i) => {
+                        let page;
+                        const maxPages = window.innerWidth < 640 ? 3 : 7;
+                        if (totalPages <= maxPages) {
+                          page = i + 1;
+                        } else if (
+                          currentPage <=
+                          Math.floor(maxPages / 2) + 1
+                        ) {
+                          page = i + 1;
+                        } else if (
+                          currentPage >=
+                          totalPages - Math.floor(maxPages / 2)
+                        ) {
+                          page = totalPages - maxPages + 1 + i;
+                        } else {
+                          page = currentPage - Math.floor(maxPages / 2) + i;
+                        }
+                        return (
+                          <Button
+                            key={page}
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="w-8 h-8 p-0 transition-colors text-xs"
+                          >
+                            {page}
+                          </Button>
+                        );
                       }
-                      return (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className="w-8 h-8 p-0 transition-colors"
-                        >
-                          {page}
-                        </Button>
-                      );
-                    })}
+                    )}
                   </div>
                   <Button
                     variant="outline"
@@ -1105,7 +1190,7 @@ export default function Schedule() {
                     disabled={currentPage === totalPages}
                     className="transition-colors"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -1132,7 +1217,7 @@ export default function Schedule() {
         >
           <div className="bg-popover rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-popover z-10">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-border sticky top-0 bg-popover z-10">
               <h2 className="text-lg font-semibold text-popover-foreground">
                 Delete Scheduled Ad
               </h2>
@@ -1147,7 +1232,7 @@ export default function Schedule() {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-6">
               <div>
                 <Label className="text-sm font-medium text-popover-foreground mb-3 block">
                   Select Device Group:
@@ -1318,12 +1403,12 @@ export default function Schedule() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-border sticky bottom-0 bg-popover">
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 p-4 md:p-6 border-t border-border sticky bottom-0 bg-popover">
               <Button
                 variant="outline"
                 onClick={closeDeleteModal}
                 disabled={isDeleting}
-                className="transition-colors hover:bg-muted/50 bg-transparent"
+                className="w-full sm:w-auto transition-colors hover:bg-muted/50 bg-transparent"
               >
                 Cancel
               </Button>
@@ -1336,7 +1421,7 @@ export default function Schedule() {
                   (timeRange === "custom" &&
                     (!customStartDate || !customEndDate))
                 }
-                className="transition-colors"
+                className="w-full sm:w-auto transition-colors"
               >
                 {isDeleting ? "Deleting..." : "Delete Schedule"}
               </Button>

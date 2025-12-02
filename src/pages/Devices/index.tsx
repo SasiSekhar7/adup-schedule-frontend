@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Device, DevicesResponse, columns } from "./columns";
 import AddDeviceDialog from "./components/AddDeviceDialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 function Home() {
   const navigate = useNavigate();
@@ -23,33 +24,42 @@ function Home() {
   }, []);
 
   return (
-    <div className="">
-      <div className="flex items-center w-full mb-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
-          <p className="text-md font-semibold ">Devices</p>
+          <p className="text-lg md:text-xl font-semibold">Devices</p>
           <p className="text-sm text-muted-foreground">
-            list of all android devices
+            List of all android devices
           </p>
         </div>
 
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto">
           <AddDeviceDialog fetchDta={fetchDta} />
         </div>
       </div>
 
-      {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3"> */}
-      <DataTable
-        data={data}
-        columns={columns(fetchDta)}
-        onRowClick={handleRowClick}
-        filters={[
-          { label: "Locations", value: "location" },
-          { label: "Device ID", value: "device_id" },
-          // { label: "Created At", value: "created_at" },
-          { label: "Group Name", value: "group_name" },
-          { label: "Device Name", value: "device_name" },
-        ]}
-      />
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            {/* Mobile scroll hint */}
+            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+              Scroll →
+            </div>
+            <DataTable
+              data={data}
+              columns={columns(fetchDta)}
+              onRowClick={handleRowClick}
+              filters={[
+                { label: "Locations", value: "location" },
+                { label: "Device ID", value: "device_id" },
+                { label: "Group Name", value: "group_name" },
+                { label: "Device Name", value: "device_name" },
+              ]}
+              maxHeight="none"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

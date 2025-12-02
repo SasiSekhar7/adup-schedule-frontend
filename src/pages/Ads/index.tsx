@@ -3,6 +3,7 @@ import { DataTable } from "@/components/data-table";
 import { useEffect, useState } from "react";
 import { Ad, AdsResponse, columns } from "./columns";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -155,32 +156,35 @@ function Ads() {
     }
   };
   return (
-    <div className="">
-      <div className="flex items-center w-full mb-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
-          <p className="text-md font-semibold ">Ads</p>
+          <p className="text-lg md:text-xl font-semibold">Ads</p>
           <p className="text-sm text-muted-foreground">
-            list of all Ads and files
+            List of all ads and files
           </p>
         </div>
 
-        <div className="ml-auto flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Export Button */}
           <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
-                Export Proof of Play
+                <span className="hidden sm:inline">Export Proof of Play</span>
+                <span className="sm:hidden">Export</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Export Ads Proof of Play Data</DialogTitle>
+                <DialogTitle className="text-base md:text-lg">
+                  Export Ads Proof of Play Data
+                </DialogTitle>
                 <div className="text-sm text-muted-foreground mt-2">
                   Export proof of play data for selected ads
                 </div>
               </DialogHeader>
-              <div className="space-y-6 py-4">
+              <div className="space-y-4 md:space-y-6 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="adSelection">Ad Selection</Label>
                   <Select
@@ -224,11 +228,11 @@ function Ads() {
                 </div>
 
                 {exportFilter === "date_range" && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-4 p-3 md:p-4 bg-gray-50 rounded-lg">
                     <h4 className="text-sm font-medium">
                       Date Range Selection
                     </h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="exportStartDate">Start Date</Label>
                         <Input
@@ -251,11 +255,12 @@ function Ads() {
                   </div>
                 )}
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setExportDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -267,6 +272,7 @@ function Ads() {
                     (exportFilter === "date_range" &&
                       (!exportStartDate || !exportEndDate))
                   }
+                  className="w-full sm:w-auto"
                 >
                   {isExporting ? "Exporting..." : "Export"}
                 </Button>
@@ -278,19 +284,29 @@ function Ads() {
         </div>
       </div>
 
-      {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3"> */}
-      <DataTable
-        data={data}
-        columns={columns}
-        filters={[
-          { label: "Ad Name", value: "name" },
-          { label: "ad_id", value: "ad_id" },
-        ]}
-        getRowCanSelect={(row) => {
-          const ad = row as Ad;
-          return ad.status !== "pending" && ad.status !== "processing";
-        }}
-      />
+      <Card>
+        <CardContent className="sm:p-0 p-4 md:p-6">
+          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            {/* Mobile scroll hint */}
+            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+              Scroll →
+            </div>
+            <DataTable
+              data={data}
+              columns={columns}
+              filters={[
+                { label: "Ad Name", value: "name" },
+                { label: "ad_id", value: "ad_id" },
+              ]}
+              maxHeight="none"
+              getRowCanSelect={(row) => {
+                const ad = row as Ad;
+                return ad.status !== "pending" && ad.status !== "processing";
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
