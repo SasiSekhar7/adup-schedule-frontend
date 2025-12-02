@@ -5,12 +5,19 @@
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
-  Activity, Users, Calendar, Box, Rocket, TrendingUp, CalendarCheck, Server, Smartphone, // Import new icons
-  AlertTriangleIcon
+  Activity,
+  Users,
+  Calendar,
+  Box,
+  Rocket,
+  TrendingUp,
+  CalendarCheck,
+  Server,
+  Smartphone, // Import new icons
+  AlertTriangleIcon,
 } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { subDays, format } from "date-fns"; // Import format
-
 
 import { DateRangePicker } from "./components/DateRangePicker";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
@@ -38,7 +45,8 @@ interface DynamicKpiData {
 
 const Dashboard = () => {
   // State for overall stats (fetched once)
-  const [overallStatsData, setOverallStatsData] = useState<OverallStatsData | null>(null);
+  const [overallStatsData, setOverallStatsData] =
+    useState<OverallStatsData | null>(null);
 
   // State for the date range picker
   const [date, setDate] = useState<DateRange | undefined>({
@@ -47,7 +55,9 @@ const Dashboard = () => {
   });
 
   // State for the dynamic, date-range sensitive KPIs
-  const [dynamicKpiData, setDynamicKpiData] = useState<DynamicKpiData | null>(null);
+  const [dynamicKpiData, setDynamicKpiData] = useState<DynamicKpiData | null>(
+    null
+  );
   const [dynamicKpiLoading, setDynamicKpiLoading] = useState(false); // Start false, true when date changes
   const [dynamicKpiError, setDynamicKpiError] = useState<string | null>(null);
 
@@ -79,7 +89,9 @@ const Dashboard = () => {
       // Don't fetch if date range is incomplete
       if (!date?.from || !date?.to) {
         setDynamicKpiData(null); // Clear previous data if range becomes invalid
-        setDynamicKpiError("Please select a valid date range for performance KPIs.");
+        setDynamicKpiError(
+          "Please select a valid date range for performance KPIs."
+        );
         setDynamicKpiLoading(false); // Ensure loading is off
         return;
       }
@@ -93,12 +105,18 @@ const Dashboard = () => {
 
       try {
         // Use the date-range sensitive stats endpoint
-        const res = await api.get<DynamicKpiData>(`/dashboard/stats?${params.toString()}`);
+        const res = await api.get<DynamicKpiData>(
+          `/dashboard/stats?${params.toString()}`
+        );
         console.log("Dashboard Dynamic KPI API response:", res.data);
         setDynamicKpiData(res.data);
       } catch (error: any) {
         console.error("Error fetching dynamic KPI data:", error);
-        setDynamicKpiError(error.response?.data?.message || error.message || "Failed to load performance KPIs");
+        setDynamicKpiError(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to load performance KPIs"
+        );
         setDynamicKpiData(null); // Clear data on error
       } finally {
         setDynamicKpiLoading(false);
@@ -130,16 +148,22 @@ const Dashboard = () => {
 
   // --- Render the Dashboard ---
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             System statistics and performance details.
           </p>
         </div>
-        <DateRangePicker date={date} setDate={setDate} className="self-start sm:self-center" />
+        <div className="w-full sm:w-auto">
+          <DateRangePicker
+            date={date}
+            setDate={setDate}
+            className="w-full sm:w-auto"
+          />
+        </div>
       </div>
 
       {/* Overall System Stats Cards Grid */}
@@ -154,74 +178,115 @@ const Dashboard = () => {
         </div>
       </div> */}
 
-
       {/* Dynamic Performance KPI Section */}
-      <div className="">
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg md:text-xl font-semibold mb-3 text-foreground">
+            Performance Overview
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Key metrics for the selected date range
+          </p>
+        </div>
 
         {/* Loading State */}
         {dynamicKpiLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {[...Array(4)].map((_, i) => ( // Render 4 skeleton cards
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <Skeleton className="h-4 w-3/5" /> {/* Skeleton for title */}
+            {[...Array(4)].map(
+              (
+                _,
+                i // Render 4 skeleton cards
+              ) => (
+                <Card key={i} className="p-4 md:p-6">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
+                    <Skeleton className="h-4 w-3/5" />{" "}
+                    {/* Skeleton for title */}
                     <Skeleton className="h-4 w-4" /> {/* Skeleton for icon */}
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-8 w-1/2" /> {/* Skeleton for value */}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="p-0 pt-2">
+                    <Skeleton className="h-8 w-1/2" />{" "}
+                    {/* Skeleton for value */}
+                  </CardContent>
+                </Card>
+              )
+            )}
           </div>
         )}
         {/* Error State */}
         {!dynamicKpiLoading && dynamicKpiError && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="p-4 md:p-6">
             <AlertTriangleIcon className="h-4 w-4" />
-            <AlertTitle>Error Loading Performance KPIs</AlertTitle>
-            <AlertDescription>{dynamicKpiError}</AlertDescription>
+            <AlertTitle className="text-sm md:text-base">
+              Error Loading Performance KPIs
+            </AlertTitle>
+            <AlertDescription className="text-sm">
+              {dynamicKpiError}
+            </AlertDescription>
           </Alert>
         )}
+
         {/* Data State */}
         {!dynamicKpiLoading && !dynamicKpiError && dynamicKpiData && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <StatsCard title="Total Impressions" value={dynamicKpiData.totalImpressions} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} />
-            <StatsCard title="Ads Scheduled (Period)" value={dynamicKpiData.adsScheduledInRange} icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />} />
-            <StatsCard title="Active Groups (Period)" value={dynamicKpiData.activeGroupsInRange} icon={<Server className="h-4 w-4 text-muted-foreground" />} />
-            <StatsCard title="Active Devices (Period)" value={dynamicKpiData.activeDevicesInRange} icon={<Smartphone className="h-4 w-4 text-muted-foreground" />} />
+            <StatsCard
+              title="Total Impressions"
+              value={dynamicKpiData.totalImpressions}
+              icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatsCard
+              title="Ads Scheduled"
+              value={dynamicKpiData.adsScheduledInRange}
+              icon={<CalendarCheck className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatsCard
+              title="Active Groups"
+              value={dynamicKpiData.activeGroupsInRange}
+              icon={<Server className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatsCard
+              title="Active Devices"
+              value={dynamicKpiData.activeDevicesInRange}
+              icon={<Smartphone className="h-4 w-4 text-muted-foreground" />}
+            />
           </div>
         )}
-         {/* No Data State */}
-         {!dynamicKpiLoading && !dynamicKpiError && !dynamicKpiData && (
-            <p className="text-sm text-muted-foreground">No performance data available for the selected period.</p>
-         )}
+
+        {/* No Data State */}
+        {!dynamicKpiLoading && !dynamicKpiError && !dynamicKpiData && (
+          <div className="text-center py-8">
+            <p className="text-sm md:text-base text-muted-foreground">
+              No performance data available for the selected period.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Performance Details Tables Card (passes date range down) */}
       <PerformanceTablesCard dateRange={date} />
-
     </div>
   );
 };
 
-
 // Stats Card Component (accepts null/undefined value)
 interface StatsCardProps {
-    title: string;
-    value: number | undefined | null;
-    icon: React.ReactNode;
+  title: string;
+  value: number | undefined | null;
+  icon: React.ReactNode;
 }
 const StatsCard = ({ title, value, icon }: StatsCardProps) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      {icon}
+  <Card className="p-4 md:p-6 hover:shadow-md transition-shadow">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
+      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">
+        {title}
+      </CardTitle>
+      <div className="flex-shrink-0">{icon}</div>
     </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value != null ? value.toLocaleString() : "-"}</div>
+    <CardContent className="p-0 pt-2">
+      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
+        {value != null ? value.toLocaleString() : "-"}
+      </div>
     </CardContent>
   </Card>
 );
-
 
 export default Dashboard;
