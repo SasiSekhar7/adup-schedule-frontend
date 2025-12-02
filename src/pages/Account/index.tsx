@@ -4,7 +4,6 @@ import api from "@/api";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-
 export default function AccountPage() {
   const [account, setAccount] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -23,33 +22,58 @@ export default function AccountPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <Card className="p-6 max-w-xl mx-auto shadow-md space-y-4 relative">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Account Information</h1>
+    <div className="space-y-4 md:space-y-6">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-lg md:text-xl font-semibold">Account</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your account information
+        </p>
+      </div>
+
+      <Card className="p-4 md:p-6 max-w-2xl mx-auto shadow-md space-y-4 relative">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h2 className="text-lg font-semibold">Account Information</h2>
         </div>
 
-      {account ? (
-        <div className="space-y-2 mb-4">
-          <p><strong>Name:</strong> {account.name}</p>
-          <p><strong>Email:</strong> {account.email}</p>
-          <p><strong>Phone Number:</strong> {account.phone_number}</p>
-          <div>
-            <strong>Role:</strong>{" "}
-            <Badge variant="outline" className="capitalize">{account.role}</Badge>
+        {account ? (
+          <div className="space-y-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium">{account.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium break-all">{account.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Phone Number</p>
+                <p className="font-medium">{account.phone_number}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Role</p>
+                <Badge variant="outline" className="capitalize">
+                  {account.role}
+                </Badge>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-sm text-muted-foreground">Joined</p>
+                <p className="font-medium">
+                  {new Date(account.joined_on).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
           </div>
-          <div><strong>Joined:</strong> {new Date(account.joined_on).toLocaleDateString()}</div>
-        </div>
-      ) : (
-        <p>Loading account info...</p>
-      )}
+        ) : (
+          <p className="text-center text-gray-500">Loading account info...</p>
+        )}
 
-      <EditAccount
-        onIsOpenChange={(open) => {
-          setEditOpen(open);
-          if (!open) fetchAccount(); // Refresh data on close
-        }}
-      />
+        <EditAccount
+          onIsOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) fetchAccount(); // Refresh data on close
+          }}
+        />
       </Card>
     </div>
   );

@@ -89,9 +89,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full">
       {/* Filters */}
-      <div className="flex flex-row items-center space-x-4">
+      <div className="flex flex-row items-center space-x-4 overflow-x-auto pb-4 flex-shrink-0">
         {filters?.map((filter) => (
           <div className="flex items-center " key={filter.value}>
             <Input
@@ -112,68 +112,81 @@ export function DataTable<TData, TValue>({
           </div>
         ))}
       </div>
-      {/* Table Container with maxHeight */}
+
+      {/* Table Container - flexible height when maxHeight is "none" */}
       <div
-        className="rounded-md border overflow-auto"
-        style={{ maxHeight }} // ✅ Apply maxHeight dynamically
+        className={`flex-1 w-full ${
+          maxHeight !== "none" ? "rounded-md border" : ""
+        } min-h-0`}
       >
-        <Table className="text-sm w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={() => onRowClick?.(row.original)}
-                  className={
-                    onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+        <div className="h-full overflow-auto">
+          <Table
+            className="text-sm"
+            style={{ width: "100%", minWidth: "600px" }}
+          >
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className="whitespace-nowrap"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => onRowClick?.(row.original)}
+                    className={
+                      onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="whitespace-nowrap">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+
       {/* Pagination */}
-      <DataTablePagination
-        table={table}
-        onPaginationChange={onPaginationChange}
-      />{" "}
-      {/* ✅ Pass the callback */}
+      <div className="pt-4 flex-shrink-0 flex-row">
+        <DataTablePagination
+          table={table}
+          onPaginationChange={onPaginationChange || (() => {})}
+        />
+      </div>
     </div>
   );
 }

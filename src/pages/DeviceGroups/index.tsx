@@ -3,6 +3,7 @@ import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
 import { Device, DevicesResponse, columns } from "./columns";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Plus, RefreshCcw, Save } from "lucide-react";
 import {
   Dialog,
@@ -39,9 +40,8 @@ function DeviceGroup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [clients, setClients] = useState<
-    { client_id: string; name: string }[]
-  >();
+  const [clients, setClients] =
+    useState<{ client_id: string; name: string }[]>();
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const fetchDta = async () => {
@@ -84,17 +84,19 @@ function DeviceGroup() {
       setLoading(false);
     }
   };
-function generateUniqueCode(name: string): string {
-  const cleanName = name.replace(/[^a-zA-Z ]/g, "").trim().toUpperCase();
-  const words = cleanName.split(/\s+/);
-  const  baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
+  function generateUniqueCode(name: string): string {
+    const cleanName = name
+      .replace(/[^a-zA-Z ]/g, "")
+      .trim()
+      .toUpperCase();
+    const words = cleanName.split(/\s+/);
+    const baseCode = (words[0] || "XXXXXX").substring(0, 6).padEnd(6, "X");
 
-  // Random 4-digit alphanumeric string
-  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Random 4-digit alphanumeric string
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-  return `${baseCode}${randomPart}`;
-}
-
+    return `${baseCode}${randomPart}`;
+  }
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -119,81 +121,100 @@ function generateUniqueCode(name: string): string {
   }, [deviceGroup.name]);
 
   return (
-    <div className="">
-      <div className="flex items-center w-full mb-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
-          <p className="text-md font-semibold ">Device Groups</p>
+          <p className="text-lg md:text-xl font-semibold">Device Groups</p>
           <p className="text-sm text-muted-foreground">
-            list of all adup display groups
+            List of all adup display groups
           </p>
         </div>
 
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto">
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-              <Button>
-                Create Device Group
-                <Plus className="h-4 w-4" />
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <span className="hidden sm:inline">Create Device Group</span>
+                <span className="sm:hidden">Create Group</span>
+                <Plus className="h-4 w-4 ml-2" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create Group</DialogTitle>
+                <DialogTitle className="text-base md:text-lg">
+                  Create Group
+                </DialogTitle>
               </DialogHeader>
 
-              {userRole === "Admin" && (
-                <div>
-                  <Label>Client</Label>
-                  <Select
-                    onValueChange={(client_id) =>
-                      setDeviceGroup({ ...deviceGroup, client_id })
+              <div className="space-y-4 py-4">
+                {userRole === "Admin" && (
+                  <div className="space-y-2">
+                    <Label>Client</Label>
+                    <Select
+                      onValueChange={(client_id) =>
+                        setDeviceGroup({ ...deviceGroup, client_id })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {clients?.map((client) => (
+                            <SelectItem
+                              key={client.client_id}
+                              value={client.client_id}
+                            >
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input
+                    type="text"
+                    value={deviceGroup.name}
+                    onChange={(e) =>
+                      setDeviceGroup({ ...deviceGroup, name: e.target.value })
                     }
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {clients?.map((client) => (
-                          <SelectItem
-                            key={client.client_id}
-                            value={client.client_id}
-                          >
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    placeholder="Enter Device Group Name"
+                  />
                 </div>
-              )}
 
-              <Label>Name</Label>
-              <Input
-                type="text"
-                value={deviceGroup.name}
-                onChange={(e) =>
-                  setDeviceGroup({ ...deviceGroup, name: e.target.value })
-                }
-                placeholder="Enter Device Group Name"
-              />
+                <div className="space-y-2">
+                  <Label>License Key</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={deviceGroup.reg_code}
+                      readOnly
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={regenerateKey}
+                      size="icon"
+                    >
+                      <RefreshCcw size={16} />
+                    </Button>
+                  </div>
+                </div>
 
-              <Label>License Key</Label>
-              <div className="flex items-center gap-2">
-                <Input type="text" value={deviceGroup.reg_code} readOnly />
-                <Button variant="outline" onClick={regenerateKey}>
-                  <RefreshCcw size={16} />
-                </Button>
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
               </div>
 
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-
-              <DialogFooter>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button
                   onClick={handleCreate}
                   disabled={loading || !deviceGroup.name}
+                  className="w-full sm:w-auto"
                 >
-                  <Save size={16} />
+                  <Save size={16} className="mr-2" />
                   {loading ? "Creating..." : "Create"}
                 </Button>
               </DialogFooter>
@@ -202,7 +223,17 @@ function generateUniqueCode(name: string): string {
         </div>
       </div>
 
-      <DataTable data={data} columns={columns} />
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            {/* Mobile scroll hint */}
+            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+              Scroll →
+            </div>
+            <DataTable data={data} columns={columns} maxHeight="none" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

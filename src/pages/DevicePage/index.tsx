@@ -548,16 +548,17 @@ function DevicePage() {
   }
 
   return (
-    <div className="container mx-auto p-1">
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <Button
           variant="ghost"
           onClick={() => navigate("/devices")}
-          className="mr-4"
+          className="w-fit"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Devices
+          <span className="hidden sm:inline">Back to Devices</span>
+          <span className="sm:hidden">Back</span>
         </Button>
 
         {/* Global Export Button */}
@@ -566,9 +567,15 @@ function DevicePage() {
           onOpenChange={setFullDeviceExportDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            >
               <Download className="w-4 h-4 mr-2" />
-              Export Full Device Details
+              <span className="hidden sm:inline">
+                Export Full Device Details
+              </span>
+              <span className="sm:hidden">Export Details</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -662,37 +669,39 @@ function DevicePage() {
       {/* Device Information Card - Fixed at top */}
       {device && (
         <Card className="mb-6 shadow-sm border border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg md:text-xl font-semibold">
               Device Overview
             </CardTitle>
           </CardHeader>
 
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               {/* Left Section — Basic Info */}
-              <div className="space-y-5 bg-gray-50 p-4 rounded-xl">
+              <div className="space-y-4 md:space-y-5 bg-gray-50 p-4 md:p-6 rounded-xl">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
                     Device Name
                   </h4>
-                  <p className="text-base font-semibold text-gray-900">
+                  <p className="text-base md:text-lg font-semibold text-gray-900 break-words">
                     {device.device_name}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
                     Device ID
                   </h4>
-                  <p className="text-sm font-mono text-gray-800">
+                  <p className="text-xs md:text-sm font-mono text-gray-800 break-all">
                     {device.device_id}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Group</h4>
-                  <p className="text-base font-semibold text-gray-900">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Group
+                  </h4>
+                  <p className="text-base font-semibold text-gray-900 break-words">
                     {device.DeviceGroup?.name || "—"}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -702,7 +711,7 @@ function DevicePage() {
 
                 <div className="flex flex-wrap gap-2">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
                       device.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
@@ -711,7 +720,7 @@ function DevicePage() {
                     {device.status}
                   </span>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
                       device.registration_status === "pending"
                         ? "bg-yellow-100 text-yellow-800"
                         : device.registration_status === "approved"
@@ -723,16 +732,20 @@ function DevicePage() {
                   </span>
                 </div>
 
-                {device.tags?.length ? (
+                {device.tags &&
+                typeof device.tags === "string" &&
+                device.tags.length > 0 ? (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">Tags</h4>
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">
+                      Tags
+                    </h4>
                     <div className="flex flex-wrap gap-1">
-                      {device.tags.map((tag, i) => (
+                      {device.tags.split(",").map((tag: string, i: number) => (
                         <span
                           key={i}
-                          className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md"
+                          className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md"
                         >
-                          {tag}
+                          {tag.trim()}
                         </span>
                       ))}
                     </div>
@@ -741,7 +754,7 @@ function DevicePage() {
               </div>
 
               {/* Right Section — Technical Specs */}
-              <div className="relative space-y-5 bg-gray-50 p-4 rounded-xl">
+              <div className="relative space-y-4 md:space-y-5 bg-gray-50 p-4 md:p-6 rounded-xl">
                 {/* Edit Icon */}
                 {/* <div className="absolute top-3 right-3">
                   {!isEditing ? (
@@ -762,46 +775,52 @@ function DevicePage() {
                 </div> */}
 
                 {/* Grid 1 — Basic Info */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">Type</h4>
-                    <p className="text-sm text-gray-900 capitalize">
-                      {device.device_type}
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Type
+                    </h4>
+                    <p className="text-sm text-gray-900 capitalize break-words">
+                      {(device as any).device_type || "—"}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">Model</h4>
-                    <p className="text-sm text-gray-900">
-                      {device.device_model || "—"}
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Model
+                    </h4>
+                    <p className="text-sm text-gray-900 break-words">
+                      {(device as any).device_model || "—"}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">OS</h4>
-                    <p className="text-sm text-gray-900 capitalize">
-                      {device.device_os || "—"}
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      OS
+                    </h4>
+                    <p className="text-sm text-gray-900 capitalize break-words">
+                      {(device as any).device_os || "—"}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       OS Version
                     </h4>
-                    <p className="text-sm text-gray-900">
-                      {device.device_os_version || "—"}
+                    <p className="text-sm text-gray-900 break-words">
+                      {(device as any).device_os_version || "—"}
                     </p>
                   </div>
 
                   {/* Orientation — Editable Dropdown */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       Orientation
                     </h4>
                     {isEditing ? (
                       <select
-                        value={editedDevice.device_orientation || ""}
+                        value={(editedDevice as any)?.device_orientation || ""}
                         onChange={(e) =>
                           handleChange("device_orientation", e.target.value)
                         }
-                        className="w-full border rounded-lg p-1 text-sm text-gray-900 capitalize"
+                        className="w-full border rounded-lg p-2 text-sm text-gray-900 capitalize"
                       >
                         <option value="">Select orientation</option>
                         <option value="landscape">Landscape</option>
@@ -809,72 +828,72 @@ function DevicePage() {
                         <option value="auto">Auto</option>
                       </select>
                     ) : (
-                      <p className="text-sm text-gray-900 capitalize">
-                        {device.device_orientation}
+                      <p className="text-sm text-gray-900 capitalize break-words">
+                        {(device as any).device_orientation || "—"}
                       </p>
                     )}
                   </div>
 
                   {/* Resolution — Editable Input */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       Resolution
                     </h4>
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editedDevice.device_resolution || ""}
+                        value={(editedDevice as any)?.device_resolution || ""}
                         onChange={(e) =>
                           handleChange("device_resolution", e.target.value)
                         }
-                        className="w-full border rounded-lg p-1 text-sm text-gray-900"
+                        className="w-full border rounded-lg p-2 text-sm text-gray-900"
                         placeholder="e.g. 1920x1080"
                       />
                     ) : (
-                      <p className="text-sm text-gray-900">
-                        {device.device_resolution || "—"}
+                      <p className="text-sm text-gray-900 break-words">
+                        {(device as any).device_resolution || "—"}
                       </p>
                     )}
                   </div>
                 </div>
 
                 {/* Grid 2 — On/Off Times */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       On Time
                     </h4>
                     {isEditing ? (
                       <input
                         type="time"
-                        value={editedDevice.device_on_time || ""}
+                        value={(editedDevice as any)?.device_on_time || ""}
                         onChange={(e) =>
                           handleChange("device_on_time", e.target.value)
                         }
-                        className="w-full border rounded-lg p-1 text-sm"
+                        className="w-full border rounded-lg p-2 text-sm"
                       />
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {device.device_on_time}
+                        {(device as any).device_on_time || "—"}
                       </p>
                     )}
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       Off Time
                     </h4>
                     {isEditing ? (
                       <input
                         type="time"
-                        value={editedDevice.device_off_time || ""}
+                        value={(editedDevice as any)?.device_off_time || ""}
                         onChange={(e) =>
                           handleChange("device_off_time", e.target.value)
                         }
-                        className="w-full border rounded-lg p-1 text-sm"
+                        className="w-full border rounded-lg p-2 text-sm"
                       />
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {device.device_off_time}
+                        {(device as any).device_off_time || "—"}
                       </p>
                     )}
                   </div>
@@ -882,27 +901,29 @@ function DevicePage() {
 
                 {/* Location */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
                     Location
                   </h4>
-                  <p className="text-sm text-gray-900">{device.location}</p>
+                  <p className="text-sm text-gray-900 break-words">
+                    {device.location}
+                  </p>
                 </div>
 
                 {/* Timestamps */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       Last Synced
                     </h4>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-700 break-words">
                       {new Date(device.last_synced).toLocaleString()}
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
                       Created At
                     </h4>
-                    <p className="text-xs text-gray-700">
+                    <p className="text-xs text-gray-700 break-words">
                       {new Date(device.created_at).toLocaleString()}
                     </p>
                   </div>
@@ -910,16 +931,16 @@ function DevicePage() {
 
                 {/* Save / Cancel Buttons */}
                 {isEditing && (
-                  <div className="flex justify-end gap-2 pt-3">
+                  <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
                     <button
                       onClick={handleCancel}
-                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg"
+                      className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg order-2 sm:order-1"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center gap-1"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 order-1 sm:order-2"
                     >
                       <Check size={16} /> Save
                     </button>
@@ -933,18 +954,32 @@ function DevicePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="schedules">Schedules</TabsTrigger>
-          <TabsTrigger value="proof-of-play">Proof of Play</TabsTrigger>
-          <TabsTrigger value="device-events">Event Logs</TabsTrigger>
-          <TabsTrigger value="terminology">Telemetry</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsTrigger value="schedules" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Schedules</span>
+            <span className="sm:hidden">Schedule</span>
+          </TabsTrigger>
+          <TabsTrigger value="proof-of-play" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Proof of Play</span>
+            <span className="sm:hidden">Proof</span>
+          </TabsTrigger>
+          <TabsTrigger value="device-events" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Event Logs</span>
+            <span className="sm:hidden">Events</span>
+          </TabsTrigger>
+          <TabsTrigger value="terminology" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Telemetry</span>
+            <span className="sm:hidden">Telemetry</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="schedules" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Device Schedules</CardTitle>
-              <div className="flex items-center gap-2">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">
+                Device Schedules
+              </CardTitle>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <Select
                   value={schedulesLimit.toString()}
                   onValueChange={(value) => {
@@ -952,7 +987,7 @@ function DevicePage() {
                     setSchedulesPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger className="w-full sm:w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -962,53 +997,67 @@ function DevicePage() {
                     <SelectItem value="50">50</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">per page</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  per page
+                </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
               {schedules.length > 0 ? (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Schedule ID</TableHead>
-                        <TableHead>Ad Name</TableHead>
-                        <TableHead>Start Time</TableHead>
-                        <TableHead>End Time</TableHead>
-                        <TableHead>Duration</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {schedules.map((schedule) => (
-                        <TableRow key={schedule.schedule_id}>
-                          <TableCell className="font-mono text-sm">
-                            {schedule.schedule_id}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {schedule.Ad.name}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(schedule.start_time).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(schedule.end_time).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {Math.round(
-                              (new Date(schedule.end_time).getTime() -
-                                new Date(schedule.start_time).getTime()) /
-                                (1000 * 60)
-                            )}{" "}
-                            min
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table className="w-full min-w-[600px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs sm:text-sm">
+                            Schedule ID
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Ad Name
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Start Time
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            End Time
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Duration
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {schedules.map((schedule) => (
+                          <TableRow key={schedule.schedule_id}>
+                            <TableCell className="font-mono text-xs sm:text-sm break-all">
+                              {schedule.schedule_id}
+                            </TableCell>
+                            <TableCell className="font-medium text-xs sm:text-sm break-words">
+                              {schedule.Ad.name}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {new Date(schedule.start_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {new Date(schedule.end_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {Math.round(
+                                (new Date(schedule.end_time).getTime() -
+                                  new Date(schedule.start_time).getTime()) /
+                                  (1000 * 60)
+                              )}{" "}
+                              min
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
                   {/* Pagination Controls */}
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(schedulesPage - 1) * schedulesLimit + 1} to{" "}
                       {Math.min(schedulesPage * schedulesLimit, schedulesTotal)}{" "}
                       of {schedulesTotal} entries
@@ -1019,11 +1068,13 @@ function DevicePage() {
                         size="sm"
                         onClick={() => setSchedulesPage(schedulesPage - 1)}
                         disabled={schedulesPage <= 1}
+                        className="text-xs sm:text-sm"
                       >
                         <ChevronLeft className="w-4 h-4" />
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                       </Button>
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm whitespace-nowrap">
                         Page {schedulesPage} of {schedulesTotalPages}
                       </span>
                       <Button
@@ -1031,8 +1082,10 @@ function DevicePage() {
                         size="sm"
                         onClick={() => setSchedulesPage(schedulesPage + 1)}
                         disabled={schedulesPage >= schedulesTotalPages}
+                        className="text-xs sm:text-sm"
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
+                        <span className="sm:hidden">Next</span>
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </div>
@@ -1049,15 +1102,21 @@ function DevicePage() {
 
         <TabsContent value="proof-of-play" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Proof of Play Log</CardTitle>
-              <div className="flex items-center gap-2">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">
+                Proof of Play Log
+              </CardTitle>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <Dialog
                   open={exportDialogOpen}
                   onOpenChange={setExportDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Export
                     </Button>
@@ -1159,7 +1218,7 @@ function DevicePage() {
                     setProofOfPlayPage(1); // Reset to first page when changing limit
                   }}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger className="w-full sm:w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1169,50 +1228,68 @@ function DevicePage() {
                     <SelectItem value="50">50</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">per page</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  per page
+                </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
               {proofOfPlayLogs.length > 0 ? (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ad ID</TableHead>
-                        <TableHead>Event ID</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Start Time</TableHead>
-                        <TableHead>End Time</TableHead>
-                        <TableHead>Schedule ID</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {proofOfPlayLogs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">
-                            {log.ad_id}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {log.event_id}
-                          </TableCell>
-                          <TableCell>
-                            {(log.duration_played_ms / 1000).toFixed(1)}s
-                          </TableCell>
-                          <TableCell>
-                            {new Date(log.start_time).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(log.end_time).toLocaleString()}
-                          </TableCell>
-                          <TableCell>{log.schedule_id || "N/A"}</TableCell>
+                  <div className="overflow-x-auto">
+                    <Table className="w-full min-w-[700px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs sm:text-sm">
+                            Ad ID
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Event ID
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Duration
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Start Time
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            End Time
+                          </TableHead>
+                          <TableHead className="text-xs sm:text-sm">
+                            Schedule ID
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {proofOfPlayLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium text-xs sm:text-sm break-all">
+                              {log.ad_id}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm text-muted-foreground break-all">
+                              {log.event_id}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {(log.duration_played_ms / 1000).toFixed(1)}s
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {new Date(log.start_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm">
+                              {new Date(log.end_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-xs sm:text-sm break-all">
+                              {log.schedule_id || "N/A"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
                   {/* Pagination Controls */}
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(proofOfPlayPage - 1) * proofOfPlayLimit + 1} to{" "}
                       {Math.min(
                         proofOfPlayPage * proofOfPlayLimit,
@@ -1226,11 +1303,13 @@ function DevicePage() {
                         size="sm"
                         onClick={() => setProofOfPlayPage(proofOfPlayPage - 1)}
                         disabled={proofOfPlayPage <= 1}
+                        className="text-xs sm:text-sm"
                       >
                         <ChevronLeft className="w-4 h-4" />
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                       </Button>
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm whitespace-nowrap">
                         Page {proofOfPlayPage} of {proofOfPlayTotalPages}
                       </span>
                       <Button
@@ -1238,8 +1317,10 @@ function DevicePage() {
                         size="sm"
                         onClick={() => setProofOfPlayPage(proofOfPlayPage + 1)}
                         disabled={proofOfPlayPage >= proofOfPlayTotalPages}
+                        className="text-xs sm:text-sm"
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
+                        <span className="sm:hidden">Next</span>
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </div>
@@ -1256,15 +1337,21 @@ function DevicePage() {
 
         <TabsContent value="device-events" className="mt-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Device Event Log</CardTitle>
-              <div className="flex items-center gap-2">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">
+                Device Event Log
+              </CardTitle>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <Dialog
                   open={eventLogsExportDialogOpen}
                   onOpenChange={setEventLogsExportDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Export
                     </Button>
@@ -1368,7 +1455,7 @@ function DevicePage() {
                     setEventLogsPage(1); // Reset to first page when changing limit
                   }}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger className="w-full sm:w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1378,66 +1465,70 @@ function DevicePage() {
                     <SelectItem value="50">50</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="text-sm text-muted-foreground">per page</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  per page
+                </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
               {deviceEventLogs.length > 0 ? (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Event Type</TableHead>
-                        <TableHead>Event ID</TableHead>
-                        <TableHead>Timestamp</TableHead>
-                        <TableHead>Payload</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deviceEventLogs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">
-                            {log.event_type}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {log.event_id}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(log.timestamp).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-xs">
-                              <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-20">
-                                {(() => {
-                                  try {
-                                    // If payload is already an object, stringify it
-                                    if (typeof log.payload === "object") {
+                  <div className="overflow-x-auto">
+                    <Table className="w-full min-w-[700px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Event Type</TableHead>
+                          <TableHead>Event ID</TableHead>
+                          <TableHead>Timestamp</TableHead>
+                          <TableHead>Payload</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deviceEventLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-medium">
+                              {log.event_type}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {log.event_id}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(log.timestamp).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-xs">
+                                <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded overflow-auto max-h-20">
+                                  {(() => {
+                                    try {
+                                      // If payload is already an object, stringify it
+                                      if (typeof log.payload === "object") {
+                                        return JSON.stringify(
+                                          log.payload,
+                                          null,
+                                          2
+                                        );
+                                      }
+                                      // If payload is a string, try to parse and format it
                                       return JSON.stringify(
-                                        log.payload,
+                                        JSON.parse(log.payload),
                                         null,
                                         2
                                       );
+                                    } catch {
+                                      // If all else fails, convert to string
+                                      return typeof log.payload === "string"
+                                        ? log.payload
+                                        : JSON.stringify(log.payload);
                                     }
-                                    // If payload is a string, try to parse and format it
-                                    return JSON.stringify(
-                                      JSON.parse(log.payload),
-                                      null,
-                                      2
-                                    );
-                                  } catch {
-                                    // If all else fails, convert to string
-                                    return typeof log.payload === "string"
-                                      ? log.payload
-                                      : JSON.stringify(log.payload);
-                                  }
-                                })()}
-                              </pre>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                                  })()}
+                                </pre>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
                   {/* Pagination Controls */}
                   <div className="flex items-center justify-between mt-4">
@@ -1505,47 +1596,49 @@ function DevicePage() {
                 <span className="text-sm text-muted-foreground">per page</span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
               {deviceTelemetry.length > 0 ? (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Timestamp</TableHead>
-                        <TableHead>CPU Usage (%)</TableHead>
-                        <TableHead>RAM Free (MB)</TableHead>
-                        <TableHead>Storage Free (MB)</TableHead>
-                        <TableHead>Network Type</TableHead>
-                        <TableHead>App Version</TableHead>
-                        <TableHead>Created At</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deviceTelemetry.map((telemetry) => (
-                        <TableRow key={telemetry.id}>
-                          <TableCell className="font-medium">
-                            {new Date(telemetry.timestamp).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {(telemetry.cpu_usage * 100).toFixed(1)}%
-                          </TableCell>
-                          <TableCell>{telemetry.ram_free_mb}</TableCell>
-                          <TableCell>
-                            {telemetry.storage_free_mb || "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            {telemetry.network_type || "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            {telemetry.app_version_code || "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(telemetry.created_at).toLocaleString()}
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Timestamp</TableHead>
+                          <TableHead>CPU Usage (%)</TableHead>
+                          <TableHead>RAM Free (MB)</TableHead>
+                          <TableHead>Storage Free (MB)</TableHead>
+                          <TableHead>Network Type</TableHead>
+                          <TableHead>App Version</TableHead>
+                          <TableHead>Created At</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {deviceTelemetry.map((telemetry) => (
+                          <TableRow key={telemetry.id}>
+                            <TableCell className="font-medium">
+                              {new Date(telemetry.timestamp).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              {(telemetry.cpu_usage * 100).toFixed(1)}%
+                            </TableCell>
+                            <TableCell>{telemetry.ram_free_mb}</TableCell>
+                            <TableCell>
+                              {telemetry.storage_free_mb || "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {telemetry.network_type || "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {telemetry.app_version_code || "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(telemetry.created_at).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
                   {/* Pagination Controls */}
                   <div className="flex items-center justify-between mt-4">

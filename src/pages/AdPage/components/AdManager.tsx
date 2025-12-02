@@ -336,18 +336,25 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     }
   };
   return (
-    <div className="flex h-screen">
-      <div className="w-2/3 p-6 overflow-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      <div className="w-full lg:w-2/3 p-4 md:p-6 overflow-auto">
         <Card>
-          <CardHeader className="flex flex-row items-center">
-            <CardTitle>{isEditing ? "Edit Ad" : "Ad Details"}</CardTitle>
-            <div className="flex items-center space-x-2 ml-auto">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <CardTitle className="text-lg md:text-xl">
+              {isEditing ? "Edit Ad" : "Ad Details"}
+            </CardTitle>
+            <div className="flex items-center space-x-2 sm:ml-auto">
               <Dialog>
                 <DialogTrigger>
                   {isEditing && (
-                    <Button variant="destructive">
-                      <Trash />
-                      Delete Ad
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash className="w-4 h-4 mr-2" />
+                      <span className="hidden sm:inline">Delete Ad</span>
+                      <span className="sm:hidden">Delete</span>
                     </Button>
                   )}
                 </DialogTrigger>
@@ -367,16 +374,22 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
               </Dialog>
 
               {!isEditing && (
-                <Button onClick={() => navigate(`/ads/${formData.ad_id}/edit`)}>
+                <Button
+                  onClick={() => navigate(`/ads/${formData.ad_id}/edit`)}
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   Edit
                 </Button>
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
+          <CardContent className="p-4 md:p-6">
+            <form onSubmit={onSubmit} className="space-y-4 md:space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Name
+                </Label>
                 <Input
                   id="name"
                   name="name"
@@ -384,6 +397,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                   onChange={handleChange}
                   required
                   readOnly={!isEditing}
+                  className="w-full"
                 />
               </div>
               {/* <div>
@@ -398,8 +412,10 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                   readOnly={!isEditing}
                 />
               </div> */}
-              <div>
-                <Label htmlFor="duration">Duration (in seconds)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="text-sm font-medium">
+                  Duration (in seconds)
+                </Label>
                 <Input
                   id="duration"
                   name="duration"
@@ -408,10 +424,13 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                   onChange={handleChange}
                   required
                   readOnly={!isEditing}
+                  className="w-full"
                 />
               </div>
-              <div>
-                <Label htmlFor="client_id">Client ID</Label>
+              <div className="space-y-2">
+                <Label htmlFor="client_id" className="text-sm font-medium">
+                  Client ID
+                </Label>
                 <Input
                   id="client_id"
                   name="client_id"
@@ -419,14 +438,17 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                   onChange={handleChange}
                   required
                   readOnly
+                  className="w-full"
                 />
               </div>
               {formData.status && (
-                <div>
-                  <Label htmlFor="status">Status</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-sm font-medium">
+                    Status
+                  </Label>
                   <div className="mt-1">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
                         formData.status === "pending"
                           ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                           : formData.status === "processing"
@@ -445,66 +467,82 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
               )}
             </form>
           </CardContent>
-          <CardFooter className="flex justify-end">
+          <CardFooter className="flex justify-end p-4 md:p-6">
             {isEditing && (
               <Dialog>
                 <DialogTrigger>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <Upload className="w-4 h-4 mr-2" />
-                    {isUploading ? "Uploading..." : "Upload New File"}
+                    <span className="hidden sm:inline">
+                      {isUploading ? "Uploading..." : "Upload New File"}
+                    </span>
+                    <span className="sm:hidden">
+                      {isUploading ? "Uploading..." : "Upload"}
+                    </span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>
+                    <DialogTitle className="text-lg">
                       Upload image or video file of duration (10s)
                     </DialogTitle>
                   </DialogHeader>
 
-                  <Input
-                    type="file"
-                    onChange={(e) => setFile(e.target.files?.[0])}
-                  />
+                  <div className="space-y-4">
+                    <Input
+                      type="file"
+                      onChange={(e) => setFile(e.target.files?.[0])}
+                      className="w-full"
+                    />
 
-                  {/* File info and upload method */}
-                  {file && !isUploading && (
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div>File: {file.name}</div>
-                      <div>Size: {formatBytes(file.size)}</div>
-                      <div className="flex items-center gap-2">
-                        <span>Upload method:</span>
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            file.size > 50 * 1024 * 1024
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {file.size > 50 * 1024 * 1024
-                            ? "Multipart (>50MB)"
-                            : "Signed URL (≤50MB)"}
-                        </span>
+                    {/* File info and upload method */}
+                    {file && !isUploading && (
+                      <div className="text-sm text-gray-600 space-y-2 p-3 bg-gray-50 rounded-md">
+                        <div className="break-all">
+                          <strong>File:</strong> {file.name}
+                        </div>
+                        <div>
+                          <strong>Size:</strong> {formatBytes(file.size)}
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="font-medium">Upload method:</span>
+                          <span
+                            className={`px-2 py-1 rounded text-xs inline-block ${
+                              file.size > 50 * 1024 * 1024
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {file.size > 50 * 1024 * 1024
+                              ? "Multipart (>50MB)"
+                              : "Signed URL (≤50MB)"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Progress UI */}
-                  {isUploading && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{uploadStatus}</span>
-                        <span>{uploadProgress}%</span>
+                    {/* Progress UI */}
+                    {isUploading && (
+                      <div className="space-y-3 p-3 bg-blue-50 rounded-md">
+                        <div className="flex justify-between text-sm">
+                          <span className="truncate pr-2">{uploadStatus}</span>
+                          <span className="font-medium">{uploadProgress}%</span>
+                        </div>
+                        <Progress value={uploadProgress} className="w-full" />
+                        <div className="flex flex-col sm:flex-row sm:justify-between text-xs text-gray-500 gap-1">
+                          <span>Speed: {uploadSpeed}</span>
+                          <span>Time left: {timeLeft}</span>
+                        </div>
                       </div>
-                      <Progress value={uploadProgress} className="w-full" />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Speed: {uploadSpeed}</span>
-                        <span>Time left: {timeLeft}</span>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   <DialogFooter>
-                    <Button onClick={handleUpload} disabled={isUploading}>
+                    <Button
+                      onClick={handleUpload}
+                      disabled={isUploading}
+                      className="w-full sm:w-auto"
+                    >
                       <Upload className="w-4 h-4 mr-2" />
                       {isUploading ? "Uploading..." : "Upload"}
                     </Button>
@@ -516,14 +554,16 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
         </Card>
       </div>
 
-      <div className="w-1/3 bg-gray-100 p-6 sticky top-0 h-[82vh]">
+      {/* Preview Section - Responsive */}
+      <div className="w-full lg:w-1/3 bg-gray-50 lg:bg-gray-100 p-4 md:p-6 lg:sticky lg:top-0 lg:h-screen">
         <div className="h-full flex items-center justify-center">
-          <div className="w-full max-w-[300px] aspect-[9/16] bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[300px] aspect-[9/16] bg-white shadow-lg rounded-lg overflow-hidden">
             {isVideo && (
               <video
                 src={formData.url}
                 controls
                 className="w-full h-full object-cover"
+                playsInline
               >
                 Your browser does not support the video tag.
               </video>
@@ -536,8 +576,11 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
               />
             )}
             {!isVideo && !isImage && (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
-                Preview not available
+              <div className="w-full h-full flex items-center justify-center text-gray-500 text-center p-4">
+                <div>
+                  <div className="text-lg mb-2">📱</div>
+                  <div className="text-sm">Preview not available</div>
+                </div>
               </div>
             )}
           </div>

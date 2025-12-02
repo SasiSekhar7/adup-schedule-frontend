@@ -135,162 +135,201 @@ function AddToSchedule() {
     isSingleDay,
   }) => {
     return (
-      <div className="flex space-x-2">
-        <input
-          type="date"
-          value={startDate ? startDate.toISOString().split("T")[0] : ""}
-          onChange={(e) => {
-            const date = e.target.value ? new Date(e.target.value) : null;
-            setStartDate(date);
-            if (isSingleDay) setEndDate(date); // If single-day mode, endDate = startDate
-          }}
-          className="border rounded-md px-4 py-2"
-        />
-
-        {!isSingleDay && (
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">Start Date</label>
           <input
             type="date"
-            value={endDate ? endDate.toISOString().split("T")[0] : ""}
-            onChange={(e) =>
-              setEndDate(e.target.value ? new Date(e.target.value) : null)
-            }
-            className="border rounded-md px-4 py-2"
+            value={startDate ? startDate.toISOString().split("T")[0] : ""}
+            onChange={(e) => {
+              const date = e.target.value ? new Date(e.target.value) : null;
+              setStartDate(date);
+              if (isSingleDay) setEndDate(date); // If single-day mode, endDate = startDate
+            }}
+            className="border rounded-md px-3 py-2 text-sm w-full sm:w-auto"
           />
+        </div>
+
+        {!isSingleDay && (
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">End Date</label>
+            <input
+              type="date"
+              value={endDate ? endDate.toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                setEndDate(e.target.value ? new Date(e.target.value) : null)
+              }
+              className="border rounded-md px-3 py-2 text-sm w-full sm:w-auto"
+            />
+          </div>
         )}
       </div>
     );
   };
 
   return (
-    <div>
-      <h1 className="text-md font-semibold mb-4 ">Ad Scheduling</h1>
+    <div className="space-y-4 md:space-y-6">
+      <h1 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+        Ad Scheduling
+      </h1>
 
-      <div className="grid gap-6 md:grid-cols-2 max-h-[100vh]">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2 w-full">
         {/* ✅ Select Ad */}
-        {/* <div className="col-span-2 grid grid-cols-2 gap-6 h-[60vh]"> */}
+        <Card className="w-full min-w-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Select Ad</CardTitle>
+          </CardHeader>
 
-        <Card>
-          {/* <CardHeader>
-            <CardTitle className="text-md p-0">Select Ad</CardTitle>
-          </CardHeader> */}
-          <h1 className="text-md font-semibold p-4">Select Ad</h1>
-
-          <CardContent className="max-h-[70vh]">
-            {/* <div className="h-[50vh]"> */}
-
-            <DataTable
-              data={adsData}
-              columns={adcolumns}
-              filters={[{ label: "Ad Name", value: "name" }]}
-              onRowSelectionChange={handleSelectedAd}
-              maxHeight="40vh"
-              getRowCanSelect={(row) => {
-                const ad = row as Ad;
-                return ad.status !== "pending" && ad.status !== "processing";
-              }}
-            />
-            {/* </div> */}
+          <CardContent className="p-4 md:p-6">
+            <div className="relative">
+              {/* Mobile scroll hint */}
+              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div>
+              <DataTable
+                data={adsData}
+                columns={adcolumns}
+                filters={[{ label: "Ad Name", value: "name" }]}
+                onRowSelectionChange={handleSelectedAd}
+                maxHeight="40vh"
+                getRowCanSelect={(row) => {
+                  const ad = row as Ad;
+                  return ad.status !== "pending" && ad.status !== "processing";
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
 
         {/* ✅ Select Device */}
-        <Card>
-          <h1 className="text-md font-semibold p-4">Select Group</h1>
+        <Card className="w-full min-w-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base md:text-lg">Select Group</CardTitle>
+          </CardHeader>
 
-          <CardContent className="max-h-[70vh]">
-            {/* <div className="h-[30vh]"> */}
-
-            <DataTable
-              data={devicesData}
-              columns={devicecolumns}
-              filters={[{ label: "Name", value: "name" }]}
-              onRowSelectionChange={handleSelectedDevices}
-              maxHeight="40vh"
-            />
-            {/* </div> */}
+          <CardContent className="p-4 md:p-6">
+            <div className="relative">
+              {/* Mobile scroll hint */}
+              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div>
+              <DataTable
+                data={devicesData}
+                columns={devicecolumns}
+                filters={[{ label: "Name", value: "name" }]}
+                onRowSelectionChange={handleSelectedDevices}
+                maxHeight="40vh"
+              />
+            </div>
           </CardContent>
         </Card>
         {/* </div> */}
 
         {/* ✅ Date Range Picker */}
-        <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center w-full">
-            <CardTitle className="text-md mx-4">Select Date</CardTitle>
-
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={isSingleDay}
-                  onChange={(e) => {
-                    setIsSingleDay(e.target.checked);
-                    if (e.target.checked && startDate) setEndDate(startDate);
-                  }}
-                />
-                <span>Single Day</span>
-              </label>
-            </div>
-
-            <MyDateRangePicker
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-              isSingleDay={isSingleDay}
-            />
-
-            <CardTitle className="text-md mx-4">
-              Select No. of Plays per Day
+        <Card className="lg:col-span-2">
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-base md:text-lg">
+              Schedule Configuration
             </CardTitle>
 
-            <Select onValueChange={setPlays}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="No. of Plays" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Plays</SelectLabel>
-                  <SelectItem value="360">360</SelectItem>
-                  <SelectItem value="720">720</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            {/* Mobile: Stacked Layout, Desktop: Horizontal Layout */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+              {/* Date Selection Section */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Select Date</span>
+                  <div className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={isSingleDay}
+                        onChange={(e) => {
+                          setIsSingleDay(e.target.checked);
+                          if (e.target.checked && startDate)
+                            setEndDate(startDate);
+                        }}
+                        className="rounded"
+                      />
+                      <span>Single Day</span>
+                    </label>
+                  </div>
+                </div>
 
-            <div className="ml-auto space-x-4">
-              <Button
-                size="lg"
-                onClick={handleScheduleAd}
-                disabled={
-                  selectedDevices.length < 1 ||
-                  !selectedAd ||
-                  !startDate ||
-                  !endDate
-                }
-              >
-                Schedule Ad
-              </Button>
+                <MyDateRangePicker
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  endDate={endDate}
+                  setEndDate={setEndDate}
+                  isSingleDay={isSingleDay}
+                />
+              </div>
+
+              {/* Plays Selection Section */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">
+                  No. of Plays per Day
+                </span>
+                <Select onValueChange={setPlays} defaultValue="360">
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="No. of Plays" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Plays</SelectLabel>
+                      <SelectItem value="360">360</SelectItem>
+                      <SelectItem value="720">720</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Schedule Button */}
+              <div className="flex justify-end lg:justify-start">
+                <Button
+                  size="lg"
+                  onClick={handleScheduleAd}
+                  disabled={
+                    selectedDevices.length < 1 ||
+                    !selectedAd ||
+                    !startDate ||
+                    !endDate
+                  }
+                  className="w-full sm:w-auto"
+                >
+                  Schedule Ad
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent className="flex">
-            <p className="text-sm text-muted-foreground flex flex-row">
-              {selectedAd?.name ? (
-                <div>
-                  <span className="font-extrabold">{selectedAd.name}</span> will
-                  be scheduled for{" "}
-                  <span className="font-extrabold">{plays}</span> plays per day
-                  on the{" "}
-                  <span className="font-extrabold">
-                    {selectedDevices.length}
-                  </span>{" "}
-                  group(s) selected for{" "}
-                  <span className="font-extrabold">{totalDays}</span>{" "}
-                  {totalDays === 1 ? "day" : "days"}.
-                </div>
-              ) : (
-                "No Ad Selected."
-              )}
-            </p>
+          <CardContent>
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-sm font-medium mb-2">Schedule Summary</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {selectedAd?.name ? (
+                  <span>
+                    <span className="font-semibold text-foreground">
+                      {selectedAd.name}
+                    </span>{" "}
+                    will be scheduled for{" "}
+                    <span className="font-semibold text-foreground">
+                      {plays}
+                    </span>{" "}
+                    plays per day on{" "}
+                    <span className="font-semibold text-foreground">
+                      {selectedDevices.length}
+                    </span>{" "}
+                    group{selectedDevices.length !== 1 ? "s" : ""} for{" "}
+                    <span className="font-semibold text-foreground">
+                      {totalDays}
+                    </span>{" "}
+                    {totalDays === 1 ? "day" : "days"}.
+                  </span>
+                ) : (
+                  "Please select an ad, device group(s), and date range to see the schedule summary."
+                )}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

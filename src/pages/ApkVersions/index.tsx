@@ -5,6 +5,7 @@ import { DataTable } from "@/components/data-table"; // Your existing DataTable 
 import api from "@/api"; // Your API client
 import { ApkVersion, columns } from "./columns";
 import AddApkComponent from "./components/AddApkComponent";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ApkVersionsResponse {
   apk_versions: ApkVersion[]; // Assuming your API returns an object with an array under 'apk_versions'
@@ -23,7 +24,7 @@ function ApkVersionsPage() {
       // NOTE: This assumes your API for fetching ALL APK versions is protected
       // and requires admin token, as discussed in the backend section.
       // Adjust '/api/v1/apk_versions' if your route is different.
-      const response = await api.get<ApkVersionsResponse>('/apk_versions');
+      const response = await api.get<ApkVersionsResponse>("/apk_versions");
       setData(response.apk_versions); // Adjust based on your actual API response structure
     } catch (err: any) {
       console.error("Failed to fetch APK versions:", err);
@@ -43,29 +44,42 @@ function ApkVersionsPage() {
   };
 
   return (
-    <div className="p-6"> {/* Added padding for better layout */}
-      <div className="flex items-center w-full mb-6">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div>
-          <p className="text-xl font-semibold">APK Versions</p>
+          <p className="text-lg md:text-xl font-semibold">APK Versions</p>
           <p className="text-sm text-muted-foreground">
             Manage all Android application package versions.
           </p>
         </div>
 
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto">
           <AddApkComponent onApkAdded={handleDataChange} />
         </div>
       </div>
 
-      {loading && <p className="text-center text-gray-500">Loading APK versions...</p>}
+      {loading && (
+        <p className="text-center text-gray-500">Loading APK versions...</p>
+      )}
       {error && <p className="text-center text-red-500">Error: {error}</p>}
 
       {!loading && !error && (
-        <DataTable
-          data={data}
-          columns={columns} // Pass the callback to columns for actions
-          filters={[{ label: "Version Name", value: "version_name" }]}
-        />
+        <Card>
+          <CardContent className="p-4 md:p-6">
+            <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+              {/* Mobile scroll hint */}
+              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div>
+              <DataTable
+                data={data}
+                columns={columns} // Pass the callback to columns for actions
+                filters={[{ label: "Version Name", value: "version_name" }]}
+                maxHeight="none"
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

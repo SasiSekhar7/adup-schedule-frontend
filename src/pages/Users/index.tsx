@@ -3,10 +3,10 @@ import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { userColumns, User } from "./columns";
 import AddUsers from "./components/add";
+import { Card, CardContent } from "@/components/ui/card";
 
 function Users() {
   const [data, setData] = useState<User[]>([]);
-
 
   const fetchData = async () => {
     const response = await api.get("/user/all");
@@ -24,22 +24,34 @@ function Users() {
   };
 
   return (
-    <div>
-      <div className="flex items-center w-full mb-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div>
-          <p className="text-md font-semibold">Users</p>
+          <p className="text-lg md:text-xl font-semibold">Users</p>
           <p className="text-sm text-muted-foreground">List of all users</p>
         </div>
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto">
           {/* Pass onIsOpenChange to AddUsers so it can trigger a data refresh */}
           <AddUsers onIsOpenChange={onIsOpenChange} />
         </div>
       </div>
-      
-      {/* Show loading indicator if data is being fetched */}
-      
-        <DataTable data={data} columns={userColumns} filters={[{ label: "Name", value: "name" }]} />
-      
+
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            {/* Mobile scroll hint */}
+            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+              Scroll →
+            </div>
+            <DataTable
+              data={data}
+              columns={userColumns}
+              filters={[{ label: "Name", value: "name" }]}
+              maxHeight="none"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

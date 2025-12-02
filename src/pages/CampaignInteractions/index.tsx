@@ -1,39 +1,55 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useEffect, useState } from "react";
-import { CampaignInteraction, CampaignInteractionResponse, columns, filters } from "./columns";
-
+import {
+  CampaignInteraction,
+  CampaignInteractionResponse,
+  columns,
+  filters,
+} from "./columns";
+import { Card, CardContent } from "@/components/ui/card";
 
 function CampaignInteractions() {
-  const [data, setData] = useState<CampaignInteraction[]>([])
+  const [data, setData] = useState<CampaignInteraction[]>([]);
   const fetchDta = async () => {
-    const response =  await api.get<CampaignInteractionResponse>('/campaign/interactions')
-    setData(response.interactions)
+    const response = await api.get<CampaignInteractionResponse>(
+      "/campaign/interactions"
+    );
+    setData(response.interactions);
   };
   useEffect(() => {
-
     fetchDta();
   }, []);
- 
+
   return (
-    <div className="">
-      <div className="flex items-center w-full mb-4">
-      <div className="">
-      <p className="text-md font-semibold ">
-        Campaign Interactions
-        </p>
-        <p className="text-sm text-muted-foreground">
-          list of all Campaign Interactions 
-        </p>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
+        <div className="">
+          <p className="text-lg md:text-xl font-semibold">
+            Campaign Interactions
+          </p>
+          <p className="text-sm text-muted-foreground">
+            List of all campaign interactions
+          </p>
+        </div>
       </div>
 
-      <div className="ml-auto">
-      </div>
-      </div>
-     
-
-      {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3"> */}
-     <DataTable data={data}  columns={columns} filters={filters}/>
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            {/* Mobile scroll hint */}
+            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+              Scroll →
+            </div>
+            <DataTable
+              data={data}
+              columns={columns}
+              filters={filters}
+              maxHeight="none"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

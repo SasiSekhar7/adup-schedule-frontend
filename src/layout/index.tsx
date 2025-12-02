@@ -1,4 +1,4 @@
-import { AppSidebar } from "./components/app-sidebar"
+import { AppSidebar } from "./components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,18 +6,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Link, Outlet, useLocation } from "react-router-dom"
+} from "@/components/ui/sidebar";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 export default function Layout() {
   const location = useLocation();
-    const pathSegments = location.pathname.split("/").filter(Boolean);
+  const pathSegments = location.pathname.split("/").filter(Boolean);
 
   return (
     <SidebarProvider>
@@ -29,23 +29,28 @@ export default function Layout() {
             {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
             <Breadcrumb>
               <BreadcrumbList>
-              <div className="flex items-center space-x-2">
-      {pathSegments.map((item, index) => {
-        const path = `/${pathSegments.slice(0, index + 1).join("/")}`;
-        return (
-          <div className="flex items-center" key={path}>
-            <BreadcrumbItem>
-              <Link to={path} className="capitalize">
-                {decodeURIComponent(item)}
-              </Link>
-            </BreadcrumbItem>
-            {index <= pathSegments.length - 1 && (
-              <Separator orientation="vertical" className="mr-2 h-4" />
-            )}
-          </div>
-        );
-      })}
-    </div>
+                <div className="flex items-center space-x-2">
+                  {pathSegments.map((item, index) => {
+                    const path = `/${pathSegments
+                      .slice(0, index + 1)
+                      .join("/")}`;
+                    return (
+                      <div className="flex items-center" key={path}>
+                        <BreadcrumbItem>
+                          <Link to={path} className="capitalize">
+                            {decodeURIComponent(item)}
+                          </Link>
+                        </BreadcrumbItem>
+                        {index <= pathSegments.length - 1 && (
+                          <Separator
+                            orientation="vertical"
+                            className="mr-2 h-4"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
                 {/* <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="#">
                     Building Your Application
@@ -59,10 +64,10 @@ export default function Layout() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-         <Outlet/>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-x-hidden">
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
