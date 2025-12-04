@@ -247,7 +247,11 @@ export function PerformanceTablesCard({
           {/* Ads Tab */}
           <TabsContent value="ads">
             {renderError(adError)}
-            <div className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <div   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               <div className="overflow-x-auto">
                 <Table className="w-full min-w-[600px]">
                   <TableHeader>
@@ -315,7 +319,11 @@ export function PerformanceTablesCard({
           {/* Groups Tab */}
           <TabsContent value="groups" className="overflow-y-auto">
             {renderError(groupError)}
-            <div className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <div   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               <div className="overflow-x-auto">
                 <Table className="w-full min-w-[600px]">
                   <TableHeader>

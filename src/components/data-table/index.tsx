@@ -119,10 +119,10 @@ export function DataTable<TData, TValue>({
           maxHeight !== "none" ? "rounded-md border" : ""
         } min-h-0`}
       >
-        <div className="h-full overflow-auto">
+        <div className="h-full overflow-auto overflow-y-auto">
           <Table
             className="text-sm"
-            style={{ width: "100%", minWidth: "600px" }}
+
           >
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -131,7 +131,7 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
-                      className="whitespace-nowrap"
+                      className=""
                     >
                       {header.isPlaceholder
                         ? null
@@ -156,7 +156,7 @@ export function DataTable<TData, TValue>({
                     }
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="whitespace-nowrap">
+                      <TableCell key={cell.id} className="">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

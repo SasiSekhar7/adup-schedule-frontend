@@ -1002,7 +1002,11 @@ function DevicePage() {
                 </span>
               </div>
             </CardHeader>
-            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <CardContent   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               {schedules.length > 0 ? (
                 <>
                   <div className="overflow-x-auto">
@@ -1233,7 +1237,11 @@ function DevicePage() {
                 </span>
               </div>
             </CardHeader>
-            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <CardContent   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               {proofOfPlayLogs.length > 0 ? (
                 <>
                   <div className="overflow-x-auto">
@@ -1470,7 +1478,11 @@ function DevicePage() {
                 </span>
               </div>
             </CardHeader>
-            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <CardContent   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               {deviceEventLogs.length > 0 ? (
                 <>
                   <div className="overflow-x-auto">
@@ -1596,7 +1608,11 @@ function DevicePage() {
                 <span className="text-sm text-muted-foreground">per page</span>
               </div>
             </CardHeader>
-            <CardContent className="p-4 max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+            <CardContent   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               {deviceTelemetry.length > 0 ? (
                 <>
                   <div className="overflow-x-auto">
