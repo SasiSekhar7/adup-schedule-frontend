@@ -24,10 +24,10 @@ import { getRole } from "@/helpers";
 import { cn } from "@/lib/utils"; // Assuming you have a utility for class merging (from shadcn/ui)
 
 // Define allowed file types
-const ALLOWED_VIDEO_TYPES = ["video/mp4"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg"]; // image/jpeg covers both .jpg and .jpeg
 const ALL_ALLOWED_FILE_TYPES = [...ALLOWED_VIDEO_TYPES, ...ALLOWED_IMAGE_TYPES];
-const ALLOWED_FILE_EXTENSIONS = ".mp4, .png, .jpg, .jpeg";
+const ALLOWED_FILE_EXTENSIONS = ".mp4, .png, .jpg, .jpeg .mov .webm ";
 
 // Helper function to format bytes into a readable string (KB, MB, GB)
 const formatBytes = (bytes: number, decimals = 2) => {

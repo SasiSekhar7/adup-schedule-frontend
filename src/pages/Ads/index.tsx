@@ -286,7 +286,13 @@ function Ads() {
 
       <Card>
         <CardContent className="sm:p-0 p-4 md:p-6">
-          <div className="max-w-[350px] sm:max-w-[600px] md:max-w-full relative">
+          <div
+            className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+"
+          >
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
               Scroll →

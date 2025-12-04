@@ -104,7 +104,11 @@ function Clients() {
                 <Plus className="h-4 w-4 ml-2" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogContent   className="
+  max-w-[350px]
+  md:max-w-[calc(100vw-20rem)]
+  relative
+">
               <DialogHeader>
                 <DialogTitle className="text-base md:text-lg">
                   Create Client
