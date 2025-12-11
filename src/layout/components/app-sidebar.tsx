@@ -6,6 +6,11 @@ import {
   Bot,
   BookOpen,
   QrCode,
+  RotateCcw,
+  Video,
+  Globe,
+  Monitor,
+  Play,
   // Add any other icons you use here
 } from "lucide-react";
 
@@ -28,6 +33,11 @@ const iconMap: Record<string, React.ElementType> = {
   Bot,
   BookOpen,
   QrCode,
+  RotateCcw,
+  Video,
+  Globe,
+  Monitor,
+  Play,
   // Add additional icon mappings here as needed
 };
 

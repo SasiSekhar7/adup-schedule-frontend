@@ -27,6 +27,10 @@ const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
 const Users = lazy(() => import("./pages/Users"));
 const DevicePage = lazy(() => import("./pages/DevicePage"));
+const Carousels = lazy(() => import("./pages/Carousels"));
+const CreateCarousel = lazy(() => import("./pages/Carousels/create"));
+const LiveContent = lazy(() => import("./pages/LiveContent"));
+const CreateLiveContent = lazy(() => import("./pages/LiveContent/create"));
 
 // Loading Fallback Component
 
@@ -192,6 +196,58 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <CampaignInteractions />
+                </Suspense>
+              }
+            />
+
+            {/* Carousel Routes */}
+            <Route
+              path="/carousels"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <Carousels />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/carousels/add"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <CreateCarousel />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/carousels/:id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <CreateCarousel />
+                </Suspense>
+              }
+            />
+
+            {/* Live Content Routes */}
+            <Route
+              path="/live-content"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <LiveContent />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/live-content/add"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <CreateLiveContent />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/live-content/:id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <CreateLiveContent />
                 </Suspense>
               }
             />

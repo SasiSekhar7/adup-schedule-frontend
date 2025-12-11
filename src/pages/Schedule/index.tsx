@@ -117,6 +117,8 @@ import {
   ChevronRight,
   X,
   ExternalLinkIcon,
+  Video,
+  RotateCcw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -146,23 +148,44 @@ interface ApiGroup {
   completedDays: number;
   completedPercentage: string;
   lastDate: string;
+  weekdays?: number[];
+  time_slots?: { start: string; end: string }[];
 }
 
 interface ApiAd {
   adId: string;
   adName: string;
+  adDuration: number;
+  groups: ApiGroup[];
+}
+
+interface ApiLiveContent {
+  contentId: string;
+  contentName: string;
+  contentDuration: number;
+  contentType: "live_content";
+  groups: ApiGroup[];
+}
+
+interface ApiCarousel {
+  contentId: string;
+  contentName: string;
+  contentDuration: number;
+  contentType: "carousel";
   groups: ApiGroup[];
 }
 
 interface ApiResponse {
   ads: ApiAd[];
+  live_contents: ApiLiveContent[];
+  carousels: ApiCarousel[];
   total: number;
 }
 
 interface Schedule {
   id: string;
   name: string;
-  type: "Ad" | "Image";
+  type: "Ad" | "Live Content" | "Carousel";
   deviceGroups: string[];
   status: "Scheduled" | "Active" | "Inactive";
   progress: number;
@@ -171,6 +194,12 @@ interface Schedule {
   totalPlays: number;
   category: "default" | "preferred";
   originalGroups: ApiGroup[];
+  contentType?: "ad" | "live_content" | "carousel";
+  advancedScheduling?: {
+    weekdays: string;
+    timeSlots: string;
+    hasAdvancedScheduling: boolean;
+  };
 }
 
 interface DeleteModalState {
@@ -494,17 +523,19 @@ export default function Schedule() {
 
       const payload = {
         adId: deleteModal.schedule.id,
+        contentId: deleteModal.schedule.id,
         groupId: selectedGroupId,
         startDate: dateRange.from,
         endDate: dateRange.to,
-        timeRangeType: timeRange, // Keep original option for reference
+        timeRangeType: timeRange,
+        contentType: deleteModal.schedule.contentType || "ad",
       };
 
       console.log("[v0] Calling delete API with payload:", payload);
 
       const result = await api.post("/schedule/multiple-delete", payload);
 
-      if (!result || !result.message) {
+      if (!result || !result.data?.message) {
         throw new Error("Failed to delete schedule");
       } else {
         toast.success("Schedule deleted successfully");
@@ -549,67 +580,118 @@ export default function Schedule() {
       };
 
       const response = await api.get("/schedule/all_v2", { params });
-      if (!response || !response.ads) {
+      if (!response) {
         throw new Error("Failed to fetch schedules");
       }
 
-      const transformedSchedules: Schedule[] = response.ads.map((ad) => {
-        const avgProgress =
-          ad.groups.reduce((sum, group) => {
-            return (
-              sum +
-              Number.parseFloat(group.completedPercentage.replace("%", ""))
-            );
-          }, 0) / ad.groups.length;
+      const transformedSchedules: Schedule[] = [];
 
-        const mostRecentGroup = ad.groups.reduce((latest, current) => {
+      // Helper functions for transformation
+      const getDuration = (totalDays: number) => {
+        if (totalDays === 1) return "1 day";
+        return `${totalDays} days`;
+      };
+
+      const getAdvancedSchedulingInfo = (group: ApiGroup) => {
+        if (!group.weekdays || !group.time_slots) return null;
+
+        const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const selectedDays = group.weekdays.map(d => weekdayNames[d]).join(", ");
+        const timeSlots = group.time_slots.map(slot => `${slot.start}-${slot.end}`).join(", ");
+
+        return {
+          weekdays: selectedDays,
+          timeSlots: timeSlots,
+          hasAdvancedScheduling: true
+        };
+      };
+
+      const formatDate = (dateStr: string) => {
+        const [day, month, year] = dateStr.split("-");
+        const date = new Date(
+          Number.parseInt(year),
+          Number.parseInt(month) - 1,
+          Number.parseInt(day)
+        );
+        return date.toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+      };
+
+      const transformContent = (content: any, type: "Ad" | "Live Content" | "Carousel", contentType: "ad" | "live_content" | "carousel") => {
+        const avgProgress = content.groups.reduce((sum: number, group: ApiGroup) => {
+          return sum + Number.parseFloat(group.completedPercentage.replace("%", ""));
+        }, 0) / content.groups.length;
+
+        const mostRecentGroup = content.groups.reduce((latest: ApiGroup, current: ApiGroup) => {
           return new Date(current.lastDate.split("-").reverse().join("-")) >
             new Date(latest.lastDate.split("-").reverse().join("-"))
             ? current
             : latest;
         });
 
-        const getDuration = (totalDays: number) => {
-          // Duration Calculation Logic:
-          // - 1 day: Shows "1 day"
-          // - 2+ days: Shows "X days" (no conversion to weeks or months)
-          if (totalDays === 1) return "1 day";
-          return `${totalDays} days`;
-        };
+        // Use totalDays from the schedule groups to show schedule duration
+        const displayDuration = getDuration(mostRecentGroup.totalDays);
 
-        const formatDate = (dateStr: string) => {
-          // Date Formatting Logic:
-          // Input: DD-MM-YYYY format (e.g., "18-08-2025")
-          // Output: Human-readable format (e.g., "18 August 2025")
-          // Process: Split by "-", parse as day-month-year, format using toLocaleDateString
-          const [day, month, year] = dateStr.split("-");
-          const date = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day)
-          );
-          return date.toLocaleDateString("en-US", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          });
-        };
+        // Determine status based on progress and dates
+        const today = new Date();
+        const startDate = new Date(mostRecentGroup.fromDate.split("-").reverse().join("-"));
+        const endDate = new Date(mostRecentGroup.toDate.split("-").reverse().join("-"));
+
+        let status: "Scheduled" | "Active" | "Inactive";
+        if (avgProgress >= 100) {
+          status = "Inactive";
+        } else if (today >= startDate && today <= endDate) {
+          status = "Active";
+        } else {
+          status = "Scheduled";
+        }
+
+        // Get advanced scheduling info from the most recent group
+        const advancedScheduling = getAdvancedSchedulingInfo(mostRecentGroup);
 
         return {
-          id: ad.adId,
-          name: ad.adName,
-          type: "Ad" as const,
-          deviceGroups: ad.groups.map((group) => group.groupName),
-          // status: avgProgress === 100 ? "Inactive" : "Scheduled",
-          status: "Scheduled",
+          id: content.adId || content.contentId,
+          name: content.adName || content.contentName,
+          type,
+          deviceGroups: content.groups.map((group: ApiGroup) => group.groupName),
+          status,
           progress: Math.round(avgProgress),
-          duration: getDuration(mostRecentGroup.totalDays),
+          duration: displayDuration,
           startDate: formatDate(mostRecentGroup.fromDate),
           totalPlays: Math.round(avgProgress * 10),
           category: "default" as const,
-          originalGroups: ad.groups,
+          originalGroups: content.groups,
+          contentType,
+          advancedScheduling,
         };
-      });
+      };
+
+      // Transform ads
+      if ((response as any).ads) {
+        const adSchedules = (response as any).ads.map((ad: ApiAd) =>
+          transformContent(ad, "Ad", "ad")
+        );
+        transformedSchedules.push(...adSchedules);
+      }
+
+      // Transform live contents
+      if ((response as any).live_contents) {
+        const liveContentSchedules = (response as any).live_contents.map((content: ApiLiveContent) =>
+          transformContent(content, "Live Content", "live_content")
+        );
+        transformedSchedules.push(...liveContentSchedules);
+      }
+
+      // Transform carousels
+      if ((response as any).carousels) {
+        const carouselSchedules = (response as any).carousels.map((carousel: ApiCarousel) =>
+          transformContent(carousel, "Carousel", "carousel")
+        );
+        transformedSchedules.push(...carouselSchedules);
+      }
 
       setSchedules(transformedSchedules);
     } catch (error) {
@@ -711,11 +793,23 @@ export default function Schedule() {
       <td className="p-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-accent/10 rounded flex items-center justify-center">
-            <Grid3X3 className="h-4 w-4 text-accent" />
+            {schedule.contentType === "live_content" ? (
+              <Video className="h-4 w-4 text-accent" />
+            ) : schedule.contentType === "carousel" ? (
+              <RotateCcw className="h-4 w-4 text-accent" />
+            ) : (
+              <Grid3X3 className="h-4 w-4 text-accent" />
+            )}
           </div>
           <div>
             <Link
-              to={`/ads/${schedule.id}`}
+              to={
+                schedule.contentType === "live_content"
+                  ? `/live-content/${schedule.id}`
+                  : schedule.contentType === "carousel"
+                  ? `/carousels/${schedule.id}`
+                  : `/ads/${schedule.id}`
+              }
               className="flex items-center gap-1"
             >
               <p className="font-medium text-foreground cursor-pointer flex justify-center align-middle gap-1 ">
@@ -727,6 +821,18 @@ export default function Schedule() {
               <Badge variant="outline" className=" text-muted-foreground">
                 {schedule.type}
               </Badge>
+              {/* <Badge
+                variant={
+                  schedule.status === "Active"
+                    ? "default"
+                    : schedule.status === "Scheduled"
+                    ? "secondary"
+                    : "destructive"
+                }
+                className="text-xs"
+              >
+                {schedule.status}
+              </Badge> */}
             </div>
           </div>
         </div>
@@ -768,6 +874,20 @@ export default function Schedule() {
         <p className="text-xs text-muted-foreground mt-1">
           {schedule.startDate}
         </p>
+
+        {/* Advanced Scheduling Information */}
+        {schedule.advancedScheduling?.hasAdvancedScheduling && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              <span>{schedule.advancedScheduling.weekdays}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>{schedule.advancedScheduling.timeSlots}</span>
+            </div>
+          </div>
+        )}
       </td>
       {/* End of Schedule Column */}
 
@@ -967,7 +1087,7 @@ export default function Schedule() {
               </Select>
               <span className="text-sm text-muted-foreground">per page</span>
             </div>
-            {/* <Select
+            <Select
               value={filters.status}
               onValueChange={(value) => handleFilterChange("status", value)}
             >
@@ -977,6 +1097,7 @@ export default function Schedule() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
@@ -990,9 +1111,10 @@ export default function Schedule() {
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="ad">Ad</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
+                <SelectItem value="live content">Live Content</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
               </SelectContent>
-            </Select> */}
+            </Select>
           </div>
         </div>
       </div>
@@ -1073,11 +1195,23 @@ export default function Schedule() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-8 h-8 bg-accent/10 rounded flex items-center justify-center flex-shrink-0">
-                        <Grid3X3 className="h-4 w-4 text-accent" />
+                        {schedule.contentType === "live_content" ? (
+                          <Video className="h-4 w-4 text-accent" />
+                        ) : schedule.contentType === "carousel" ? (
+                          <RotateCcw className="h-4 w-4 text-accent" />
+                        ) : (
+                          <Grid3X3 className="h-4 w-4 text-accent" />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <Link
-                          to={`/ads/${schedule.id}`}
+                          to={
+                            schedule.contentType === "live_content"
+                              ? `/live-content/${schedule.id}`
+                              : schedule.contentType === "carousel"
+                              ? `/carousels/${schedule.id}`
+                              : `/ads/${schedule.id}`
+                          }
                           className="flex items-center gap-1"
                         >
                           <p className="font-medium text-foreground cursor-pointer flex items-center gap-1 truncate">
@@ -1085,12 +1219,26 @@ export default function Schedule() {
                             <ExternalLinkIcon className="h-4 w-4 text-blue-900 flex-shrink-0" />
                           </p>
                         </Link>
-                        <Badge
-                          variant="outline"
-                          className="text-muted-foreground mt-1"
-                        >
-                          {schedule.type}
-                        </Badge>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Badge
+                            variant="outline"
+                            className="text-muted-foreground"
+                          >
+                            {schedule.type}
+                          </Badge>
+                          <Badge
+                            variant={
+                              schedule.status === "Active"
+                                ? "default"
+                                : schedule.status === "Scheduled"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            {schedule.status}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -1122,6 +1270,25 @@ export default function Schedule() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {schedule.startDate}
                       </p>
+
+                      {/* Advanced Scheduling Information for Mobile */}
+                      {schedule.advancedScheduling?.hasAdvancedScheduling && (
+                        <div className="mt-3 p-2 bg-muted/30 rounded border">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            ADVANCED SCHEDULING
+                          </p>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{schedule.advancedScheduling.weekdays}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>{schedule.advancedScheduling.timeSlots}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1274,6 +1441,35 @@ export default function Schedule() {
                       days)
                     </span>
                   </div>
+
+                  {/* Advanced Scheduling Information in Delete Modal */}
+                  {selectedGroup.weekdays && selectedGroup.time_slots && (
+                    <div className="mt-3 p-3 bg-accent/10 rounded border border-accent/20">
+                      <h4 className="text-sm font-medium text-popover-foreground mb-2">
+                        Advanced Scheduling:
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span className="font-medium">Weekdays:</span>
+                          <span>
+                            {selectedGroup.weekdays
+                              .map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                              .join(", ")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-medium">Time Slots:</span>
+                          <span>
+                            {selectedGroup.time_slots
+                              .map(slot => `${slot.start}-${slot.end}`)
+                              .join(", ")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
