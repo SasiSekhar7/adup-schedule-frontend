@@ -135,7 +135,7 @@ function AddToSchedule() {
         }
 
         console.log("Scheduling data:", data);
-        await api.post("/schedule/add", data);
+        await api.post("/schedule/add_v2", data);
         navigate("/schedule");
         setLoading(false);
       }
