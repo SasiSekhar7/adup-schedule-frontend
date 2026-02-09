@@ -43,7 +43,7 @@ function Clients() {
 
   const fetchDta = async () => {
     const response = await api.get<ClientsResponse>("/ads/clients");
-    setData(response.data.clients);
+    setData(response?.clients);
   };
 
   useEffect(() => {
