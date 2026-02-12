@@ -43,7 +43,7 @@ function Clients() {
 
   const fetchDta = async () => {
     const response = await api.get<ClientsResponse>("/ads/clients");
-    setData(response.data.clients);
+    setData(response?.clients);
   };
 
   useEffect(() => {
@@ -104,11 +104,14 @@ function Clients() {
                 <Plus className="h-4 w-4 ml-2" />
               </Button>
             </DialogTrigger>
-            <DialogContent   className="
-  max-w-[350px]
-  md:max-w-[calc(100vw-20rem)]
-  relative
-">
+            <DialogContent
+              // className="
+              //   max-w-[350px]
+              //   md:max-w-[calc(100vw-20rem)]
+              //   relative
+              // "
+              className="sm:max-w-md"
+            >
               <DialogHeader>
                 <DialogTitle className="text-base md:text-lg">
                   Create Client
