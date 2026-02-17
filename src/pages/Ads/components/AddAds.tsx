@@ -20,8 +20,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input"; // Assuming this is your Shadcn Input
 import api from "@/api";
-import { getRole } from "@/helpers";
+import { getRole, getUser } from "@/helpers";
 import { cn } from "@/lib/utils"; // Assuming you have a utility for class merging (from shadcn/ui)
+import { useNavigate } from "react-router-dom";
 
 // Define allowed file types
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
@@ -48,7 +49,7 @@ const getFileExtension = (filename: string): string => {
 // Single part upload function for files ≤ 50MB using signed URL
 async function uploadSingleFile(
   file: File,
-  onProgress?: (progress: number, status: string) => void
+  onProgress?: (progress: number, status: string) => void,
 ) {
   // Generate filename in the format: ad-{timestamp}{extension}
   const fileExtension = getFileExtension(file.name);
@@ -87,8 +88,8 @@ async function uploadLargeFile(
     progress: number,
     status: string,
     speed: string,
-    timeLeft: string
-  ) => void
+    timeLeft: string,
+  ) => void,
 ) {
   // Generate filename in the format: ad-{timestamp}{extension}
   const fileExtension = getFileExtension(file.name);
@@ -153,17 +154,17 @@ async function uploadLargeFile(
     const timeLeftFormatted =
       estimatedTimeLeft > 0 && isFinite(estimatedTimeLeft)
         ? `${Math.floor(estimatedTimeLeft / 60)}m ${Math.round(
-            estimatedTimeLeft % 60
+            estimatedTimeLeft % 60,
           )}s left`
         : "calculating...";
 
     onProgress?.(
       progress,
       `Uploading part ${i + 1}/${urls.length}... ${formatBytes(
-        uploadedBytes
+        uploadedBytes,
       )} / ${formatBytes(file.size)}`,
       speedFormatted,
-      timeLeftFormatted
+      timeLeftFormatted,
     );
 
     console.log(`Uploaded part ${i + 1}/${urls.length}`);
@@ -188,7 +189,7 @@ interface AdToSubmit {
 
 function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
   const [clients, setClients] = useState<{ client_id: string; name: string }[]>(
-    []
+    [],
   );
   const [file, setFile] = useState<File | null>(null);
   const [ad, setAd] = useState<AdToSubmit>({ duration: 10 });
@@ -210,6 +211,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
   useEffect(() => {
     const role = getRole();
+
     setUserRole(role);
   }, []);
 
@@ -217,6 +219,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
     const fetchClients = async () => {
       try {
         const response = await api.get("/ads/clients");
+
         setClients((response as any).clients);
       } catch (err) {
         console.error(err);
@@ -228,41 +231,131 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
     }
   }, [userRole]);
 
-  // Handler for file input and drag/drop
-  const handleFileSelection = useCallback((selectedFile: File | null) => {
-    setError(undefined); // Clear previous errors
+  const [plans, setPlans] = useState<any[]>([]);
+  const [storageLimit, setStorageLimit] = useState(0);
+  const [usedStorage, setUsedStorage] = useState(0);
+  const [newFileSize, setNewFileSize] = useState(0);
+  const [isPlanExpired, setIsPlanExpired] = useState(false);
 
-    if (!selectedFile) {
-      setFile(null);
-      // Crucial: Clear the file input's value when a file is removed or changed
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+  const fetchPlans = async () => {
+    try {
+      let response;
+
+      if (userRole === "Admin" && ad?.client_id) {
+        response = await api.get(
+          "/subscription/client?clientid=" + ad.client_id,
+        );
+      } else {
+        response = await api.get("/subscription/client");
       }
+
+      const user = response;
+      const tier = response?.Tier;
+
+      if (tier !== null && tier !== undefined) {
+        setPlans([tier]);
+
+        console.log("inside tier !== null && tier !== undefined");
+
+        setStorageLimit(Number(tier.storage_limit_bytes));
+        setUsedStorage(Number(user.used_storage_bytes));
+        //  Expiry Check
+        const now = new Date();
+        const expiryDate = new Date(user.subscription_expiry);
+
+        if (user.subscription_status !== "active" || expiryDate < now) {
+          setIsPlanExpired(true);
+        } else {
+          setIsPlanExpired(false);
+        }
+      } else {
+        console.log("inside not tier !== null && tier !== undefined");
+
+        setPlans([]);
+      }
+    } catch (err) {
+      console.error("Plan fetch error:", err);
+      setPlans([]);
+    }
+  };
+  useEffect(() => {
+    fetchPlans();
+  }, [userRole, ad?.client_id, storageLimit, usedStorage, isPlanExpired]);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  // Handler for file input and drag/drop
+  const handleFileSelection = useCallback(
+    (selectedFile: File | null) => {
+      setError(undefined); // Clear previous errors
+
+      //  Block if expired
+      if (isPlanExpired) {
+        setError(
+          "Your subscription plan has expired. Please renew to continue uploading.",
+        );
+        return;
+      }
+      if (!selectedFile) {
+        setFile(null);
+        setNewFileSize(0);
+        // Crucial: Clear the file input's value when a file is removed or changed
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        setUploadProgress(0);
+        setUploadStatus("");
+        setUploadSpeed("0 B/s");
+        setTimeLeft("calculating...");
+        return;
+      }
+
+      console.log("strage:-", usedStorage);
+      console.log("storage limit :-", storageLimit);
+      const fileSizeInBytes = selectedFile.size;
+      const totalAfterUpload = usedStorage + fileSizeInBytes;
+
+      //  Check if exceeds plan limit
+      if (totalAfterUpload > storageLimit) {
+        setError("Storage limit exceeded. Upgrade your plan.");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // Validate file type
+      if (!ALL_ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
+        setError(
+          `Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`,
+        );
+        setFile(null); // Clear the file if it's invalid
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; // Ensure input value is cleared for invalid files
+        }
+        return;
+      }
+
+      setFile(selectedFile);
       setUploadProgress(0);
+      setNewFileSize(fileSizeInBytes);
       setUploadStatus("");
       setUploadSpeed("0 B/s");
       setTimeLeft("calculating...");
-      return;
-    }
+    },
+    [usedStorage, storageLimit, isPlanExpired],
+  );
 
-    // Validate file type
-    if (!ALL_ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
-      setError(
-        `Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`
-      );
-      setFile(null); // Clear the file if it's invalid
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Ensure input value is cleared for invalid files
-      }
-      return;
-    }
+  const totalUsed = usedStorage + newFileSize;
 
-    setFile(selectedFile);
-    setUploadProgress(0);
-    setUploadStatus("");
-    setUploadSpeed("0 B/s");
-    setTimeLeft("calculating...");
-  }, []);
+  const storagePercentage =
+    storageLimit > 0 ? Math.min((totalUsed / storageLimit) * 100, 100) : 0;
 
   // Drag & Drop Handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -288,7 +381,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
         e.dataTransfer.clearData();
       }
     },
-    [handleFileSelection]
+    [handleFileSelection],
   );
 
   const handleCreate = async () => {
@@ -306,7 +399,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
       // Double-check file type validity right before upload
       if (!ALL_ALLOWED_FILE_TYPES.includes(file.type)) {
         throw new Error(
-          `Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`
+          `Invalid file type. Only ${ALLOWED_FILE_EXTENSIONS} files are allowed.`,
         );
       }
 
@@ -332,7 +425,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
             setUploadStatus(status);
             setUploadSpeed(speed);
             setTimeLeft(timeLeft);
-          }
+          },
         );
 
         // After successful multipart upload, create the ad record
@@ -360,7 +453,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
           (progress, status) => {
             setUploadProgress(progress);
             setUploadStatus(status);
-          }
+          },
         );
 
         // After successful upload, create the ad record
@@ -382,6 +475,18 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
       }
 
       setUploadStatus("Upload complete!");
+
+      if(ad.client_id){
+        await api.post(`/storage/increment?client_id=${ad.client_id}`, {
+          fileSizeBytes: file.size,
+        });
+      }else{
+        await api.post("/storage/increment", {
+          fileSizeBytes: file.size,
+        });
+      }
+     
+
       setUploadProgress(100);
       setTimeout(() => {
         setOpen(false);
@@ -472,7 +577,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
           <Plus className="ml-2 h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {loading ? "Uploading Ad..." : "Create New Ad"}
@@ -531,111 +636,143 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
         ) : (
           <div className="grid gap-6 py-4">
             {userRole === "Admin" && (
-              <div className="grid gap-2">
-                <Label htmlFor="client">Client</Label>
-                <Select
-                  onValueChange={(client_id) =>
-                    setAd((prev) => ({ ...prev, client_id }))
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="client">Client</Label>
+                  <Select
+                    onValueChange={(client_id) =>
+                      setAd((prev) => ({ ...prev, client_id }))
+                    }
+                    value={ad.client_id || ""}
+                  >
+                    <SelectTrigger id="client" className="w-full">
+                      <SelectValue placeholder="Select Client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {clients.map((client) => (
+                          <SelectItem
+                            key={client.client_id}
+                            value={client.client_id}
+                          >
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+            {/*  SHOW MESSAGE IF NO PLAN */}
+            {plans.length == 0 && (
+              <p className="text-sm text-red-500 mt-1">
+                You do not have an active subscription plan.
+              </p>
+            )}
+
+            {plans.length != 0 && (
+              <div
+                className={cn(
+                  "flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg transition-colors duration-200 cursor-pointer min-h-[120px]",
+                  isDragOver
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-gray-400 bg-gray-50",
+                  file ? "border-green-500 bg-green-50" : "",
+                )}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                // Clicking the div will trigger the hidden file input
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600 mb-1 text-center">
+                  {file ? (
+                    <span className="font-medium text-green-700">
+                      Selected: {file.name} ({formatBytes(file.size)})
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-medium">
+                        Drag & drop your ad file here
+                      </span>
+                      <br />
+                      or click to browse
+                    </>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 text-center mt-1">
+                  Allowed formats: {ALLOWED_FILE_EXTENSIONS}
+                </p>
+                <Input
+                  id="file-upload-input"
+                  type="file"
+                  className="hidden" // Hide the actual input
+                  ref={fileInputRef} // Attach ref here
+                  onChange={(e) =>
+                    handleFileSelection(e.target.files?.[0] || null)
                   }
-                  value={ad.client_id || ""}
-                >
-                  <SelectTrigger id="client" className="w-full">
-                    <SelectValue placeholder="Select Client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {clients.map((client) => (
-                        <SelectItem
-                          key={client.client_id}
-                          value={client.client_id}
+                  accept={ALL_ALLOWED_FILE_TYPES.join(",")} // Add accept attribute for native file dialog filtering
+                />
+                {file && (
+                  <div className="mt-2 space-y-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent dialog from closing or drag-drop area click
+                        handleFileSelection(null); // Clear file state and input value via callback
+                      }}
+                    >
+                      Remove file
+                    </Button>
+
+                    {/* File info and upload method */}
+                    <div className="text-sm text-gray-600 space-y-1 p-2 bg-gray-50 rounded">
+                      <div>File: {file.name}</div>
+                      <div>Size: {formatBytes(file.size)}</div>
+                      <div className="flex items-center gap-2">
+                        <span>Upload method:</span>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            file.size > 50 * 1024 * 1024
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
                         >
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                          {file.size > 50 * 1024 * 1024
+                            ? "Multipart (>50MB)"
+                            : "Signed URL (≤50MB)"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg transition-colors duration-200 cursor-pointer min-h-[120px]",
-                isDragOver
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-gray-400 bg-gray-50",
-                file ? "border-green-500 bg-green-50" : ""
-              )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              // Clicking the div will trigger the hidden file input
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600 mb-1 text-center">
-                {file ? (
-                  <span className="font-medium text-green-700">
-                    Selected: {file.name} ({formatBytes(file.size)})
-                  </span>
-                ) : (
-                  <>
-                    <span className="font-medium">
-                      Drag & drop your ad file here
-                    </span>
-                    <br />
-                    or click to browse
-                  </>
-                )}
-              </p>
-              <p className="text-xs text-gray-500 text-center mt-1">
-                Allowed formats: {ALLOWED_FILE_EXTENSIONS}
-              </p>
-              <Input
-                id="file-upload-input"
-                type="file"
-                className="hidden" // Hide the actual input
-                ref={fileInputRef} // Attach ref here
-                onChange={(e) =>
-                  handleFileSelection(e.target.files?.[0] || null)
-                }
-                accept={ALL_ALLOWED_FILE_TYPES.join(",")} // Add accept attribute for native file dialog filtering
-              />
-              {file && (
-                <div className="mt-2 space-y-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent dialog from closing or drag-drop area click
-                      handleFileSelection(null); // Clear file state and input value via callback
-                    }}
-                  >
-                    Remove file
-                  </Button>
+            {isPlanExpired && (
+              <div className="bg-red-100 text-red-600 p-3 rounded-md mb-3">
+                ⚠️ Your subscription has expired. Please renew your plan.
+              </div>
+            )}
 
-                  {/* File info and upload method */}
-                  <div className="text-sm text-gray-600 space-y-1 p-2 bg-gray-50 rounded">
-                    <div>File: {file.name}</div>
-                    <div>Size: {formatBytes(file.size)}</div>
-                    <div className="flex items-center gap-2">
-                      <span>Upload method:</span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          file.size > 50 * 1024 * 1024
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {file.size > 50 * 1024 * 1024
-                          ? "Multipart (>50MB)"
-                          : "Signed URL (≤50MB)"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="mt-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span>
+                  {formatFileSize(totalUsed)} / {formatFileSize(storageLimit)}
+                </span>
+                <span>{storagePercentage.toFixed(1)}%</span>
+              </div>
+
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${storagePercentage}%` }}
+                />
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -707,7 +844,9 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
               !file ||
               !ad.name ||
               (userRole === "Admin" && !ad.client_id) ||
-              !!error
+              !!error ||
+              totalUsed >= storageLimit ||
+              plans.length == 0
             }
           >
             <Save className="mr-2 h-4 w-4" />
