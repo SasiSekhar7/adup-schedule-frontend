@@ -1,7 +1,7 @@
 import api from "@/api";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BadgeDollarSign, Pencil, Plus, Save } from "lucide-react";
+import { BadgeDollarSign, Layers, Pencil, Plus, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -14,6 +14,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  Tooltip,
+  TooltipArrow,
+} from "@radix-ui/react-tooltip";
 
 interface Client {
   client_id: string;
@@ -155,6 +162,19 @@ function Clients() {
     }
   };
 
+  const formatBytes = (bytes: number) => {
+    if (bytes >= 1073741824) {
+      return (bytes / 1073741824).toFixed(2) + " GB";
+    }
+    if (bytes >= 1048576) {
+      return (bytes / 1048576).toFixed(2) + " MB";
+    }
+    if (bytes >= 1024) {
+      return (bytes / 1024).toFixed(2) + " KB";
+    }
+    return bytes + " Bytes";
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
@@ -267,17 +287,22 @@ function Clients() {
             2,
           );
 
+          // const usagePercent =
+          //   limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;
+
           const usagePercent =
-            limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;
+            limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
 
           return (
-            <Card key={index} className="col-span-1">
+            <Card key={index} className="col-span-1 bg-gray-100">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {client.name}
                 </CardTitle>
                 <div className="flex items-center gap-2 cursor-pointer">
-                  <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+                  {/* <BadgeDollarSign className="h-4 w-4 text-muted-foreground" /> */}
+
+                  <Layers className="h-4 w-4  text-muted-foreground" />
 
                   <Pencil
                     onClick={() => handleEditClient(client)}
@@ -297,25 +322,71 @@ function Clients() {
                 <p className="text-xs text-muted-foreground">Total Ads</p>
 
                 {/* Storage Info */}
-                <div className="text-sm space-y-1 mt-2">
+                {/*<div className="text-sm space-y-1 mt-2">
                   <p>Used: {usedGB} GB</p>
                   <p>Total: {totalGB} GB</p>
                   <p>Remaining: {remainingGB > 0 ? remainingGB : 0} GB</p>
-                </div>
+                </div>*/}
 
                 {/* Progress Bar */}
-                {limitBytes > 0 && (
+                {/* {limitBytes > 0 && (
                   <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div
                       className="bg-blue-500 h-2 rounded-full"
                       style={{ width: `${usagePercent}%` }}
                     ></div>
                   </div>
+                )} */}
+                {limitBytes > 0 && (
+                  <TooltipProvider>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2 flex overflow-hidden">
+                      {/* Used */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="bg-blue-500 h-2 cursor-pointer"
+                            style={{ width: `${usagePercent}%` }}
+                          />
+                        </TooltipTrigger>
+
+                        <TooltipContent
+                          side="top"
+                          className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
+                        >
+                          Used: {formatBytes(usedBytes)}
+                          <TooltipArrow className="fill-neutral-900" />
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Remaining */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="bg-gray-200 h-2 cursor-pointer"
+                            style={{ width: `${100 - usagePercent}%` }}
+                          />
+                        </TooltipTrigger>
+
+                        <TooltipContent
+                          side="top"
+                          className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
+                        >
+                          Remaining: {formatBytes(limitBytes - usedBytes)}
+                          <TooltipArrow className="fill-neutral-900" />
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
                 )}
 
-                <p className="text-xs text-muted-foreground">
-                  {usagePercent}% Storage Used
-                </p>
+                <div className="space-y-1 flex align-center justify-between mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    {usagePercent.toFixed(1)}% Storage Used
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Total: {totalGB} GB
+                  </p>
+                </div>
               </CardContent>
             </Card>
           );
