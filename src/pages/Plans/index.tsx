@@ -51,23 +51,6 @@ function Plans() {
   };
 
   // 🔹 Purchase Plan
-  const purchasePlan = async (tier_id: string) => {
-    try {
-      setLoading(tier_id);
-
-      await api.post("/subscription/purchase", {
-        tier_id,
-      });
-
-      toast.success("Plan purchased successfully!");
-
-      setCurrentTierId(tier_id);
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Purchase failed");
-    } finally {
-      setLoading(null);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-pink-500 to-orange-400 p-10">
@@ -112,17 +95,9 @@ function Plans() {
                   <p>{tier.max_ads} Ads</p>
                 </div>
 
-                {isCurrent ? (
+                {isCurrent && (
                   <Button disabled className="w-full mt-4 bg-green-500">
                     Current Plan
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => purchasePlan(tier.tier_id)}
-                    className="w-full mt-4"
-                    disabled={loading === tier.tier_id}
-                  >
-                    {loading === tier.tier_id ? "Processing..." : "Get Started"}
                   </Button>
                 )}
               </CardContent>
