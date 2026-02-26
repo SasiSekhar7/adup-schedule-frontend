@@ -117,9 +117,9 @@ function AdminPlans() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Manage Plans</h1>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={handleAssignBasic}>
+          {/* <Button variant="secondary" onClick={handleAssignBasic}>
             Assign Basic to Old Clients
-          </Button>
+          </Button> */}
 
           <Button onClick={handleOpenCreate}>Create Plan</Button>
         </div>

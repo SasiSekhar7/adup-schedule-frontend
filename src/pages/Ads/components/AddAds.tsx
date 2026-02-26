@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Save, UploadCloud } from "lucide-react";
+import { AlertTriangle, Plus, Save, UploadCloud } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -354,8 +354,29 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
   const totalUsed = usedStorage + newFileSize;
 
-  const storagePercentage =
-    storageLimit > 0 ? Math.min((totalUsed / storageLimit) * 100, 100) : 0;
+  // const storagePercentage =
+  //   storageLimit > 0 ? Math.min((totalUsed / storageLimit) * 100, 100) : 0;
+  const storagePercentRaw =
+    storageLimit > 0 ? (totalUsed / storageLimit) * 100 : 0;
+
+  const storagePercentage = Math.min(storagePercentRaw, 100);
+  const remainingPercent = 100 - storagePercentage;
+
+  let storageBarColor = "bg-blue-600";
+  let storageBorder = "";
+  let storageError = "";
+
+  if (storagePercentRaw >= 100) {
+    storageBarColor = "bg-red-500";
+    storageBorder = "border border-red-500";
+    storageError = "Storage limit exceeded";
+  } else if (remainingPercent <= 5) {
+    storageBarColor = "bg-red-500";
+    storageBorder = "border border-red-500";
+    storageError = "Storage almost full";
+  } else if (storagePercentage >= 75) {
+    storageBarColor = "bg-orange-500";
+  }
 
   // Drag & Drop Handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -476,16 +497,15 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
 
       setUploadStatus("Upload complete!");
 
-      if(ad.client_id){
+      if (ad.client_id) {
         await api.post(`/storage/increment?client_id=${ad.client_id}`, {
           fileSizeBytes: file.size,
         });
-      }else{
+      } else {
         await api.post("/storage/increment", {
           fileSizeBytes: file.size,
         });
       }
-     
 
       setUploadProgress(100);
       setTimeout(() => {
@@ -767,12 +787,19 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
                 <span>{storagePercentage.toFixed(1)}%</span>
               </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`w-full bg-gray-200 rounded-full h-3 overflow-hidden ${storageBorder}`}
+              >
                 <div
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                  className={`${storageBarColor} h-3 rounded-full transition-all duration-300`}
                   style={{ width: `${storagePercentage}%` }}
                 />
               </div>
+              {storageError && (
+                <p className="text-xs text-red-500 mt-1 font-medium flex items-center">
+                  <AlertTriangle className="mr-1 h-4 w-4" /> {storageError}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -322,6 +322,35 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
   const isVideo = /\.(mp4|webm|ogg)$/i.test(cleanUrl);
   const isImage = /\.(jpeg|jpg|gif|png)$/i.test(cleanUrl);
 
+  const getFileSize = async (url: string): Promise<number | null> => {
+    try {
+      const res = await fetch(url);
+
+      // content-length sometimes null → fallback blob
+      const headerSize = res.headers.get("content-length");
+
+      if (headerSize) return Number(headerSize);
+
+      const blob = await res.blob();
+      return blob.size;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+
+  const [fileSize, setFileSize] = useState<number | null>(null);
+  useEffect(() => {
+    const run = async () => {
+      if (!formData?.url) return;
+
+      const size = await getFileSize(formData.url);
+      setFileSize(size);
+    };
+
+    run();
+  }, [formData?.url]);
+
   const handleDelete = async () => {
     setLoading(true);
     try {
@@ -466,6 +495,13 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 </div>
               )}
             </form>
+
+            <div className="text-sm flex flex-col text-gray-800 mt-4">
+              <Label className="text-sm font-medium mb-2">File Size: </Label>
+              <p className="text-sm text-muted-foreground">
+                {fileSize ? formatBytes(fileSize) : "Unknown"}
+              </p>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-end p-4 md:p-6">
             {isEditing && (
