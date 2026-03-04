@@ -22,6 +22,7 @@ const AdPage = ({ edit }: { edit: boolean }) => {
           ad_id: ad_id,
           name: response.data.name,
           url: response.data.url,
+          fileSize: response.data.fileSize,
           duration: response.data.duration,
           client_id: response.data.client_id,
           status: response.data.status || "pending",

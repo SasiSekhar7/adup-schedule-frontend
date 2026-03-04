@@ -316,8 +316,8 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
         return;
       }
 
-      console.log("strage:-", usedStorage);
-      console.log("storage limit :-", storageLimit);
+      // console.log("strage:-", usedStorage);
+      // console.log("storage limit :-", storageLimit);
       const fileSizeInBytes = selectedFile.size;
       const totalAfterUpload = usedStorage + fileSizeInBytes;
 
@@ -456,6 +456,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
           name,
           duration: duration.toString(),
           file_url: uploadResult.url,
+          fileSize: newFileSize,
           isMultipartUpload: true,
           ...(client_id && { client_id }),
         };
@@ -484,6 +485,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
           name,
           duration: duration.toString(),
           file_url: uploadResult.url,
+          fileSize: newFileSize,
           isMultipartUpload: false,
           ...(client_id && { client_id }),
         };

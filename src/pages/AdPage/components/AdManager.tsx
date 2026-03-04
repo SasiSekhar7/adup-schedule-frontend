@@ -172,6 +172,7 @@ export interface AdData {
   ad_id?: string;
   name: string;
   url: string;
+  fileSize: string;
   duration: number;
   client_id: string;
   status?: string;
@@ -188,6 +189,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     initialData || {
       name: "",
       url: "",
+      fileSize: "",
       duration: 0,
       client_id: "",
     },
@@ -321,35 +323,6 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
 
   const isVideo = /\.(mp4|webm|ogg)$/i.test(cleanUrl);
   const isImage = /\.(jpeg|jpg|gif|png)$/i.test(cleanUrl);
-
-  const getFileSize = async (url: string): Promise<number | null> => {
-    try {
-      const res = await fetch(url);
-
-      // content-length sometimes null → fallback blob
-      const headerSize = res.headers.get("content-length");
-
-      if (headerSize) return Number(headerSize);
-
-      const blob = await res.blob();
-      return blob.size;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
-
-  const [fileSize, setFileSize] = useState<number | null>(null);
-  useEffect(() => {
-    const run = async () => {
-      if (!formData?.url) return;
-
-      const size = await getFileSize(formData.url);
-      setFileSize(size);
-    };
-
-    run();
-  }, [formData?.url]);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -499,7 +472,9 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
             <div className="text-sm flex flex-col text-gray-800 mt-4">
               <Label className="text-sm font-medium mb-2">File Size: </Label>
               <p className="text-sm text-muted-foreground">
-                {fileSize ? formatBytes(fileSize) : "Unknown"}
+                {formData.fileSize
+                  ? formatBytes(Number(formData.fileSize))
+                  : "Unknown"}
               </p>
             </div>
           </CardContent>
