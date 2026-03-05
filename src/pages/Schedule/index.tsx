@@ -119,6 +119,7 @@ import {
   ExternalLinkIcon,
   Video,
   RotateCcw,
+  Activity,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -194,6 +195,7 @@ interface Schedule {
   totalPlays: number;
   category: "default" | "preferred";
   originalGroups: ApiGroup[];
+  is_enabled: boolean;
   contentType?: "ad" | "live_content" | "carousel";
   advancedScheduling?: {
     weekdays: string;
@@ -205,6 +207,12 @@ interface Schedule {
 interface DeleteModalState {
   isOpen: boolean;
   schedule: Schedule | null;
+}
+
+interface LiveModalState {
+  isOpen: boolean;
+  schedule: Schedule | null;
+  action: "start" | "stop";
 }
 
 export default function Schedule() {
@@ -225,7 +233,7 @@ export default function Schedule() {
     year: "numeric",
   });
   const [selectedDate, setSelectedDate] = useState(
-    `${todayFormatted} - ${todayFormatted}`
+    `${todayFormatted} - ${todayFormatted}`,
   );
   const [dateRange, setDateRange] = useState({
     from: today,
@@ -244,6 +252,12 @@ export default function Schedule() {
   const [selectedGroup, setSelectedGroup] = useState<ApiGroup | null>(null);
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+
+  const [liveModal, setLiveModal] = useState<LiveModalState>({
+    isOpen: false,
+    schedule: null,
+    action: "start",
+  });
 
   const openDeleteModal = (schedule: Schedule) => {
     setDeleteModal({ isOpen: true, schedule });
@@ -371,7 +385,7 @@ export default function Schedule() {
     const totalDays = selectedGroup.totalDays;
     const remainingDays = Math.max(
       0,
-      Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
     );
     const isActiveToday = today >= startDate && today <= endDate;
 
@@ -392,6 +406,87 @@ export default function Schedule() {
     options.push({ value: "custom", label: "Custom date range" });
 
     return options;
+  };
+
+  const handleLiveToggle = async (schedule: Schedule) => {
+    try {
+      const groupIds = schedule.originalGroups.map((g) => g.groupId);
+
+      const isEnable = schedule.status !== "Active";
+
+      await api.patch("/schedule/live/toggle", {
+        groupIds,
+        content_id: schedule.id,
+        is_enabled: isEnable,
+      });
+
+      toast.success(isEnable ? "Live content started" : "Live content stopped");
+
+      getSchedules(); // refresh list
+    } catch (error) {
+      console.error("Live toggle failed", error);
+      toast.error("Failed to update live content");
+    }
+  };
+
+  const openLiveModal = (schedule: Schedule) => {
+    setLiveModal({
+      isOpen: true,
+      schedule,
+      action: schedule.is_enabled ? "stop" : "start",
+    });
+
+    if (schedule.originalGroups?.length) {
+      setSelectedGroupId(schedule.originalGroups[0].groupId);
+      setSelectedGroup(schedule.originalGroups[0]);
+    }
+
+    setTimeRange("today");
+  };
+
+  const closeLiveModal = () => {
+    setLiveModal({ isOpen: false, schedule: null, action: "start" });
+    setSelectedGroupId("");
+    setSelectedGroup(null);
+    setTimeRange("today");
+    setCustomStartDate("");
+    setCustomEndDate("");
+  };
+
+  const handleLiveConfirm = async () => {
+    if (!liveModal.schedule) return;
+
+    try {
+      const dateRange = getDateRangeForTimeOption(timeRange);
+
+      const groupIds =
+        selectedGroupId === "all"
+          ? liveModal.schedule.originalGroups.map((g) => g.groupId)
+          : [selectedGroupId];
+
+      const payload = {
+        content_id: liveModal.schedule.id,
+        contentType: liveModal.schedule.contentType,
+        groupIds,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        is_enabled: liveModal.action === "start",
+      };
+
+      await api.patch("/schedule/live/toggle", payload);
+
+      toast.success(
+        liveModal.action === "start"
+          ? "Live content started"
+          : "Live content stopped",
+      );
+
+      closeLiveModal();
+      getSchedules();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update live content");
+    }
   };
 
   // const getDateRangeForTimeOption = (option: string) => {
@@ -459,7 +554,7 @@ export default function Schedule() {
     const formatDate = (date: Date) =>
       `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
         2,
-        "0"
+        "0",
       )}-${String(date.getDate()).padStart(2, "0")}`;
 
     switch (option) {
@@ -491,7 +586,7 @@ export default function Schedule() {
         const endOfMonth = new Date(
           today.getFullYear(),
           today.getMonth() + 1,
-          0
+          0,
         );
 
         return {
@@ -513,47 +608,50 @@ export default function Schedule() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedGroupId || !selectedGroup || !deleteModal.schedule) return;
+const handleDeleteConfirm = async () => {
+  if (!deleteModal.schedule || !selectedGroupId) return;
 
-    setIsDeleting(true);
+  setIsDeleting(true);
 
-    try {
-      const dateRange = getDateRangeForTimeOption(timeRange);
+  try {
+    const dateRange = getDateRangeForTimeOption(timeRange);
 
-      const payload = {
-        adId: deleteModal.schedule.id,
-        contentId: deleteModal.schedule.id,
-        groupId: selectedGroupId,
-        startDate: dateRange.from,
-        endDate: dateRange.to,
-        timeRangeType: timeRange,
-        contentType: deleteModal.schedule.contentType || "ad",
-      };
+    const payload = {
+      adId: deleteModal.schedule.id,
+      contentId: deleteModal.schedule.id,
+      groupId: selectedGroupId === "all" ? null : selectedGroupId,
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      timeRangeType: timeRange,
+      contentType: deleteModal.schedule.contentType || "ad",
+    };
 
-      console.log("[v0] Calling delete API with payload:", payload);
+    console.log("[v0] Calling delete API with payload:", payload);
 
-      const result = await api.post("/schedule/multiple-delete", payload);
+    const result = await api.post("/schedule/multiple-delete", payload);
 
-      if (!result || !result.data?.message) {
-        throw new Error("Failed to delete schedule");
-      } else {
-        toast.success("Schedule deleted successfully");
-      }
+    console.log("[v0] Delete API response:", result);
 
-      console.log("[v0] Delete API called successfully with payload:", payload);
-      console.log("[v0] Delete API response:", result);
-
-      closeDeleteModal();
-      getSchedules();
-    } catch (error) {
-      console.error("[v0] Delete API error:", error);
-      toast.error("Failed to delete schedule. Please try again.");
-      // alert("Failed to delete schedule. Please try again.");
-    } finally {
-      setIsDeleting(false);
+    // ✅ SUCCESS CHECK (backend-driven)
+    if (result?.deleted_count > 0) {
+      toast.success(
+        `${result.deleted_count} schedule${
+          result.deleted_count > 1 ? "s" : ""
+        } deleted successfully`
+      );
+    } else {
+      throw new Error("No schedules were deleted");
     }
-  };
+
+    closeDeleteModal();
+    getSchedules();
+  } catch (error) {
+    console.error("[v0] Delete API error:", error);
+    toast.error("Failed to delete schedule. Please try again.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -563,7 +661,7 @@ export default function Schedule() {
 
   useEffect(() => {
     const group = deleteModal.schedule?.originalGroups?.find(
-      (g) => g.groupId === selectedGroupId
+      (g) => g.groupId === selectedGroupId,
     );
     setSelectedGroup(group || null);
   }, [selectedGroupId, deleteModal.schedule?.originalGroups]);
@@ -596,13 +694,17 @@ export default function Schedule() {
         if (!group.weekdays || !group.time_slots) return null;
 
         const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const selectedDays = group.weekdays.map(d => weekdayNames[d]).join(", ");
-        const timeSlots = group.time_slots.map(slot => `${slot.start}-${slot.end}`).join(", ");
+        const selectedDays = group.weekdays
+          .map((d) => weekdayNames[d])
+          .join(", ");
+        const timeSlots = group.time_slots
+          .map((slot) => `${slot.start}-${slot.end}`)
+          .join(", ");
 
         return {
           weekdays: selectedDays,
           timeSlots: timeSlots,
-          hasAdvancedScheduling: true
+          hasAdvancedScheduling: true,
         };
       };
 
@@ -611,7 +713,7 @@ export default function Schedule() {
         const date = new Date(
           Number.parseInt(year),
           Number.parseInt(month) - 1,
-          Number.parseInt(day)
+          Number.parseInt(day),
         );
         return date.toLocaleDateString("en-US", {
           day: "numeric",
@@ -620,25 +722,39 @@ export default function Schedule() {
         });
       };
 
-      const transformContent = (content: any, type: "Ad" | "Live Content" | "Carousel", contentType: "ad" | "live_content" | "carousel") => {
-        const avgProgress = content.groups.reduce((sum: number, group: ApiGroup) => {
-          return sum + Number.parseFloat(group.completedPercentage.replace("%", ""));
-        }, 0) / content.groups.length;
+      const transformContent = (
+        content: any,
+        type: "Ad" | "Live Content" | "Carousel",
+        contentType: "ad" | "live_content" | "carousel",
+      ) => {
+        const avgProgress =
+          content.groups.reduce((sum: number, group: ApiGroup) => {
+            return (
+              sum +
+              Number.parseFloat(group.completedPercentage.replace("%", ""))
+            );
+          }, 0) / content.groups.length;
 
-        const mostRecentGroup = content.groups.reduce((latest: ApiGroup, current: ApiGroup) => {
-          return new Date(current.lastDate.split("-").reverse().join("-")) >
-            new Date(latest.lastDate.split("-").reverse().join("-"))
-            ? current
-            : latest;
-        });
+        const mostRecentGroup = content.groups.reduce(
+          (latest: ApiGroup, current: ApiGroup) => {
+            return new Date(current.lastDate.split("-").reverse().join("-")) >
+              new Date(latest.lastDate.split("-").reverse().join("-"))
+              ? current
+              : latest;
+          },
+        );
 
         // Use totalDays from the schedule groups to show schedule duration
         const displayDuration = getDuration(mostRecentGroup.totalDays);
 
         // Determine status based on progress and dates
         const today = new Date();
-        const startDate = new Date(mostRecentGroup.fromDate.split("-").reverse().join("-"));
-        const endDate = new Date(mostRecentGroup.toDate.split("-").reverse().join("-"));
+        const startDate = new Date(
+          mostRecentGroup.fromDate.split("-").reverse().join("-"),
+        );
+        const endDate = new Date(
+          mostRecentGroup.toDate.split("-").reverse().join("-"),
+        );
 
         let status: "Scheduled" | "Active" | "Inactive";
         if (avgProgress >= 100) {
@@ -656,7 +772,10 @@ export default function Schedule() {
           id: content.adId || content.contentId,
           name: content.adName || content.contentName,
           type,
-          deviceGroups: content.groups.map((group: ApiGroup) => group.groupName),
+          deviceGroups: content.groups.map(
+            (group: ApiGroup) => group.groupName,
+          ),
+          is_enabled: content.groups.some((g: any) => g.is_enabled === true),
           status,
           progress: Math.round(avgProgress),
           duration: displayDuration,
@@ -672,23 +791,25 @@ export default function Schedule() {
       // Transform ads
       if ((response as any).ads) {
         const adSchedules = (response as any).ads.map((ad: ApiAd) =>
-          transformContent(ad, "Ad", "ad")
+          transformContent(ad, "Ad", "ad"),
         );
         transformedSchedules.push(...adSchedules);
       }
 
       // Transform live contents
       if ((response as any).live_contents) {
-        const liveContentSchedules = (response as any).live_contents.map((content: ApiLiveContent) =>
-          transformContent(content, "Live Content", "live_content")
+        const liveContentSchedules = (response as any).live_contents.map(
+          (content: ApiLiveContent) =>
+            transformContent(content, "Live Content", "live_content"),
         );
         transformedSchedules.push(...liveContentSchedules);
       }
 
       // Transform carousels
       if ((response as any).carousels) {
-        const carouselSchedules = (response as any).carousels.map((carousel: ApiCarousel) =>
-          transformContent(carousel, "Carousel", "carousel")
+        const carouselSchedules = (response as any).carousels.map(
+          (carousel: ApiCarousel) =>
+            transformContent(carousel, "Carousel", "carousel"),
         );
         transformedSchedules.push(...carouselSchedules);
       }
@@ -706,7 +827,7 @@ export default function Schedule() {
     const matchesGroupName =
       filters.groupName === "" ||
       schedule.deviceGroups.some((group) =>
-        group.toLowerCase().includes(filters.groupName.toLowerCase())
+        group.toLowerCase().includes(filters.groupName.toLowerCase()),
       );
     const matchesStatus =
       filters.status === "all" ||
@@ -807,8 +928,8 @@ export default function Schedule() {
                 schedule.contentType === "live_content"
                   ? `/live-content/${schedule.id}`
                   : schedule.contentType === "carousel"
-                  ? `/carousels/${schedule.id}`
-                  : `/ads/${schedule.id}`
+                    ? `/carousels/${schedule.id}`
+                    : `/ads/${schedule.id}`
               }
               className="flex items-center gap-1"
             >
@@ -891,12 +1012,23 @@ export default function Schedule() {
       </td>
       {/* End of Schedule Column */}
 
-      <td className="p-4">
+      <td className="p-4 flex gap-2">
+        {schedule.contentType === "live_content" && (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => openLiveModal(schedule)}
+      className="text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+    >
+      Live Control
+    </Button>
+        )}
+
         <Button
           variant="ghost"
           size="sm"
           onClick={() => openDeleteModal(schedule)}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -909,7 +1041,7 @@ export default function Schedule() {
   const handleDateSelection = (
     dateText: string,
     fromDate: Date,
-    toDate: Date
+    toDate: Date,
   ) => {
     setSelectedDate(dateText);
     setDateRange({ from: fromDate, to: toDate });
@@ -1024,12 +1156,12 @@ export default function Schedule() {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
-                                }
+                                },
                               );
                               handleDateSelection(
                                 `${startFormatted} - ${endFormatted}`,
                                 startDate,
-                                endDate
+                                endDate,
                               );
                             }
                             setCustomStartDate("");
@@ -1209,8 +1341,8 @@ export default function Schedule() {
                             schedule.contentType === "live_content"
                               ? `/live-content/${schedule.id}`
                               : schedule.contentType === "carousel"
-                              ? `/carousels/${schedule.id}`
-                              : `/ads/${schedule.id}`
+                                ? `/carousels/${schedule.id}`
+                                : `/ads/${schedule.id}`
                           }
                           className="flex items-center gap-1"
                         >
@@ -1231,8 +1363,8 @@ export default function Schedule() {
                               schedule.status === "Active"
                                 ? "default"
                                 : schedule.status === "Scheduled"
-                                ? "secondary"
-                                : "destructive"
+                                  ? "secondary"
+                                  : "destructive"
                             }
                             className="text-xs"
                           >
@@ -1280,11 +1412,15 @@ export default function Schedule() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Calendar className="h-3 w-3" />
-                              <span>{schedule.advancedScheduling.weekdays}</span>
+                              <span>
+                                {schedule.advancedScheduling.weekdays}
+                              </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              <span>{schedule.advancedScheduling.timeSlots}</span>
+                              <span>
+                                {schedule.advancedScheduling.timeSlots}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1313,7 +1449,7 @@ export default function Schedule() {
                       {
                         length: Math.min(
                           totalPages,
-                          window.innerWidth < 640 ? 3 : 7
+                          window.innerWidth < 640 ? 3 : 7,
                         ),
                       },
                       (_, i) => {
@@ -1347,7 +1483,7 @@ export default function Schedule() {
                             {page}
                           </Button>
                         );
-                      }
+                      },
                     )}
                   </div>
                   <Button
@@ -1454,7 +1590,18 @@ export default function Schedule() {
                           <span className="font-medium">Weekdays:</span>
                           <span>
                             {selectedGroup.weekdays
-                              .map(d => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                              .map(
+                                (d) =>
+                                  [
+                                    "Sun",
+                                    "Mon",
+                                    "Tue",
+                                    "Wed",
+                                    "Thu",
+                                    "Fri",
+                                    "Sat",
+                                  ][d],
+                              )
                               .join(", ")}
                           </span>
                         </div>
@@ -1463,7 +1610,7 @@ export default function Schedule() {
                           <span className="font-medium">Time Slots:</span>
                           <span>
                             {selectedGroup.time_slots
-                              .map(slot => `${slot.start}-${slot.end}`)
+                              .map((slot) => `${slot.start}-${slot.end}`)
                               .join(", ")}
                           </span>
                         </div>
@@ -1625,6 +1772,125 @@ export default function Schedule() {
           </div>
         </div>
       )}
+
+    {liveModal.isOpen && liveModal.schedule && (
+  <div
+    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    onClick={closeLiveModal}
+  >
+    <div
+      className="bg-background rounded-lg shadow-lg w-full max-w-md p-6"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* HEADER */}
+      <h2 className="text-lg font-semibold mb-2">
+        {liveModal.action === "start"
+          ? "Start Live Content"
+          : "Stop Live Content"}
+      </h2>
+
+      <p className="text-sm text-muted-foreground mb-4">
+        This action will{" "}
+        <span className="font-medium">
+          {liveModal.action === "start" ? "start" : "stop"}
+        </span>{" "}
+        live content for selected groups.
+      </p>
+
+      {/* CONTENT DETAILS (LIKE DELETE MODAL) */}
+      <div className="border rounded-md p-3 mb-4 bg-muted/40">
+        <div className="text-sm">
+          <div className="font-medium">
+            {liveModal.schedule.name}
+          </div>
+          <div className="text-muted-foreground">
+            Type: {liveModal.schedule.type}
+          </div>
+        </div>
+      </div>
+
+      {/* GROUP SELECT */}
+      <div className="mb-4">
+        <Label>Select Groups</Label>
+        <Select
+          value={selectedGroupId}
+          onValueChange={setSelectedGroupId}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select group" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Groups</SelectItem>
+            {liveModal.schedule.originalGroups.map((group) => (
+              <SelectItem key={group.groupId} value={group.groupId}>
+                {group.groupName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* TIME RANGE */}
+      <div className="mb-4">
+        <Label>Time Range</Label>
+        <RadioGroup value={timeRange} onValueChange={setTimeRange}>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="today" />
+            <Label>Today</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="week" />
+            <Label>This Week</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="month" />
+            <Label>This Month</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="custom" />
+            <Label>Custom</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      {/* CUSTOM DATE */}
+      {timeRange === "custom" && (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <Input
+            type="date"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+          />
+          <Input
+            type="date"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* WARNING MESSAGE */}
+      <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
+        {liveModal.action === "stop"
+          ? "Stopping live content will immediately stop playback for the selected groups."
+          : "Starting live content will make it live immediately for the selected groups."}
+      </div>
+
+      {/* ACTIONS */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={closeLiveModal}>
+          Cancel
+        </Button>
+        <Button
+          variant={liveModal.action === "stop" ? "destructive" : "default"}
+          onClick={handleLiveConfirm}
+        >
+          {liveModal.action === "start" ? "Start" : "Stop"}
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

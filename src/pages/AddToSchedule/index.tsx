@@ -58,59 +58,80 @@ function AddToSchedule() {
   const navigate = useNavigate();
 
   // Advanced scheduling states
-  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([1, 2, 3, 4, 5]); // Default: Monday to Friday (backend format: 0=Sunday, 6=Saturday)
-  const [timeSlots, setTimeSlots] = useState<{start: string, end: string}[]>([
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([
+    1, 2, 3, 4, 5,
+  ]); // Default: Monday to Friday (backend format: 0=Sunday, 6=Saturday)
+  const [timeSlots, setTimeSlots] = useState<{ start: string; end: string }[]>([
     { start: "06:00", end: "10:00" },
-    { start: "18:00", end: "22:00" }
+    { start: "18:00", end: "22:00" },
   ]);
   const [showAdvancedScheduling, setShowAdvancedScheduling] = useState(false);
 
   // Helper functions for advanced scheduling
   // Backend expects: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
-  const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const weekdayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   const toggleWeekday = (dayIndex: number) => {
-    setSelectedWeekdays(prev =>
+    setSelectedWeekdays((prev) =>
       prev.includes(dayIndex)
-        ? prev.filter(d => d !== dayIndex)
-        : [...prev, dayIndex].sort()
+        ? prev.filter((d) => d !== dayIndex)
+        : [...prev, dayIndex].sort(),
     );
   };
 
   const addTimeSlot = () => {
-    setTimeSlots(prev => [...prev, { start: "09:00", end: "17:00" }]);
+    setTimeSlots((prev) => [...prev, { start: "09:00", end: "17:00" }]);
   };
 
   const removeTimeSlot = (index: number) => {
-    setTimeSlots(prev => prev.filter((_, i) => i !== index));
+    setTimeSlots((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateTimeSlot = (index: number, field: 'start' | 'end', value: string) => {
-    setTimeSlots(prev => prev.map((slot, i) =>
-      i === index ? { ...slot, [field]: value } : slot
-    ));
+  const updateTimeSlot = (
+    index: number,
+    field: "start" | "end",
+    value: string,
+  ) => {
+    setTimeSlots((prev) =>
+      prev.map((slot, i) => (i === index ? { ...slot, [field]: value } : slot)),
+    );
   };
 
   // New state for content type selection
-  const [contentType, setContentType] = useState<"ad" | "carousel" | "live_content">("ad");
+  const [contentType, setContentType] = useState<
+    "ad" | "carousel" | "live_content"
+  >("ad");
   const [carouselsData, setCarouselsData] = useState<any[]>([]);
   const [liveContentData, setLiveContentData] = useState<any[]>([]);
   const [selectedCarousel, setSelectedCarousel] = useState<any | null>(null);
-  const [selectedLiveContent, setSelectedLiveContent] = useState<any | null>(null);
+  const [selectedLiveContent, setSelectedLiveContent] = useState<any | null>(
+    null,
+  );
 
   const [isSingleDay, setIsSingleDay] = useState(true);
   const totalDays = isSingleDay
     ? 1
     : startDate && endDate
-    ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-    : 0;
+      ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+      : 0;
 
   const handleScheduleContent = async () => {
     setLoading(true);
     try {
-      const selectedContent = contentType === "ad" ? selectedAd :
-                            contentType === "carousel" ? selectedCarousel :
-                            selectedLiveContent;
+      const selectedContent =
+        contentType === "ad"
+          ? selectedAd
+          : contentType === "carousel"
+            ? selectedCarousel
+            : selectedLiveContent;
 
       if (startDate && endDate && selectedContent && selectedDevices) {
         // Prepare data based on content type
@@ -121,8 +142,12 @@ function AddToSchedule() {
           end_time: endDate,
           total_duration: plays,
           priority: 1,
-          weekdays: showAdvancedScheduling ? selectedWeekdays : [0, 1, 2, 3, 4, 5, 6], // All days if not advanced (0=Sunday, 6=Saturday)
-          time_slots: showAdvancedScheduling ? timeSlots : [{ start: "00:00", end: "23:59" }], // All day if not advanced
+          weekdays: showAdvancedScheduling
+            ? selectedWeekdays
+            : [0, 1, 2, 3, 4, 5, 6], // All days if not advanced (0=Sunday, 6=Saturday)
+          time_slots: showAdvancedScheduling
+            ? timeSlots
+            : [{ start: "00:00", end: "23:59" }], // All day if not advanced
         };
 
         // Add the appropriate content ID based on type
@@ -183,7 +208,7 @@ function AddToSchedule() {
     const fetchDevicesData = async () => {
       try {
         const response = await api.get<DevicesGroupsResponse>(
-          "/device/fetch-groups"
+          "/device/fetch-groups",
         );
         setDevicesData(response.groups);
       } catch (error) {
@@ -263,13 +288,16 @@ function AddToSchedule() {
           <CardTitle className="text-base md:text-lg">Content Type</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={contentType} onValueChange={(value: "ad" | "carousel" | "live_content") => {
-            setContentType(value);
-            // Reset selections when changing content type
-            setSelectedAd(null);
-            setSelectedCarousel(null);
-            setSelectedLiveContent(null);
-          }}>
+          <Select
+            value={contentType}
+            onValueChange={(value: "ad" | "carousel" | "live_content") => {
+              setContentType(value);
+              // Reset selections when changing content type
+              setSelectedAd(null);
+              setSelectedCarousel(null);
+              setSelectedLiveContent(null);
+            }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select content type" />
             </SelectTrigger>
@@ -287,7 +315,12 @@ function AddToSchedule() {
         <Card className="w-full min-w-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-base md:text-lg">
-              Select {contentType === "ad" ? "Ad" : contentType === "carousel" ? "Carousel" : "Live Content"}
+              Select{" "}
+              {contentType === "ad"
+                ? "Ad"
+                : contentType === "carousel"
+                  ? "Carousel"
+                  : "Live Content"}
             </CardTitle>
           </CardHeader>
 
@@ -307,7 +340,9 @@ function AddToSchedule() {
                   maxHeight="40vh"
                   getRowCanSelect={(row) => {
                     const ad = row as Ad;
-                    return ad.status !== "pending" && ad.status !== "processing";
+                    return (
+                      ad.status !== "pending" && ad.status !== "processing"
+                    );
                   }}
                 />
               )}
@@ -315,7 +350,9 @@ function AddToSchedule() {
               {contentType === "carousel" && (
                 <div className="space-y-3 max-h-[40vh] overflow-y-auto">
                   {carouselsData.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No carousel available</p>
+                    <p className="text-center text-muted-foreground py-8">
+                      No carousel available
+                    </p>
                   ) : (
                     carouselsData.map((carousel) => (
                       <div
@@ -335,7 +372,9 @@ function AddToSchedule() {
                             </p>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {carousel.status === "active" ? "Active" : "Inactive"}
+                            {carousel.status === "active"
+                              ? "Active"
+                              : "Inactive"}
                           </div>
                         </div>
                       </div>
@@ -347,13 +386,16 @@ function AddToSchedule() {
               {contentType === "live_content" && (
                 <div className="space-y-3 max-h-[40vh] overflow-y-auto">
                   {liveContentData.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No live content available</p>
+                    <p className="text-center text-muted-foreground py-8">
+                      No live content available
+                    </p>
                   ) : (
                     liveContentData.map((content) => (
                       <div
                         key={content.live_content_id}
                         className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                          selectedLiveContent?.live_content_id === content.live_content_id
+                          selectedLiveContent?.live_content_id ===
+                          content.live_content_id
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
                         }`}
@@ -363,11 +405,38 @@ function AddToSchedule() {
                           <div>
                             <h4 className="font-medium">{content.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {content.content_type} • {content.duration === 0 ? "Indefinite" : `${content.duration}s`}
+                              {content.content_type} •{" "}
+                              {content.duration === 0
+                                ? "Indefinite"
+                                : `${content.duration}s`}
                             </p>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {content.status === "active" ? "Active" : "Inactive"}
+                          <div className="flex flex-col items-end gap-1">
+                            {content.channel && (
+                              <Badge
+                                variant={
+                                  content.channel.status === "live"
+                                    ? "default"
+                                    : content.channel.status === "idle"
+                                      ? "secondary"
+                                      : "destructive"
+                                }
+                                className="text-xs"
+                              >
+                                Channel: {content.channel.status}
+                              </Badge>
+                            )}
+
+                            <Badge
+                              variant={
+                                content.status === "active"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className="text-xs"
+                            >
+                              {content.status}
+                            </Badge>
                           </div>
                         </div>
                       </div>
@@ -470,9 +539,14 @@ function AddToSchedule() {
                         <Checkbox
                           id="advanced-scheduling"
                           checked={showAdvancedScheduling}
-                          onCheckedChange={(checked) => setShowAdvancedScheduling(!!checked)}
+                          onCheckedChange={(checked) =>
+                            setShowAdvancedScheduling(!!checked)
+                          }
                         />
-                        <Label htmlFor="advanced-scheduling" className="text-sm font-medium">
+                        <Label
+                          htmlFor="advanced-scheduling"
+                          className="text-sm font-medium"
+                        >
                           Advanced Scheduling
                         </Label>
                       </div>
@@ -481,7 +555,8 @@ function AddToSchedule() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Configure specific days and time slots for content playback
+                      Configure specific days and time slots for content
+                      playback
                     </p>
                   </div>
                 </CardHeader>
@@ -493,14 +568,16 @@ function AddToSchedule() {
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">Weekdays</Label>
                         <div className="text-xs text-muted-foreground">
-                          {selectedWeekdays.length} day{selectedWeekdays.length !== 1 ? 's' : ''} selected
+                          {selectedWeekdays.length} day
+                          {selectedWeekdays.length !== 1 ? "s" : ""} selected
                         </div>
                       </div>
 
                       <div className="grid grid-cols-7 gap-1 sm:gap-2">
                         {weekdayNames.map((day, index) => {
                           const dayIndex = index; // Use 0-6 format (0=Sunday, 6=Saturday)
-                          const isSelected = selectedWeekdays.includes(dayIndex);
+                          const isSelected =
+                            selectedWeekdays.includes(dayIndex);
                           return (
                             <Button
                               key={day}
@@ -514,8 +591,12 @@ function AddToSchedule() {
                                   : "hover:bg-muted"
                               }`}
                             >
-                              <span className="hidden sm:inline">{day.slice(0, 3)}</span>
-                              <span className="sm:hidden">{day.slice(0, 1)}</span>
+                              <span className="hidden sm:inline">
+                                {day.slice(0, 3)}
+                              </span>
+                              <span className="sm:hidden">
+                                {day.slice(0, 1)}
+                              </span>
                             </Button>
                           );
                         })}
@@ -544,7 +625,9 @@ function AddToSchedule() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setSelectedWeekdays([0, 1, 2, 3, 4, 5, 6])}
+                          onClick={() =>
+                            setSelectedWeekdays([0, 1, 2, 3, 4, 5, 6])
+                          }
                           className="h-7 sm:h-8 text-xs px-2 sm:px-3 flex-1 sm:flex-none min-w-0"
                         >
                           All Days
@@ -555,7 +638,9 @@ function AddToSchedule() {
                     {/* Time Slots */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium">Time Slots</Label>
+                        <Label className="text-sm font-medium">
+                          Time Slots
+                        </Label>
                         <Button
                           type="button"
                           variant="outline"
@@ -570,7 +655,10 @@ function AddToSchedule() {
 
                       <div className="space-y-3">
                         {timeSlots.map((slot, index) => (
-                          <div key={index} className="border rounded-lg bg-muted/30">
+                          <div
+                            key={index}
+                            className="border rounded-lg bg-muted/30"
+                          >
                             {/* Mobile Layout */}
                             <div className="sm:hidden p-3 space-y-3">
                               <div className="flex items-center justify-between">
@@ -592,20 +680,36 @@ function AddToSchedule() {
 
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">Start Time</Label>
+                                  <Label className="text-xs text-muted-foreground">
+                                    Start Time
+                                  </Label>
                                   <Input
                                     type="time"
                                     value={slot.start}
-                                    onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
+                                    onChange={(e) =>
+                                      updateTimeSlot(
+                                        index,
+                                        "start",
+                                        e.target.value,
+                                      )
+                                    }
                                     className="w-full h-9"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">End Time</Label>
+                                  <Label className="text-xs text-muted-foreground">
+                                    End Time
+                                  </Label>
                                   <Input
                                     type="time"
                                     value={slot.end}
-                                    onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
+                                    onChange={(e) =>
+                                      updateTimeSlot(
+                                        index,
+                                        "end",
+                                        e.target.value,
+                                      )
+                                    }
                                     className="w-full h-9"
                                   />
                                 </div>
@@ -616,23 +720,41 @@ function AddToSchedule() {
                             <div className="hidden sm:flex items-center gap-3 p-3">
                               <div className="flex items-center gap-2 flex-1">
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">Start</Label>
+                                  <Label className="text-xs text-muted-foreground">
+                                    Start
+                                  </Label>
                                   <Input
                                     type="time"
                                     value={slot.start}
-                                    onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
+                                    onChange={(e) =>
+                                      updateTimeSlot(
+                                        index,
+                                        "start",
+                                        e.target.value,
+                                      )
+                                    }
                                     className="w-28 h-8"
                                   />
                                 </div>
                                 <div className="flex items-center justify-center pt-5">
-                                  <span className="text-sm text-muted-foreground">→</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    →
+                                  </span>
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">End</Label>
+                                  <Label className="text-xs text-muted-foreground">
+                                    End
+                                  </Label>
                                   <Input
                                     type="time"
                                     value={slot.end}
-                                    onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
+                                    onChange={(e) =>
+                                      updateTimeSlot(
+                                        index,
+                                        "end",
+                                        e.target.value,
+                                      )
+                                    }
                                     className="w-28 h-8"
                                   />
                                 </div>
@@ -664,7 +786,9 @@ function AddToSchedule() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setTimeSlots([{ start: "09:00", end: "17:00" }])}
+                          onClick={() =>
+                            setTimeSlots([{ start: "09:00", end: "17:00" }])
+                          }
                           className="h-8 text-xs justify-center"
                         >
                           Business Hours
@@ -673,10 +797,12 @@ function AddToSchedule() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setTimeSlots([
-                            { start: "06:00", end: "10:00" },
-                            { start: "18:00", end: "22:00" }
-                          ])}
+                          onClick={() =>
+                            setTimeSlots([
+                              { start: "06:00", end: "10:00" },
+                              { start: "18:00", end: "22:00" },
+                            ])
+                          }
                           className="h-8 text-xs justify-center"
                         >
                           Peak Hours
@@ -685,7 +811,9 @@ function AddToSchedule() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setTimeSlots([{ start: "00:00", end: "23:59" }])}
+                          onClick={() =>
+                            setTimeSlots([{ start: "00:00", end: "23:59" }])
+                          }
                           className="h-8 text-xs justify-center"
                         >
                           All Day
@@ -711,7 +839,12 @@ function AddToSchedule() {
                   }
                   className="w-full sm:w-auto"
                 >
-                  Schedule {contentType === "ad" ? "Ad" : contentType === "carousel" ? "Carousel" : "Live Content"}
+                  Schedule{" "}
+                  {contentType === "ad"
+                    ? "Ad"
+                    : contentType === "carousel"
+                      ? "Carousel"
+                      : "Live Content"}
                 </Button>
               </div>
             </div>
@@ -722,16 +855,23 @@ function AddToSchedule() {
               <h4 className="text-sm font-medium mb-2">Schedule Summary</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {(contentType === "ad" && selectedAd) ||
-                 (contentType === "carousel" && selectedCarousel) ||
-                 (contentType === "live_content" && selectedLiveContent) ? (
+                (contentType === "carousel" && selectedCarousel) ||
+                (contentType === "live_content" && selectedLiveContent) ? (
                   <span>
                     <span className="font-semibold text-foreground">
-                      {contentType === "ad" ? selectedAd?.name :
-                       contentType === "carousel" ? selectedCarousel?.name :
-                       selectedLiveContent?.name}
+                      {contentType === "ad"
+                        ? selectedAd?.name
+                        : contentType === "carousel"
+                          ? selectedCarousel?.name
+                          : selectedLiveContent?.name}
                     </span>{" "}
-                    ({contentType === "ad" ? "Ad" : contentType === "carousel" ? "Carousel" : "Live Content"}){" "}
-                    will be scheduled for{" "}
+                    (
+                    {contentType === "ad"
+                      ? "Ad"
+                      : contentType === "carousel"
+                        ? "Carousel"
+                        : "Live Content"}
+                    ) will be scheduled for{" "}
                     <span className="font-semibold text-foreground">
                       {plays}
                     </span>{" "}
@@ -746,16 +886,22 @@ function AddToSchedule() {
                     {totalDays === 1 ? "day" : "days"}
                     {showAdvancedScheduling && (
                       <>
-                        {" "}on{" "}
+                        {" "}
+                        on{" "}
                         <span className="font-semibold text-foreground">
-                          {selectedWeekdays.map(d => weekdayNames[d].slice(0, 3)).join(", ")}
-                        </span>
-                        {" "}during{" "}
+                          {selectedWeekdays
+                            .map((d) => weekdayNames[d].slice(0, 3))
+                            .join(", ")}
+                        </span>{" "}
+                        during{" "}
                         <span className="font-semibold text-foreground">
-                          {timeSlots.map(slot => `${slot.start}-${slot.end}`).join(", ")}
+                          {timeSlots
+                            .map((slot) => `${slot.start}-${slot.end}`)
+                            .join(", ")}
                         </span>
                       </>
-                    )}.
+                    )}
+                    .
                   </span>
                 ) : (
                   `Please select ${contentType === "ad" ? "an ad" : contentType === "carousel" ? "a carousel" : "live content"}, device group(s), and date range to see the schedule summary.`

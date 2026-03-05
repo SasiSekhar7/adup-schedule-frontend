@@ -6,14 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { 
-  ArrowLeft,
-  Save,
-  Globe,
-  Video,
-  Monitor,
-  Play
-} from "lucide-react";
+import { ArrowLeft, Save, Globe, Video, Monitor, Play } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,11 +19,18 @@ import api from "@/api";
 
 interface LiveContentForm {
   name: string;
-  content_type: "streaming" | "website" | "iframe" | "youtube" | "custom";
+  content_type:
+    | "streaming"
+    | "website"
+    | "iframe"
+    | "youtube"
+    | "custom"
+    | "provider";
   url: string;
   duration: number;
   start_time: string;
   end_time: string;
+  channel_id?: string;
   config: {
     autoplay: boolean;
     mute: boolean;
@@ -42,7 +42,7 @@ export default function CreateLiveContent() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
-  
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<LiveContentForm>({
     name: "",
@@ -54,9 +54,12 @@ export default function CreateLiveContent() {
     config: {
       autoplay: false,
       mute: false,
-      loop: false
-    }
+      loop: false,
+    },
   });
+
+  const [channels, setChannels] = useState<any[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -64,26 +67,52 @@ export default function CreateLiveContent() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (formData.content_type === "provider") {
+      fetchDacastChannels();
+    }
+  }, [formData.content_type]);
+
+  const fetchDacastChannels = async () => {
+    try {
+      setLoadingChannels(true);
+      const response = await api.get("/streaming/channel");
+      setChannels(response.data || []);
+    } catch (error) {
+      toast.error("Failed to fetch Dacast channels");
+    } finally {
+      setLoadingChannels(false);
+    }
+  };
+
   const fetchLiveContentData = async () => {
     if (!id) return;
-    
+
     try {
       setLoading(true);
       const response = await api.get(`/live-content/${id}`);
       const content = response.data;
-      
+
       setFormData({
         name: content.name,
         content_type: content.content_type,
         url: content.url,
         duration: content.duration,
-        start_time: content.start_time ? content.start_time.split('T')[0] + 'T' + content.start_time.split('T')[1].slice(0, 5) : "",
-        end_time: content.end_time ? content.end_time.split('T')[0] + 'T' + content.end_time.split('T')[1].slice(0, 5) : "",
+        start_time: content.start_time
+          ? content.start_time.split("T")[0] +
+            "T" +
+            content.start_time.split("T")[1].slice(0, 5)
+          : "",
+        end_time: content.end_time
+          ? content.end_time.split("T")[0] +
+            "T" +
+            content.end_time.split("T")[1].slice(0, 5)
+          : "",
         config: {
           autoplay: content.config?.autoplay || false,
           mute: content.config?.mute || false,
-          loop: content.config?.loop || false
-        }
+          loop: content.config?.loop || false,
+        },
       });
     } catch (error) {
       console.error("Error fetching live content:", error);
@@ -95,19 +124,22 @@ export default function CreateLiveContent() {
   };
 
   const handleInputChange = (field: keyof LiveContentForm, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleConfigChange = (field: keyof LiveContentForm['config'], value: boolean) => {
-    setFormData(prev => ({
+  const handleConfigChange = (
+    field: keyof LiveContentForm["config"],
+    value: boolean,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       config: {
         ...prev.config,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -124,15 +156,20 @@ export default function CreateLiveContent() {
 
     try {
       setLoading(true);
-      
+
       const payload = {
         name: formData.name,
         content_type: formData.content_type,
+        channel_id: formData.content_type === "provider" ? formData.channel_id : undefined,
         url: formData.url,
         duration: formData.duration,
-        start_time: formData.start_time ? new Date(formData.start_time).toISOString() : undefined,
-        end_time: formData.end_time ? new Date(formData.end_time).toISOString() : undefined,
-        config: formData.config
+        start_time: formData.start_time
+          ? new Date(formData.start_time).toISOString()
+          : undefined,
+        end_time: formData.end_time
+          ? new Date(formData.end_time).toISOString()
+          : undefined,
+        config: formData.config,
       };
 
       if (isEdit) {
@@ -188,7 +225,11 @@ export default function CreateLiveContent() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/live-content")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/live-content")}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -196,7 +237,9 @@ export default function CreateLiveContent() {
             {isEdit ? "Edit Live Content" : "Create Live Content"}
           </h1>
           <p className="text-muted-foreground">
-            {isEdit ? "Update your live content configuration" : "Create new live streaming or dynamic content"}
+            {isEdit
+              ? "Update your live content configuration"
+              : "Create new live streaming or dynamic content"}
           </p>
         </div>
       </div>
@@ -224,7 +267,9 @@ export default function CreateLiveContent() {
                 <Label htmlFor="content_type">Content Type</Label>
                 <Select
                   value={formData.content_type}
-                  onValueChange={(value) => handleInputChange("content_type", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("content_type", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select content type" />
@@ -235,7 +280,9 @@ export default function CreateLiveContent() {
                         <Video className="h-4 w-4" />
                         <div>
                           <p className="font-medium">Streaming</p>
-                          <p className="text-xs text-muted-foreground">Live video stream</p>
+                          <p className="text-xs text-muted-foreground">
+                            Live video stream
+                          </p>
                         </div>
                       </div>
                     </SelectItem>
@@ -244,7 +291,9 @@ export default function CreateLiveContent() {
                         <Globe className="h-4 w-4" />
                         <div>
                           <p className="font-medium">Website</p>
-                          <p className="text-xs text-muted-foreground">Full webpage display</p>
+                          <p className="text-xs text-muted-foreground">
+                            Full webpage display
+                          </p>
                         </div>
                       </div>
                     </SelectItem>
@@ -253,7 +302,9 @@ export default function CreateLiveContent() {
                         <Monitor className="h-4 w-4" />
                         <div>
                           <p className="font-medium">iFrame</p>
-                          <p className="text-xs text-muted-foreground">Embedded content</p>
+                          <p className="text-xs text-muted-foreground">
+                            Embedded content
+                          </p>
                         </div>
                       </div>
                     </SelectItem>
@@ -262,7 +313,9 @@ export default function CreateLiveContent() {
                         <Play className="h-4 w-4" />
                         <div>
                           <p className="font-medium">YouTube</p>
-                          <p className="text-xs text-muted-foreground">YouTube video/stream</p>
+                          <p className="text-xs text-muted-foreground">
+                            YouTube video/stream
+                          </p>
                         </div>
                       </div>
                     </SelectItem>
@@ -271,10 +324,23 @@ export default function CreateLiveContent() {
                         <Monitor className="h-4 w-4" />
                         <div>
                           <p className="font-medium">Custom</p>
-                          <p className="text-xs text-muted-foreground">Custom content type</p>
+                          <p className="text-xs text-muted-foreground">
+                            Custom content type
+                          </p>
                         </div>
                       </div>
                     </SelectItem>
+                  <SelectItem value="provider">
+                    <div className="flex items-center gap-2">
+                      <Video className="h-4 w-4" />
+                      <div>
+                        <p className="font-medium">Dacast</p>
+                        <p className="text-xs text-muted-foreground">
+                          Dacast live channel
+                        </p>
+                      </div>
+                    </div>
+                  </SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -282,7 +348,7 @@ export default function CreateLiveContent() {
                 </p>
               </div>
 
-              <div>
+              {/* <div>
                 <Label htmlFor="url">Content URL</Label>
                 <Input
                   id="url"
@@ -291,7 +357,53 @@ export default function CreateLiveContent() {
                   placeholder="https://example.com/stream"
                   type="url"
                 />
-              </div>
+              </div> */}
+
+              {formData.content_type !== "provider" && (
+                <div>
+                  <Label htmlFor="url">Content URL</Label>
+                  <Input
+                    id="url"
+                    value={formData.url}
+                    onChange={(e) => handleInputChange("url", e.target.value)}
+                    placeholder="https://example.com/stream"
+                    type="url"
+                  />
+                </div>
+              )}
+
+              {formData.content_type === "provider" && (
+                <div>
+                  <Label>Select Dacast Channel</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedChannel = channels.find(
+                        (c) => c.channel_id === value,
+                      );
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        channel_id: value,
+                        url: selectedChannel?.playback_url || "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select channel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {channels.map((channel) => (
+                        <SelectItem
+                          key={channel.channel_id}
+                          value={channel.channel_id}
+                        >
+                          {channel.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="duration">Duration (seconds)</Label>
@@ -299,7 +411,9 @@ export default function CreateLiveContent() {
                   id="duration"
                   type="number"
                   value={formData.duration}
-                  onChange={(e) => handleInputChange("duration", parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleInputChange("duration", parseInt(e.target.value) || 0)
+                  }
                   placeholder="0 for indefinite"
                   min="0"
                 />
@@ -322,7 +436,9 @@ export default function CreateLiveContent() {
                   id="start_time"
                   type="datetime-local"
                   value={formData.start_time}
-                  onChange={(e) => handleInputChange("start_time", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("start_time", e.target.value)
+                  }
                 />
               </div>
 
@@ -332,7 +448,9 @@ export default function CreateLiveContent() {
                   id="end_time"
                   type="datetime-local"
                   value={formData.end_time}
-                  onChange={(e) => handleInputChange("end_time", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("end_time", e.target.value)
+                  }
                   min={formData.start_time}
                 />
               </div>
@@ -354,7 +472,9 @@ export default function CreateLiveContent() {
                 </div>
                 <Switch
                   checked={formData.config.autoplay}
-                  onCheckedChange={(checked) => handleConfigChange("autoplay", checked)}
+                  onCheckedChange={(checked) =>
+                    handleConfigChange("autoplay", checked)
+                  }
                 />
               </div>
 
@@ -367,7 +487,9 @@ export default function CreateLiveContent() {
                 </div>
                 <Switch
                   checked={formData.config.mute}
-                  onCheckedChange={(checked) => handleConfigChange("mute", checked)}
+                  onCheckedChange={(checked) =>
+                    handleConfigChange("mute", checked)
+                  }
                 />
               </div>
 
@@ -380,7 +502,9 @@ export default function CreateLiveContent() {
                 </div>
                 <Switch
                   checked={formData.config.loop}
-                  onCheckedChange={(checked) => handleConfigChange("loop", checked)}
+                  onCheckedChange={(checked) =>
+                    handleConfigChange("loop", checked)
+                  }
                 />
               </div>
             </CardContent>
@@ -397,7 +521,9 @@ export default function CreateLiveContent() {
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
                 {getContentTypeIcon(formData.content_type)}
-                <span className="font-medium capitalize">{formData.content_type}</span>
+                <span className="font-medium capitalize">
+                  {formData.content_type}
+                </span>
               </div>
 
               {formData.url && (
@@ -412,16 +538,22 @@ export default function CreateLiveContent() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Duration:</span>
                 <span className="font-medium">
-                  {formData.duration === 0 ? "Indefinite" : `${formData.duration}s`}
+                  {formData.duration === 0
+                    ? "Indefinite"
+                    : `${formData.duration}s`}
                 </span>
               </div>
 
               {(formData.start_time || formData.end_time) && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Schedule:</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Schedule:
+                  </p>
                   <div className="text-xs space-y-1">
                     {formData.start_time && (
-                      <p>Start: {new Date(formData.start_time).toLocaleString()}</p>
+                      <p>
+                        Start: {new Date(formData.start_time).toLocaleString()}
+                      </p>
                     )}
                     {formData.end_time && (
                       <p>End: {new Date(formData.end_time).toLocaleString()}</p>
@@ -430,18 +562,26 @@ export default function CreateLiveContent() {
                 </div>
               )}
 
-              {(formData.config.autoplay || formData.config.mute || formData.config.loop) && (
+              {(formData.config.autoplay ||
+                formData.config.mute ||
+                formData.config.loop) && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Config:</p>
                   <div className="flex gap-1 flex-wrap">
                     {formData.config.autoplay && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Autoplay</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        Autoplay
+                      </span>
                     )}
                     {formData.config.mute && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Muted</span>
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                        Muted
+                      </span>
                     )}
                     {formData.config.loop && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Loop</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Loop
+                      </span>
                     )}
                   </div>
                 </div>
@@ -455,7 +595,9 @@ export default function CreateLiveContent() {
               <div className="space-y-3">
                 <Button
                   onClick={handleSubmit}
-                  disabled={loading || !formData.name.trim() || !formData.url.trim()}
+                  disabled={
+                    loading || !formData.name.trim() || !formData.url.trim()
+                  }
                   className="w-full"
                 >
                   {loading ? (
