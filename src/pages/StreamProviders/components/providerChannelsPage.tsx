@@ -42,6 +42,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import api from "@/api";
+import { toast } from "sonner";
 
 export default function ProviderChannelsPage() {
   const { slug } = useParams();
@@ -159,7 +160,10 @@ export default function ProviderChannelsPage() {
         url: "",
       });
     } catch (error) {
-      console.error("Failed to create channel:", error);
+      toast.error(
+        error?.error?.details?.split("\n")[0] ||
+          "An unexpected error occurred.",
+      );
     } finally {
       setCreateLoading(false);
     }
