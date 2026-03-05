@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useRef } from "react";
 
 import {
   Copy,
@@ -51,6 +52,12 @@ export default function ChannelDetailPage() {
   const { slug: providerSlug, channelId } = useParams();
   const [channel, setChannel] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const [showWebcamModal, setShowWebcamModal] = useState(false);
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<any>(null);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetchChannelById(channelId as string);
@@ -111,6 +118,55 @@ export default function ChannelDetailPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+const startWebcamPreview = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    setWebcamStream(stream);
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  } catch (err) {
+    console.error("Webcam error", err);
+  }
+};
+
+  const startWebcamLive = async () => {
+    if (!webcamStream) return;
+
+    await api.post(`/start-stream`);
+
+    const recorder = new MediaRecorder(webcamStream, {
+      mimeType: "video/webm; codecs=vp8",
+    });
+
+    recorder.ondataavailable = async (event) => {
+      await fetch("/stream", {
+        method: "POST",
+        body: event.data,
+      });
+    };
+
+    recorder.start(1000);
+    setMediaRecorder(recorder);
+  };
+
+  const stopWebcamLive = async () => {
+    if (mediaRecorder) mediaRecorder.stop();
+
+    await api.post(`/stop-stream`);
+
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => track.stop());
+    }
+
+    setShowWebcamModal(false);
   };
 
   if (!provider || !channel) {
@@ -184,31 +240,48 @@ export default function ChannelDetailPage() {
               </Button>
             )} */}
             {channel && (
-              <Button
-                size="sm"
-                disabled={actionLoading === channel.channel_id}
-                variant={channel.status === "live" ? "destructive" : "default"}
-                className={`h-7 gap-1.5 text-xs ${
-                  channel.status === "live"
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                }`}
-                onClick={() => handleToggleLive(channel)}
-              >
-                {actionLoading === channel.channel_id ? (
-                  "Loading..."
-                ) : channel.status === "live" ? (
-                  <>
-                    <Square className="size-3" />
-                    Stop Live
-                  </>
-                ) : (
-                  <>
-                    <Play className="size-3" />
-                    Go Live
-                  </>
-                )}
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  disabled={actionLoading === channel.channel_id}
+                  variant={
+                    channel.status === "live" ? "destructive" : "default"
+                  }
+                  className={`h-7 gap-1.5 text-xs ${
+                    channel.status === "live"
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  }`}
+                  onClick={() => handleToggleLive(channel)}
+                >
+                  {actionLoading === channel.channel_id ? (
+                    "Loading..."
+                  ) : channel.status === "live" ? (
+                    <>
+                      <Square className="size-3" />
+                      Stop Live
+                    </>
+                  ) : (
+                    <>
+                      <Play className="size-3" />
+                      Go Live
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => {
+                    setShowWebcamModal(true);
+                    startWebcamPreview();
+                  }}
+                >
+                  <Radio className="size-3.5" />
+                  Go Live with Webcam
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -674,6 +747,42 @@ export default function ChannelDetailPage() {
           </div>
         </div>
       </div>
+
+      {showWebcamModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-background rounded-xl p-6 w-[500px]">
+            <h2 className="text-lg font-semibold mb-4">Webcam Live Stream</h2>
+
+            <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        className="w-full rounded"
+      />
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setShowWebcamModal(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={startWebcamLive}
+              >
+                Start Live
+              </Button>
+
+              <Button variant="destructive" onClick={stopWebcamLive}>
+                Stop
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
