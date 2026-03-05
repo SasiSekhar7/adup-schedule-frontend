@@ -152,7 +152,7 @@ const startWebcamPreview = async () => {
   if (event.data.size > 0) {
     const arrayBuffer = await event.data.arrayBuffer();
 
-    await fetch("http://localhost:8080/api/stream", {
+    await fetch("https://stg-cms.ad96.in/api/stream", {
       method: "POST",
       headers: {
         "Content-Type": "application/octet-stream",
