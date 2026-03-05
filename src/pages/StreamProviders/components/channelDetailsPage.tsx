@@ -146,12 +146,19 @@ const startWebcamPreview = async () => {
       mimeType: "video/webm; codecs=vp8",
     });
 
-    recorder.ondataavailable = async (event) => {
-      await fetch("/stream", {
-        method: "POST",
-        body: event.data,
-      });
-    };
+   recorder.ondataavailable = async (event) => {
+  if (event.data.size > 0) {
+    const arrayBuffer = await event.data.arrayBuffer();
+
+    await fetch("http://localhost:8080/api/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      body: arrayBuffer,
+    });
+  }
+};
 
     recorder.start(1000);
     setMediaRecorder(recorder);
