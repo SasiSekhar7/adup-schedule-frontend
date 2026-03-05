@@ -160,7 +160,7 @@ const startWebcamPreview = async () => {
   }
 };
 
-    recorder.start(1000);
+    recorder.start(5000);
     setMediaRecorder(recorder);
   };
 
