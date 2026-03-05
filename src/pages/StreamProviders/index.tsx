@@ -144,7 +144,7 @@ export default function StreamProvidersPage() {
           )}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/*<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {streamProviders.map((provider) => {
             const activeChannels = provider.channels.filter(
               (c) => c.status === "active" || c.status === "live",
@@ -221,8 +221,8 @@ export default function StreamProvidersPage() {
               </button>
             );
           })}
-        </div>
-        {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        </div>*/}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {providers.map((provider) => (
             <button
               key={provider.provider_id}
@@ -265,7 +265,7 @@ export default function StreamProvidersPage() {
               </div>
             </button>
           ))}
-        </div> */}
+        </div>
       </div>
     </div>
   );
