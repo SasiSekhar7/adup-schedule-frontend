@@ -11,6 +11,9 @@ import NotFoundPage from "./pages/Forbidden_403";
 import NotFound from "./pages/Notfound_404";
 import Account from "./pages/Account";
 import ApkVersionsPage from "./pages/ApkVersions";
+import StreamProvidersPage from "./pages/StreamProviders";
+import ProviderChannelsPage from "./pages/StreamProviders/components/providerChannelsPage";
+import ChannelDetailPage from "./pages/StreamProviders/components/channelDetailsPage";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -260,6 +263,33 @@ function App() {
               </Suspense>
             }
           />
+
+          <Route
+            path="/stream-providers"
+            element={
+              <Suspense fallback={<Loading />}>
+                <StreamProvidersPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/stream-providers/:slug"
+            element={
+              <Suspense fallback={<Loading />}>
+                <ProviderChannelsPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/stream-providers/:slug/:channelId"
+            element={
+              <Suspense fallback={<Loading />}>
+                <ChannelDetailPage />
+              </Suspense>
+            }
+          />
+
           <Route
             path="*"
             element={
