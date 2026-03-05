@@ -20,6 +20,7 @@ import { Radio, ChevronRight, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { streamProviders } from "./components/providers";
 import { useNavigate } from "react-router-dom";
+import { getRole } from "@/helpers";
 
 const providerColors: Record<string, string> = {
   dacast: "bg-[#0066FF]",
@@ -37,7 +38,15 @@ export default function StreamProvidersPage() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   const [providers, setProviders] = useState<any[]>([]);
+
+  useEffect(() => {
+    const role = getRole();
+    setUserRole(role);
+  }, []);
+
   useEffect(() => {
     fetchProviders();
   }, []);
@@ -87,50 +96,52 @@ export default function StreamProvidersPage() {
             </p>
           </div>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="size-4" />
-                Create Provider
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-[420px]">
-              <DialogHeader>
-                <DialogTitle>Create Streaming Provider</DialogTitle>
-              </DialogHeader>
-
-              <div className="grid gap-4 py-2">
-                <div className="grid gap-2">
-                  <Label>Provider Name</Label>
-                  <Input
-                    placeholder="Dacast Provider"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>API Key</Label>
-                  <Input
-                    placeholder="Enter API key"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  onClick={createProvider}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  {loading ? "Creating..." : "Create Provider"}
+          {userRole === "Admin" && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="size-4" />
+                  Create Provider
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-[420px]">
+                <DialogHeader>
+                  <DialogTitle>Create Streaming Provider</DialogTitle>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                  <div className="grid gap-2">
+                    <Label>Provider Name</Label>
+                    <Input
+                      placeholder="Dacast Provider"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>API Key</Label>
+                    <Input
+                      placeholder="Enter API key"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    onClick={createProvider}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    {loading ? "Creating..." : "Create Provider"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

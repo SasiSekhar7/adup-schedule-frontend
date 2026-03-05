@@ -608,50 +608,50 @@ export default function Schedule() {
     }
   };
 
-const handleDeleteConfirm = async () => {
-  if (!deleteModal.schedule || !selectedGroupId) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.schedule || !selectedGroupId) return;
 
-  setIsDeleting(true);
+    setIsDeleting(true);
 
-  try {
-    const dateRange = getDateRangeForTimeOption(timeRange);
+    try {
+      const dateRange = getDateRangeForTimeOption(timeRange);
 
-    const payload = {
-      adId: deleteModal.schedule.id,
-      contentId: deleteModal.schedule.id,
-      groupId: selectedGroupId === "all" ? null : selectedGroupId,
-      startDate: dateRange.from,
-      endDate: dateRange.to,
-      timeRangeType: timeRange,
-      contentType: deleteModal.schedule.contentType || "ad",
-    };
+      const payload = {
+        adId: deleteModal.schedule.id,
+        contentId: deleteModal.schedule.id,
+        groupId: selectedGroupId === "all" ? null : selectedGroupId,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        timeRangeType: timeRange,
+        contentType: deleteModal.schedule.contentType || "ad",
+      };
 
-    console.log("[v0] Calling delete API with payload:", payload);
+      console.log("[v0] Calling delete API with payload:", payload);
 
-    const result = await api.post("/schedule/multiple-delete", payload);
+      const result = await api.post("/schedule/multiple-delete", payload);
 
-    console.log("[v0] Delete API response:", result);
+      console.log("[v0] Delete API response:", result);
 
-    // ✅ SUCCESS CHECK (backend-driven)
-    if (result?.deleted_count > 0) {
-      toast.success(
-        `${result.deleted_count} schedule${
-          result.deleted_count > 1 ? "s" : ""
-        } deleted successfully`
-      );
-    } else {
-      throw new Error("No schedules were deleted");
+      // ✅ SUCCESS CHECK (backend-driven)
+      if (result?.deleted_count > 0) {
+        toast.success(
+          `${result.deleted_count} schedule${
+            result.deleted_count > 1 ? "s" : ""
+          } deleted successfully`,
+        );
+      } else {
+        throw new Error("No schedules were deleted");
+      }
+
+      closeDeleteModal();
+      getSchedules();
+    } catch (error) {
+      console.error("[v0] Delete API error:", error);
+      toast.error("Failed to delete schedule. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
-
-    closeDeleteModal();
-    getSchedules();
-  } catch (error) {
-    console.error("[v0] Delete API error:", error);
-    toast.error("Failed to delete schedule. Please try again.");
-  } finally {
-    setIsDeleting(false);
-  }
-};
+  };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -1014,14 +1014,14 @@ const handleDeleteConfirm = async () => {
 
       <td className="p-4 flex gap-2">
         {schedule.contentType === "live_content" && (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => openLiveModal(schedule)}
-      className="text-blue-600 hover:text-blue-600 hover:bg-blue-50"
-    >
-      Live Control
-    </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openLiveModal(schedule)}
+            className="text-blue-600 hover:text-blue-600 hover:bg-blue-50"
+          >
+            Live Control
+          </Button>
         )}
 
         <Button
@@ -1773,124 +1773,157 @@ const handleDeleteConfirm = async () => {
         </div>
       )}
 
-    {liveModal.isOpen && liveModal.schedule && (
-  <div
-    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    onClick={closeLiveModal}
-  >
-    <div
-      className="bg-background rounded-lg shadow-lg w-full max-w-md p-6"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* HEADER */}
-      <h2 className="text-lg font-semibold mb-2">
-        {liveModal.action === "start"
-          ? "Start Live Content"
-          : "Stop Live Content"}
-      </h2>
-
-      <p className="text-sm text-muted-foreground mb-4">
-        This action will{" "}
-        <span className="font-medium">
-          {liveModal.action === "start" ? "start" : "stop"}
-        </span>{" "}
-        live content for selected groups.
-      </p>
-
-      {/* CONTENT DETAILS (LIKE DELETE MODAL) */}
-      <div className="border rounded-md p-3 mb-4 bg-muted/40">
-        <div className="text-sm">
-          <div className="font-medium">
-            {liveModal.schedule.name}
-          </div>
-          <div className="text-muted-foreground">
-            Type: {liveModal.schedule.type}
-          </div>
-        </div>
-      </div>
-
-      {/* GROUP SELECT */}
-      <div className="mb-4">
-        <Label>Select Groups</Label>
-        <Select
-          value={selectedGroupId}
-          onValueChange={setSelectedGroupId}
+      {liveModal.isOpen && liveModal.schedule && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={closeLiveModal}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select group" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Groups</SelectItem>
-            {liveModal.schedule.originalGroups.map((group) => (
-              <SelectItem key={group.groupId} value={group.groupId}>
-                {group.groupName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <div
+            className="bg-background rounded-lg shadow-lg w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <h2 className="text-lg font-semibold mb-2">
+              {liveModal.action === "start"
+                ? "Start Live Content"
+                : "Stop Live Content"}
+            </h2>
 
-      {/* TIME RANGE */}
-      <div className="mb-4">
-        <Label>Time Range</Label>
-        <RadioGroup value={timeRange} onValueChange={setTimeRange}>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="today" />
-            <Label>Today</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="week" />
-            <Label>This Week</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="month" />
-            <Label>This Month</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <RadioGroupItem value="custom" />
-            <Label>Custom</Label>
-          </div>
-        </RadioGroup>
-      </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              This action will{" "}
+              <span className="font-medium">
+                {liveModal.action === "start" ? "start" : "stop"}
+              </span>{" "}
+              live content for selected groups.
+            </p>
 
-      {/* CUSTOM DATE */}
-      {timeRange === "custom" && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <Input
-            type="date"
-            value={customStartDate}
-            onChange={(e) => setCustomStartDate(e.target.value)}
-          />
-          <Input
-            type="date"
-            value={customEndDate}
-            onChange={(e) => setCustomEndDate(e.target.value)}
-          />
+            {/* CONTENT DETAILS (LIKE DELETE MODAL) */}
+            <div className="border rounded-md p-3 mb-4 bg-muted/40">
+              <div className="text-sm">
+                <div className="font-medium">{liveModal.schedule.name}</div>
+                <div className="text-muted-foreground">
+                  Type: {liveModal.schedule.type}
+                </div>
+              </div>
+            </div>
+
+            {/* GROUP SELECT */}
+            <div className="mb-4">
+              <Label>Select Groups</Label>
+              <Select
+                value={selectedGroupId}
+                onValueChange={setSelectedGroupId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Groups</SelectItem>
+                  {liveModal.schedule.originalGroups.map((group) => (
+                    <SelectItem key={group.groupId} value={group.groupId}>
+                      {group.groupName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* TIME RANGE */}
+            <div className="mb-4">
+              <Label>Time Range</Label>
+              <RadioGroup value={timeRange} onValueChange={setTimeRange}>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="today" />
+                  <Label>Today</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="week" />
+                  <Label>This Week</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="month" />
+                  <Label>This Month</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="custom" />
+                  <Label>Custom</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* CUSTOM DATE */}
+            {timeRange === "custom" && (
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                />
+                <Input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* WARNING MESSAGE */}
+            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
+              {liveModal.action === "stop"
+                ? "Stopping live content will immediately stop playback for the selected groups."
+                : "Starting live content will make it live immediately for the selected groups."}
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={closeLiveModal}>
+                Cancel
+              </Button>
+              {/* <Button
+                variant={
+                  liveModal.action === "stop" ? "destructive" : "default"
+                }
+                onClick={handleLiveConfirm}
+              >
+                {liveModal.action === "start" ? "Start" : "Stop"}
+              </Button> */}
+
+              {selectedGroupId === "all" ? (
+                <>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      setLiveModal((prev) => ({ ...prev, action: "start" }));
+                      handleLiveConfirm();
+                    }}
+                  >
+                    Start
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setLiveModal((prev) => ({ ...prev, action: "stop" }));
+                      handleLiveConfirm();
+                    }}
+                  >
+                    Stop
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant={
+                    liveModal.action === "stop" ? "destructive" : "default"
+                  }
+                  onClick={handleLiveConfirm}
+                >
+                  {liveModal.action === "start" ? "Start" : "Stop"}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       )}
-
-      {/* WARNING MESSAGE */}
-      <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
-        {liveModal.action === "stop"
-          ? "Stopping live content will immediately stop playback for the selected groups."
-          : "Starting live content will make it live immediately for the selected groups."}
-      </div>
-
-      {/* ACTIONS */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={closeLiveModal}>
-          Cancel
-        </Button>
-        <Button
-          variant={liveModal.action === "stop" ? "destructive" : "default"}
-          onClick={handleLiveConfirm}
-        >
-          {liveModal.action === "start" ? "Start" : "Stop"}
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 }
