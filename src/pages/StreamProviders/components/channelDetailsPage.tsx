@@ -140,7 +140,9 @@ const startWebcamPreview = async () => {
   const startWebcamLive = async () => {
     if (!webcamStream) return;
 
-    await api.post(`/start-stream`);
+    await api.post(`/start-stream`, {
+      channel_id: channelId,
+    });
 
     const recorder = new MediaRecorder(webcamStream, {
       mimeType: "video/webm; codecs=vp8",
