@@ -56,6 +56,10 @@ export default function ChannelDetailPage() {
   const [showWebcamModal, setShowWebcamModal] = useState(false);
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<any>(null);
+  const [cameraFacing, setCameraFacing] = useState("user");
+  const [isStreaming, setIsStreaming] = useState(false);
+  // "user" = front camera
+  // "environment" = rear camera
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -120,67 +124,127 @@ export default function ChannelDetailPage() {
     }
   };
 
-const startWebcamPreview = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
+  const startWebcamPreview = async (facing = cameraFacing) => {
+    try {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach((t) => t.stop());
+      }
 
-    setWebcamStream(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing },
+        audio: true,
+      });
 
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
+      setWebcamStream(stream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        await videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Webcam error", err);
     }
-  } catch (err) {
-    console.error("Webcam error", err);
-  }
-};
+  };
+
+  const switchCamera = async () => {
+    const newFacing = cameraFacing === "user" ? "environment" : "user";
+    setCameraFacing(newFacing);
+    await startWebcamPreview(newFacing);
+  };
 
   const startWebcamLive = async () => {
     if (!webcamStream) return;
 
+    // Start backend FFmpeg process
     await api.post(`/start-stream`, {
       channel_id: channelId,
     });
 
     const recorder = new MediaRecorder(webcamStream, {
-      mimeType: "video/webm; codecs=vp8",
+      mimeType: "video/webm;codecs=vp8,opus",
     });
 
-   recorder.ondataavailable = async (event) => {
-  if (event.data.size > 0) {
-    const arrayBuffer = await event.data.arrayBuffer();
+    recorder.ondataavailable = async (event) => {
+      if (event.data.size > 0) {
+        await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+          method: "POST",
+          body: event.data,
+        });
+      }
+    };
 
-    await fetch("https://stg-cms.ad96.in/api/stream", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-      body: arrayBuffer,
-    });
-  }
-};
+    // Send chunk every 2 seconds
+    recorder.start(2000);
 
-    recorder.start(5000);
     setMediaRecorder(recorder);
+    setIsStreaming(true);
   };
 
-  const stopWebcamLive = async () => {
-    if (mediaRecorder) mediaRecorder.stop();
-
-    await api.post(`/stop-stream`);
-
-    if (webcamStream) {
+  const closeWebcamModal = async () => {
+    if (isStreaming) {
+      await stopWebcamLive();
+    } else if (webcamStream) {
       webcamStream.getTracks().forEach((track) => track.stop());
     }
 
     setShowWebcamModal(false);
   };
 
-  if (!provider || !channel) {
-    return <div className="p-6">Loading...</div>;
-  }
+  const stopWebcamLive = async () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
+
+    await api.post(`/stop-stream`, {
+      channel_id: channelId,
+    });
+
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => track.stop());
+    }
+    setIsStreaming(false);
+    setShowWebcamModal(false);
+  };
+
+  // ALL HOOKS FIRST
+useEffect(() => {
+  const handleBeforeUnload = () => {
+    if (mediaRecorder) mediaRecorder.stop();
+
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => track.stop());
+    }
+
+    navigator.sendBeacon(
+      "/api/stop-stream",
+      JSON.stringify({ channel_id: channelId })
+    );
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  };
+}, [mediaRecorder, webcamStream]);
+
+useEffect(() => {
+  return () => {
+    if (mediaRecorder) mediaRecorder.stop();
+
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => track.stop());
+    }
+  };
+}, []);
+
+
+// THEN CONDITIONAL RENDER
+if (!provider || !channel) {
+  return <div className="p-6">Loading...</div>;
+}
 
   return (
     <div className="flex flex-1 flex-col">
@@ -757,20 +821,21 @@ const startWebcamPreview = async () => {
         </div>
       </div>
 
-      {showWebcamModal && (
+      {/* {showWebcamModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-background rounded-xl p-6 w-[500px]">
             <h2 className="text-lg font-semibold mb-4">Webcam Live Stream</h2>
 
             <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        className="w-full rounded"
-      />
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="w-full rounded"
+            />
 
             <div className="flex justify-end gap-2">
+              <Button onClick={switchCamera}>Switch Camera</Button>
               <Button
                 variant="secondary"
                 onClick={() => setShowWebcamModal(false)}
@@ -779,15 +844,107 @@ const startWebcamPreview = async () => {
               </Button>
 
               <Button
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={startWebcamLive}
+                onClick={isStreaming ? stopWebcamLive : startWebcamLive}
+                className={isStreaming ? "bg-red-600" : "bg-emerald-600"}
               >
-                Start Live
+                {isStreaming ? (
+                  <>
+                    <Square className="size-3.5" />
+                    Stop Streaming
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-3.5" />
+                    Start Streaming
+                  </>
+                )}
               </Button>
+            </div>
+          </div>
+        </div>
+      )} */}
 
-              <Button variant="destructive" onClick={stopWebcamLive}>
-                Stop
+      {showWebcamModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-[720px] max-w-[95vw] rounded-xl bg-background shadow-2xl border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b px-5 py-3">
+              <div className="flex items-center gap-2">
+                <Radio className="size-4 text-red-500" />
+                <h2 className="font-semibold text-foreground">
+                  Webcam Live Stream
+                </h2>
+
+                {isStreaming && (
+                  <span className="flex items-center gap-1 text-xs text-red-500 ml-2">
+                    <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+                    LIVE
+                  </span>
+                )}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowWebcamModal(false)}
+              >
+                Close
               </Button>
+            </div>
+
+            {/* Video Preview */}
+            <div className="bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full aspect-video object-cover"
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-between px-5 py-4">
+              {/* Left Controls */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={switchCamera}
+                  className="gap-1"
+                >
+                  <Monitor className="size-4" />
+                  Switch Camera
+                </Button>
+              </div>
+
+              {/* Right Controls */}
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" onClick={closeWebcamModal}>
+                  Cancel
+                </Button>
+
+                <Button
+                  onClick={isStreaming ? stopWebcamLive : startWebcamLive}
+                  className={`gap-2 ${
+                    isStreaming
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
+                >
+                  {isStreaming ? (
+                    <>
+                      <Square className="size-4" />
+                      Stop Live
+                    </>
+                  ) : (
+                    <>
+                      <Play className="size-4" />
+                      Start Live
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
