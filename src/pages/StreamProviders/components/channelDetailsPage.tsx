@@ -209,48 +209,47 @@ export default function ChannelDetailPage() {
   };
 
   // ALL HOOKS FIRST
-useEffect(() => {
-  const handleBeforeUnload = () => {
-    if (mediaRecorder) mediaRecorder.stop();
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (mediaRecorder) mediaRecorder.stop();
 
-    if (webcamStream) {
-      webcamStream.getTracks().forEach((track) => track.stop());
-    }
+      if (webcamStream) {
+        webcamStream.getTracks().forEach((track) => track.stop());
+      }
 
-    navigator.sendBeacon(
-      "/api/stop-stream",
-      JSON.stringify({ channel_id: channelId })
-    );
-  };
+      navigator.sendBeacon(
+        "/api/stop-stream",
+        JSON.stringify({ channel_id: channelId }),
+      );
+    };
 
-  window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
-  return () => {
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-  };
-}, [mediaRecorder, webcamStream]);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [mediaRecorder, webcamStream]);
 
-useEffect(() => {
-  return () => {
-    if (mediaRecorder) mediaRecorder.stop();
+  useEffect(() => {
+    return () => {
+      if (mediaRecorder) mediaRecorder.stop();
 
-    if (webcamStream) {
-      webcamStream.getTracks().forEach((track) => track.stop());
-    }
-  };
-}, []);
+      if (webcamStream) {
+        webcamStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
-
-// THEN CONDITIONAL RENDER
-if (!provider || !channel) {
-  return <div className="p-6">Loading...</div>;
-}
+  // THEN CONDITIONAL RENDER
+  if (!provider || !channel) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex-1 overflow-auto p-6">
         {/* Channel Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
               {provider.logo}
@@ -278,40 +277,83 @@ if (!provider || !channel) {
                 {channel.status}
               </Badge>
             )}
-            {/* {channel.type === "streaming" ? (
-              <Badge className="bg-red-50 text-red-600 border-0">
-                Streaming
-              </Badge>
-            ) : channel.type === "website" ? (
-              <Badge className="bg-muted text-muted-foreground border-0">
-                Website
+            
+            {channel && (
+              <>
+                <Button
+                  size="sm"
+                  disabled={actionLoading === channel.channel_id}
+                  variant={
+                    channel.status === "live" ? "destructive" : "default"
+                  }
+                  className={`h-7 gap-1.5 text-xs ${
+                    channel.status === "live"
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  }`}
+                  onClick={() => handleToggleLive(channel)}
+                >
+                  {actionLoading === channel.channel_id ? (
+                    "Loading..."
+                  ) : channel.status === "live" ? (
+                    <>
+                      <Square className="size-3" />
+                      Stop Live
+                    </>
+                  ) : (
+                    <>
+                      <Play className="size-3" />
+                      Go Live
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => {
+                    setShowWebcamModal(true);
+                    startWebcamPreview();
+                  }}
+                >
+                  <Radio className="size-3.5" />
+                  Go Live with Webcam
+                </Button>
+              </>
+            )}
+          </div>
+        </div> */}
+
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
+              {provider.logo}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {channel.name}
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {provider.name} Channel
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2">
+            {channel.status === "live" ? (
+              <Badge className="bg-emerald-600 text-primary-foreground border-0 text-[11px]">
+                <span className="mr-1 inline-block size-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                live
               </Badge>
             ) : (
-              <Badge className="bg-blue-50 text-blue-600 border-0">VOD</Badge>
-            )} */}
-            {/* {channel.type === "streaming" && (
-              <Button
-                size="sm"
-                className={`ml-2 gap-1.5 ${
-                  currentStatus === "live"
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                }`}
-                onClick={handleToggleLive}
+              <Badge
+                variant="secondary"
+                className="text-[11px] text-muted-foreground"
               >
-                {currentStatus === "live" ? (
-                  <>
-                    <Square className="size-3.5" />
-                    Stop Live
-                  </>
-                ) : (
-                  <>
-                    <Play className="size-3.5" />
-                    Go Live
-                  </>
-                )}
-              </Button>
-            )} */}
+                {channel.status}
+              </Badge>
+            )}
+
             {channel && (
               <>
                 <Button
@@ -360,81 +402,38 @@ if (!provider || !channel) {
         </div>
 
         {/* Channel Details Grid */}
-        {/* <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="size-4" />
-              Duration
-            </div>
-            <p className="mt-2 text-xl font-semibold text-foreground">
-              {channel.duration}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Eye className="size-4" />
-              Current Viewers
-            </div>
-            <p className="mt-2 text-xl font-semibold text-foreground">
-              {currentViewers.toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Monitor className="size-4" />
-              Resolution
-            </div>
-            <p className="mt-2 text-xl font-semibold text-foreground">
-              {channel.resolution}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Radio className="size-4" />
-              Bitrate / FPS
-            </div>
-            <p className="mt-2 text-xl font-semibold text-foreground">
-              {channel.bitrate} / {channel.fps}fps
-            </p>
-          </div>
-        </div> */}
 
         {/* Stream URL */}
-        <div className="mb-6 rounded-xl border bg-card p-5">
+        <div className="mb-6 w-full  rounded-xl border bg-card p-4 sm:p-5">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Settings2 className="size-4" />
             Stream Configuration
           </h2>
-          <div className="mt-4 grid gap-4">
-            <div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {/* Stream URL */}
+            <div className="w-full">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Stream URL
               </label>
-              <div className="mt-1.5 flex items-center rounded-lg bg-muted px-3 py-2.5">
-                <code className="flex-1 truncate text-sm font-mono text-foreground">
-                  {/* {channel.url} */}
+
+              <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5 w-full">
+                <code className="flex-1 break-all text-xs sm:text-sm font-mono text-foreground">
                   {channel.playback_url}
                 </code>
+
                 <CopyButton text={channel.playback_url} />
               </div>
             </div>
-            {/* <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Config Profile
-              </label>
-              <div className="mt-1.5 flex items-center rounded-lg bg-muted px-3 py-2.5">
-                <span className="text-sm text-foreground">
-                  {channel.config || "Default"}
-                </span>
-              </div>
-            </div> */}
-            <div>
+
+            {/* Created At */}
+            <div className="w-full">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Created At
               </label>
-              <div className="mt-1.5 flex items-center rounded-lg bg-muted px-3 py-2.5">
-                <span className="text-sm text-foreground">
-                  {/* {channel.createdAt} */}
+
+              <div className="mt-1.5 flex items-center rounded-lg bg-muted px-3 py-2.5 w-full">
+                <span className="text-xs sm:text-sm text-foreground">
                   {new Date(channel.createdAt).toLocaleString()}
                 </span>
               </div>
@@ -443,8 +442,9 @@ if (!provider || !channel) {
         </div>
 
         {/* OBS Setup Section */}
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="border-b bg-muted/50 px-5 py-4 flex items-center justify-between">
+        {/* OBS Setup Section */}
+        <div className="hidden md:block rounded-xl border bg-card overflow-hidden">
+          <div className="border-b bg-muted/50 px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-lg bg-foreground text-primary-foreground">
                 <Monitor className="size-5" />
@@ -472,7 +472,6 @@ if (!provider || !channel) {
           </div>
 
           <div className="p-5">
-            {/* RTMP URL & Stream Key */}
             <div className="mb-6 rounded-lg border border-dashed bg-muted/30 p-4">
               <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Info className="size-4 text-muted-foreground" />
@@ -485,7 +484,6 @@ if (!provider || !channel) {
                   </label>
                   <div className="mt-1.5 flex items-center rounded-lg bg-card border px-3 py-2.5">
                     <code className="flex-1 truncate text-sm font-mono text-foreground">
-                      {/* {channel.rtmpUrl} */}
                       {channel.ingest_url}
                     </code>
                     <CopyButton text={channel.ingest_url} />
@@ -497,9 +495,6 @@ if (!provider || !channel) {
                   </label>
                   <div className="mt-1.5 flex items-center rounded-lg bg-card border px-3 py-2.5">
                     <code className="flex-1 truncate text-sm font-mono text-foreground">
-                      {/* {showStreamKey
-                        ? channel.streamKey
-                        : "************************************"} */}
                       {showStreamKey
                         ? channel.stream_key
                         : "************************************"}
@@ -527,13 +522,11 @@ if (!provider || !channel) {
               </div>
             </div>
 
-            {/* Step by Step Guide */}
             <h3 className="text-sm font-semibold text-foreground mb-4">
               Step-by-Step Setup Instructions
             </h3>
 
             <div className="grid gap-4">
-              {/* Step 1 */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-primary-foreground text-sm font-bold">
@@ -562,7 +555,6 @@ if (!provider || !channel) {
                 </div>
               </div>
 
-              {/* Step 2 */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-primary-foreground text-sm font-bold">
@@ -588,7 +580,6 @@ if (!provider || !channel) {
                 </div>
               </div>
 
-              {/* Step 3 */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-primary-foreground text-sm font-bold">
@@ -633,7 +624,6 @@ if (!provider || !channel) {
                 </div>
               </div>
 
-              {/* Step 4 */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-primary-foreground text-sm font-bold">
@@ -690,7 +680,6 @@ if (!provider || !channel) {
                 </div>
               </div>
 
-              {/* Step 5 */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-primary-foreground text-sm font-bold">
@@ -813,6 +802,266 @@ if (!provider || !channel) {
                       live to ensure your audio/video quality and settings are
                       correct.
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="block md:hidden rounded-xl border bg-card overflow-hidden">
+          {/* HEADER */}
+          <div className="border-b bg-muted/50 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-foreground text-primary-foreground">
+                <Monitor className="size-4" />
+              </div>
+
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  OBS Studio Setup Guide
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Configure OBS to stream to {provider.name}
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="https://obsproject.com/download"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-3"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-center gap-1.5"
+              >
+                <Download className="size-3.5" />
+                Download OBS
+                <ExternalLink className="size-3" />
+              </Button>
+            </a>
+          </div>
+
+          <div className="p-4 space-y-6">
+            {/* STREAM CREDENTIALS */}
+            <div className="rounded-lg border border-dashed bg-muted/30 p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Info className="size-4 text-muted-foreground" />
+                Streaming Credentials
+              </h3>
+
+              <div className="space-y-4">
+                {/* RTMP */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    RTMP Server URL
+                  </label>
+
+                  <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-card border px-3 py-2.5">
+                    <code className="flex-1 break-all text-xs font-mono text-foreground">
+                      {channel.ingest_url}
+                    </code>
+
+                    <CopyButton text={channel.ingest_url} />
+                  </div>
+                </div>
+
+                {/* STREAM KEY */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Stream Key
+                  </label>
+
+                  <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-card border px-3 py-2.5">
+                    <code className="flex-1 break-all text-xs font-mono text-foreground">
+                      {showStreamKey
+                        ? channel.stream_key
+                        : "************************************"}
+                    </code>
+
+                    <button
+                      onClick={() => setShowStreamKey(!showStreamKey)}
+                      className="p-1.5 rounded-md text-muted-foreground hover:bg-muted"
+                    >
+                      {showStreamKey ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
+
+                    <CopyButton text={channel.stream_key} />
+                  </div>
+
+                  <p className="mt-1 text-[11px] text-destructive">
+                    Never share your stream key.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* STEPS */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-4">
+                Setup Steps
+              </h3>
+
+              <div className="space-y-5">
+                {/* STEP 1 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Download OBS Studio
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Download OBS Studio from the official website.
+                    </p>
+
+                    <a
+                      href="https://obsproject.com/download"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-foreground underline mt-1 inline-block"
+                    >
+                      obsproject.com/download
+                    </a>
+                  </div>
+                </div>
+
+                {/* STEP 2 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    2
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Open Stream Settings
+                    </h4>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Go to Settings → Stream tab in OBS.
+                    </p>
+                  </div>
+                </div>
+
+                {/* STEP 3 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    3
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Configure Stream Service
+                    </h4>
+
+                    <ul className="text-xs text-muted-foreground mt-1 space-y-1">
+                      <li>Service: Custom</li>
+                      <li>Server: Paste RTMP URL</li>
+                      <li>Stream Key: Paste Stream Key</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* STEP 4 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    4
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Output Settings
+                    </h4>
+
+                    <div className="mt-2 rounded-lg bg-muted p-3 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Encoder</span>
+                        <span>{channel.bitrate}</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Rate Control</span>
+                        <span>CBR</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Keyframe</span>
+                        <span>2</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 5 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    5
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Video Settings
+                    </h4>
+
+                    <div className="mt-2 rounded-lg bg-muted p-3 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Resolution</span>
+                        <span>{channel.resolution}</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>FPS</span>
+                        <span>{channel.fps}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 6 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-foreground text-primary-foreground text-xs font-bold">
+                    6
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Add Sources
+                    </h4>
+
+                    <p className="text-xs text-muted-foreground">
+                      Add webcam, display capture, or microphone sources.
+                    </p>
+                  </div>
+                </div>
+
+                {/* STEP 7 */}
+                <div className="flex gap-3">
+                  <div className="flex size-7 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold">
+                    7
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Start Streaming
+                    </h4>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Click "Start Streaming" in OBS to go live.
+                    </p>
+
+                    <div className="mt-2 rounded-lg bg-emerald-50 border border-dashed p-2">
+                      <p className="text-xs text-emerald-700">
+                        Tip: Always test your stream before going live.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
