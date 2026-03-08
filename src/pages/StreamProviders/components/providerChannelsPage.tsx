@@ -411,8 +411,8 @@ export default function ProviderChannelsPage() {
           </div>
         </div>
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1 max-w-md">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative flex-1 max-w-[300px] md:w-full">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search channels..."
@@ -421,7 +421,7 @@ export default function ProviderChannelsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 ">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px] bg-card">
                 <SelectValue placeholder="All Status" />
@@ -565,7 +565,7 @@ export default function ProviderChannelsPage() {
           {filteredChannels.map((channel) => (
             <button
               key={channel.channel_id}
-              className="group relative flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:border-foreground/20 text-left"
+              className="group relative max-w-[300px] md:max-w-md flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:border-foreground/20 text-left"
             >
               <div
                 className="p-5"
@@ -617,7 +617,7 @@ export default function ProviderChannelsPage() {
               </div>
 
               {/* FOOTER */}
-              <div className="border-t px-5 py-2.5 flex items-center justify-between">
+              <div className="border-t px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <span className="text-[11px] text-muted-foreground">
                   Created: {new Date(channel.created_at).toLocaleDateString()}
                 </span>
