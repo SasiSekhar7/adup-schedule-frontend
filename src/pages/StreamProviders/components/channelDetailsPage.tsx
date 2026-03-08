@@ -156,20 +156,32 @@ export default function ChannelDetailPage() {
 
   const startWebcamLive = async () => {
     if (!webcamStream) return;
-
+     let options: MediaRecorderOptions = {};
     // Start backend FFmpeg process
     await api.post(`/start-stream`, {
       channel_id: channelId,
     });
 
-    const recorder = new MediaRecorder(webcamStream, {
-      mimeType: "video/webm;codecs=vp8,opus",
-    });
+     if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+    options.mimeType = "video/webm;codecs=vp8,opus";
+  } else if (MediaRecorder.isTypeSupported("video/mp4")) {
+    options.mimeType = "video/mp4";
+  }
+
+
+
+    // const recorder = new MediaRecorder(webcamStream, {
+    //   mimeType: "video/webm;codecs=vp8,opus",
+    // });
+     const recorder = new MediaRecorder(webcamStream, options);
 
     recorder.ondataavailable = async (event) => {
       if (event.data.size > 0) {
         await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
           method: "POST",
+          headers: {
+          "Content-Type": event.data.type,
+        },
           body: event.data,
         });
       }
