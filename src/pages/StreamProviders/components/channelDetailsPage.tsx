@@ -154,46 +154,101 @@ export default function ChannelDetailPage() {
     await startWebcamPreview(newFacing);
   };
 
-  const startWebcamLive = async () => {
-    if (!webcamStream) return;
-     let options: MediaRecorderOptions = {};
-    // Start backend FFmpeg process
-    await api.post(`/start-stream`, {
-      channel_id: channelId,
-    });
+  // const startWebcamLive = async () => {
+  //   if (!webcamStream) return;
+  //    let options: MediaRecorderOptions = {};
+  //   // Start backend FFmpeg process
+  //   await api.post(`/start-stream`, {
+  //     channel_id: channelId,
+  //   });
 
-     if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
-    options.mimeType = "video/webm;codecs=vp8,opus";
-  } else if (MediaRecorder.isTypeSupported("video/mp4")) {
-    options.mimeType = "video/mp4";
+  //    if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+  //   options.mimeType = "video/webm;codecs=vp8,opus";
+  // } else if (MediaRecorder.isTypeSupported("video/mp4")) {
+  //   options.mimeType = "video/mp4";
+  // }
+
+
+
+  //   // const recorder = new MediaRecorder(webcamStream, {
+  //   //   mimeType: "video/webm;codecs=vp8,opus",
+  //   // });
+  //    const recorder = new MediaRecorder(webcamStream, options);
+
+  //    console.log("recorder",recorder);
+  //    console.log("options",options);
+  //    console.log("mimeType",options.mimeType);
+  //    console.log("mimeType",MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus"));
+  //    console.log("mimeType",MediaRecorder.isTypeSupported("video/mp4"));
+
+  //   recorder.ondataavailable = async (event) => {
+  //     if (event.data.size > 0) {
+  //       await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+  //         method: "POST",
+  //         headers: {
+  //         "Content-Type": event.data.type,
+  //         "data-type":options.mimeType || "video/webm",
+  //       },
+  //         body: event.data,
+  //       });
+  //     }
+  //   };
+
+  //   // Send chunk every 2 seconds
+  //   recorder.start(2000);
+
+  //   setMediaRecorder(recorder);
+  //   setIsStreaming(true);
+  // };
+
+
+  const startWebcamLive = async () => {
+  if (!webcamStream) return;
+
+  // 1. Define supported types in order of preference
+  const mimeTypes = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // Best for Safari/iOS
+    'video/webm;codecs=vp8,opus',            // Best for Chrome/Android/Desktop
+    'video/webm'                             // General fallback
+  ];
+
+  let selectedMimeType = '';
+  for (const type of mimeTypes) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      selectedMimeType = type;
+      break;
+    }
   }
 
+  if (!selectedMimeType) {
+    console.error("No supported MIME type found for MediaRecorder");
+    return;
+  }
 
+  const options = { mimeType: selectedMimeType };
 
-    // const recorder = new MediaRecorder(webcamStream, {
-    //   mimeType: "video/webm;codecs=vp8,opus",
-    // });
-     const recorder = new MediaRecorder(webcamStream, options);
+  // Start backend FFmpeg process
+  await api.post(`/start-stream`, { channel_id: channelId });
 
-    recorder.ondataavailable = async (event) => {
-      if (event.data.size > 0) {
-        await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
-          method: "POST",
-          headers: {
-          "Content-Type": event.data.type,
-          "data-type":options.mimeType || "video/webm",
+  const recorder = new MediaRecorder(webcamStream, options);
+
+  recorder.ondataavailable = async (event) => {
+    if (event.data.size > 0) {
+      await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": selectedMimeType, // Use the detected type
+          "data-type": selectedMimeType,
         },
-          body: event.data,
-        });
-      }
-    };
-
-    // Send chunk every 2 seconds
-    recorder.start(2000);
-
-    setMediaRecorder(recorder);
-    setIsStreaming(true);
+        body: event.data,
+      });
+    }
   };
+
+  recorder.start(2000);
+  setMediaRecorder(recorder);
+  setIsStreaming(true);
+};
 
   const closeWebcamModal = async () => {
     if (isStreaming) {
