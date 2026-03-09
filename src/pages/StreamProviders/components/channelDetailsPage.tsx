@@ -156,17 +156,21 @@ export default function ChannelDetailPage() {
 
   const startWebcamLive = async () => {
     if (!webcamStream) return;
-     let options: MediaRecorderOptions = {};
+  let options: MediaRecorderOptions = {};
     // Start backend FFmpeg process
     await api.post(`/start-stream`, {
       channel_id: channelId,
     });
 
-     if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
-    options.mimeType = "video/webm;codecs=vp8,opus";
-  } else if (MediaRecorder.isTypeSupported("video/mp4")) {
-    options.mimeType = "video/mp4";
-  }
+   if (MediaRecorder.isTypeSupported("video/mp4;codecs=avc1.42E01E,mp4a.40.2")) {
+  options.mimeType = "video/mp4;codecs=avc1.42E01E,mp4a.40.2";
+} 
+else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+  options.mimeType = "video/webm;codecs=vp8,opus";
+} 
+else if (MediaRecorder.isTypeSupported("video/webm")) {
+  options.mimeType = "video/webm";
+}
 
 
 
@@ -180,15 +184,15 @@ export default function ChannelDetailPage() {
         await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
           method: "POST",
           headers: {
-          "Content-Type": event.data.type,
-        },
+    "Content-Type": event.data.type || "application/octet-stream",
+  },
           body: event.data,
         });
       }
     };
 
     // Send chunk every 2 seconds
-    recorder.start(2000);
+    recorder.start(5000);
 
     setMediaRecorder(recorder);
     setIsStreaming(true);
