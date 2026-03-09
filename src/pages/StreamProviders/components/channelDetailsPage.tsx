@@ -181,6 +181,7 @@ export default function ChannelDetailPage() {
           method: "POST",
           headers: {
           "Content-Type": event.data.type,
+          "data-type":options.mimeType || "video/webm",
         },
           body: event.data,
         });
