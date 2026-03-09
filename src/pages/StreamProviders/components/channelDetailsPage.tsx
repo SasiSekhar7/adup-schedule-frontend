@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useRef } from "react";
+import { Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
 import {
   Copy,
@@ -62,6 +64,9 @@ export default function ChannelDetailPage() {
   // "environment" = rear camera
 
   const videoRef = useRef<HTMLVideoElement>(null);
+
+const socketRef = useRef<Socket | null>(null);
+const peerRef = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
     fetchChannelById(channelId as string);
@@ -123,6 +128,38 @@ export default function ChannelDetailPage() {
       setActionLoading(null);
     }
   };
+
+useEffect(() => {
+  const socket = io("http://localhost:8080/api");
+  socketRef.current = socket;
+
+  // receive answer from server
+socket.on("webrtc-answer", async (data: { answer: any; }) => {
+  const answer = data.answer; 
+
+  if (peerRef.current) {
+    await peerRef.current.setRemoteDescription(
+      new RTCSessionDescription(answer)
+    );
+  }
+});
+
+  // receive ICE candidates
+socket.on("ice-candidate", async (data: { candidate: any; } ) => {
+  const candidate = data.candidate;
+
+  if (peerRef.current) {
+    await peerRef.current.addIceCandidate(
+      new RTCIceCandidate(candidate)
+    );
+  }
+});
+
+  return () => {
+    socket.removeAllListeners();
+    socket.disconnect();
+  };
+}, []);
 
   const startWebcamPreview = async (facing = cameraFacing) => {
     try {
@@ -202,52 +239,89 @@ export default function ChannelDetailPage() {
   // };
 
 
-  const startWebcamLive = async () => {
+//   const startWebcamLive = async () => {
+//   if (!webcamStream) return;
+
+//   // 1. Define supported types in order of preference
+//   const mimeTypes = [
+//     'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // Best for Safari/iOS
+//     'video/webm;codecs=vp8,opus',            // Best for Chrome/Android/Desktop
+//     'video/webm'                             // General fallback
+//   ];
+
+//   let selectedMimeType = '';
+//   for (const type of mimeTypes) {
+//     if (MediaRecorder.isTypeSupported(type)) {
+//       selectedMimeType = type;
+//       break;
+//     }
+//   }
+
+//   if (!selectedMimeType) {
+//     console.error("No supported MIME type found for MediaRecorder");
+//     return;
+//   }
+
+//   const options = { mimeType: selectedMimeType };
+
+//   // Start backend FFmpeg process
+//   await api.post(`/start-stream`, { channel_id: channelId });
+
+//   const recorder = new MediaRecorder(webcamStream, options);
+
+//   recorder.ondataavailable = async (event) => {
+//     if (event.data.size > 0) {
+//       await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": selectedMimeType, // Use the detected type
+//           "data-type": selectedMimeType,
+//         },
+//         body: event.data,
+//       });
+//     }
+//   };
+
+//   recorder.start(2000);
+//   setMediaRecorder(recorder);
+//   setIsStreaming(true);
+// };
+
+const startWebcamLive = async () => {
   if (!webcamStream) return;
 
-  // 1. Define supported types in order of preference
-  const mimeTypes = [
-    'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // Best for Safari/iOS
-    'video/webm;codecs=vp8,opus',            // Best for Chrome/Android/Desktop
-    'video/webm'                             // General fallback
-  ];
+  setIsStreaming(true);
 
-  let selectedMimeType = '';
-  for (const type of mimeTypes) {
-    if (MediaRecorder.isTypeSupported(type)) {
-      selectedMimeType = type;
-      break;
-    }
-  }
+  const pc = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  });
 
-  if (!selectedMimeType) {
-    console.error("No supported MIME type found for MediaRecorder");
-    return;
-  }
+  peerRef.current = pc;
 
-  const options = { mimeType: selectedMimeType };
+  // Add camera tracks
+  webcamStream.getTracks().forEach((track) => {
+    pc.addTrack(track, webcamStream);
+  });
 
-  // Start backend FFmpeg process
-  await api.post(`/start-stream`, { channel_id: channelId });
-
-  const recorder = new MediaRecorder(webcamStream, options);
-
-  recorder.ondataavailable = async (event) => {
-    if (event.data.size > 0) {
-      await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": selectedMimeType, // Use the detected type
-          "data-type": selectedMimeType,
-        },
-        body: event.data,
+  // Send ICE candidates to server
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socketRef.current?.emit("ice-candidate", {
+        channelId,
+        candidate: event.candidate,
       });
     }
   };
 
-  recorder.start(2000);
-  setMediaRecorder(recorder);
-  setIsStreaming(true);
+  // Create WebRTC offer
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  // Send offer to backend
+  socketRef.current?.emit("webrtc-offer", {
+    channelId,
+    offer,
+  });
 };
 
   const closeWebcamModal = async () => {
@@ -260,43 +334,64 @@ export default function ChannelDetailPage() {
     setShowWebcamModal(false);
   };
 
+  // const stopWebcamLive = async () => {
+  //   if (mediaRecorder) {
+  //     mediaRecorder.stop();
+  //   }
+
+  //   await api.post(`/stop-stream`, {
+  //     channel_id: channelId,
+  //   });
+
+  //   if (webcamStream) {
+  //     webcamStream.getTracks().forEach((track) => track.stop());
+  //   }
+  //   setIsStreaming(false);
+  //   setShowWebcamModal(false);
+  // };
+
   const stopWebcamLive = async () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-    }
 
-    await api.post(`/stop-stream`, {
-      channel_id: channelId,
-    });
+  if (peerRef.current) {
+    peerRef.current.close();
+    peerRef.current = null;
+  }
 
-    if (webcamStream) {
-      webcamStream.getTracks().forEach((track) => track.stop());
-    }
-    setIsStreaming(false);
-    setShowWebcamModal(false);
-  };
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop());
+  }
+
+  socketRef.current?.emit("stopStream", {
+    channel_id: channelId
+  });
+
+  setIsStreaming(false);
+  setShowWebcamModal(false);
+};
 
   // ALL HOOKS FIRST
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (mediaRecorder) mediaRecorder.stop();
+useEffect(() => {
+  const handleBeforeUnload = () => {
 
-      if (webcamStream) {
-        webcamStream.getTracks().forEach((track) => track.stop());
-      }
+    if (peerRef.current) {
+      peerRef.current.close();
+    }
 
-      navigator.sendBeacon(
-        "/api/stop-stream",
-        JSON.stringify({ channel_id: channelId }),
-      );
-    };
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(track => track.stop());
+    }
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    socketRef.current?.emit("stopStream", {
+      channel_id: channelId
+    });
+  };
 
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [mediaRecorder, webcamStream]);
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  };
+}, [webcamStream]);
 
   useEffect(() => {
     return () => {
