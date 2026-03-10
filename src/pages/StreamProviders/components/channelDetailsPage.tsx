@@ -168,8 +168,6 @@ export default function ChannelDetailPage() {
   //   options.mimeType = "video/mp4";
   // }
 
-
-
   //   // const recorder = new MediaRecorder(webcamStream, {
   //   //   mimeType: "video/webm;codecs=vp8,opus",
   //   // });
@@ -201,53 +199,68 @@ export default function ChannelDetailPage() {
   //   setIsStreaming(true);
   // };
 
-
-  const startWebcamLive = async () => {
+const startWebcamLive = async () => {
   if (!webcamStream) return;
 
-  // 1. Define supported types in order of preference
-  const mimeTypes = [
-    'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // Best for Safari/iOS
-    'video/webm;codecs=vp8,opus',            // Best for Chrome/Android/Desktop
-    'video/webm'                             // General fallback
-  ];
+  try {
 
-  let selectedMimeType = '';
-  for (const type of mimeTypes) {
-    if (MediaRecorder.isTypeSupported(type)) {
-      selectedMimeType = type;
-      break;
+    // 🔴 STEP 1: Start channel if not live
+    if (channel.status !== "live") {
+      await api.put(`/streaming/channel/${channel.channel_id}/start`);
+      await fetchChannelById(channelId as string); // refresh state
     }
-  }
 
-  if (!selectedMimeType) {
-    console.error("No supported MIME type found for MediaRecorder");
-    return;
-  }
+    // 2️⃣ Detect supported mime type
+    const mimeTypes = [
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4",
+    ];
 
-  const options = { mimeType: selectedMimeType };
+    let selectedMimeType = "";
 
-  // Start backend FFmpeg process
-  await api.post(`/start-stream`, { channel_id: channelId });
-
-  const recorder = new MediaRecorder(webcamStream, options);
-
-  recorder.ondataavailable = async (event) => {
-    if (event.data.size > 0) {
-      await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": selectedMimeType, // Use the detected type
-          "data-type": selectedMimeType,
-        },
-        body: event.data,
-      });
+    for (const type of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        selectedMimeType = type;
+        break;
+      }
     }
-  };
 
-  recorder.start(2000);
-  setMediaRecorder(recorder);
-  setIsStreaming(true);
+    if (!selectedMimeType) {
+      console.error("No supported MIME type found");
+      return;
+    }
+
+    const options = { mimeType: selectedMimeType };
+
+    // 🔴 STEP 2: Start backend FFmpeg stream
+    await api.post(`/start-stream`, {
+      channel_id: channelId,
+    });
+
+    const recorder = new MediaRecorder(webcamStream, options);
+
+    recorder.ondataavailable = async (event) => {
+      if (event.data.size > 0) {
+        await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": selectedMimeType,
+            "data-type": selectedMimeType,
+          },
+          body: event.data,
+        });
+      }
+    };
+
+    recorder.start(5000);
+
+    setMediaRecorder(recorder);
+    setIsStreaming(true);
+
+  } catch (err) {
+    console.error("Webcam live start failed:", err);
+  }
 };
 
   const closeWebcamModal = async () => {
