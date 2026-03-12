@@ -114,8 +114,8 @@ function AdminPlans() {
 
   return (
     <div className="p-10 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Plans</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <h1 className="text-2xl font-bold mb-3">Manage Plans</h1>
         <div className="flex gap-3">
           {/* <Button variant="secondary" onClick={handleAssignBasic}>
             Assign Basic to Old Clients
