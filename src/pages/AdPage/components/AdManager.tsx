@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -172,6 +172,7 @@ export interface AdData {
   ad_id?: string;
   name: string;
   url: string;
+  fileSize: string;
   duration: number;
   client_id: string;
   status?: string;
@@ -188,6 +189,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     initialData || {
       name: "",
       url: "",
+      fileSize: "",
       duration: 0,
       client_id: "",
     },
@@ -466,6 +468,15 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 </div>
               )}
             </form>
+
+            <div className="text-sm flex flex-col text-gray-800 mt-4">
+              <Label className="text-sm font-medium mb-2">File Size: </Label>
+              <p className="text-sm text-muted-foreground">
+                {formData.fileSize
+                  ? formatBytes(Number(formData.fileSize))
+                  : "Unknown"}
+              </p>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-end p-4 md:p-6">
             {isEditing && (

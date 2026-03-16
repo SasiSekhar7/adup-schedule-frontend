@@ -1,7 +1,14 @@
 import api from "@/api";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BadgeDollarSign, Layers, Pencil, Plus, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeDollarSign,
+  Layers,
+  Pencil,
+  Plus,
+  Save,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -290,11 +297,35 @@ function Clients() {
           // const usagePercent =
           //   limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;
 
-          const usagePercent =
+          // const usagePercent =
+          //   limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+
+          const usagePercentRaw =
             limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+          const usagePercent = Math.min(usagePercentRaw, 100);
+          const remainingPercent = 100 - usagePercent;
+
+          let barColor = "bg-blue-500";
+          let borderColor = "";
+          let errorMessage = "";
+
+          if (usagePercentRaw >= 100) {
+            barColor = "bg-red-500";
+            borderColor = "border border-red-500";
+            errorMessage = "Storage limit exceeded";
+          } else if (remainingPercent <= 5) {
+            barColor = "bg-red-500";
+            borderColor = "border border-red-500";
+            errorMessage = "Storage almost full";
+          } else if (usagePercent >= 75) {
+            barColor = "bg-orange-500";
+          }
 
           return (
-            <Card key={index} className="col-span-1 bg-gray-100">
+            <Card
+              key={index}
+              className={`col-span-1 bg-gray-100 ${borderColor}`}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {client.name}
@@ -321,22 +352,6 @@ function Clients() {
                 <div className="text-xl font-bold">{client.adsCount}</div>
                 <p className="text-xs text-muted-foreground">Total Ads</p>
 
-                {/* Storage Info */}
-                {/*<div className="text-sm space-y-1 mt-2">
-                  <p>Used: {usedGB} GB</p>
-                  <p>Total: {totalGB} GB</p>
-                  <p>Remaining: {remainingGB > 0 ? remainingGB : 0} GB</p>
-                </div>*/}
-
-                {/* Progress Bar */}
-                {/* {limitBytes > 0 && (
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full"
-                      style={{ width: `${usagePercent}%` }}
-                    ></div>
-                  </div>
-                )} */}
                 {limitBytes > 0 && (
                   <TooltipProvider>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2 flex overflow-hidden">
@@ -344,7 +359,7 @@ function Clients() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
-                            className="bg-blue-500 h-2 cursor-pointer"
+                            className={`${barColor} h-2 cursor-pointer transition-all`}
                             style={{ width: `${usagePercent}%` }}
                           />
                         </TooltipTrigger>
@@ -387,6 +402,11 @@ function Clients() {
                     Total: {totalGB} GB
                   </p>
                 </div>
+                {errorMessage && (
+                  <p className="text-xs text-red-500 font-medium mt-1 flex items-center">
+                    <AlertTriangle className="mr-2 h-4 w-4" /> {errorMessage}
+                  </p>
+                )}
               </CardContent>
             </Card>
           );

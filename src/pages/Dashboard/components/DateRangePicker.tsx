@@ -1,6 +1,6 @@
 // components/DateRangePicker.tsx (Example file path)
 "use client"; // If using Next.js App Router
-import { useState } from "react"; // Needed for Popover open state if controlled
+import { useEffect, useState } from "react"; // Needed for Popover open state if controlled
 import { CalendarIcon } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -20,6 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
 // Define the props interface
@@ -77,30 +78,45 @@ export function DateRangePicker({
   const currentPreset = datePresets.find(
     (preset) =>
       preset.range.from?.toDateString() === date?.from?.toDateString() &&
-      preset.range.to?.toDateString() === date?.to?.toDateString()
+      preset.range.to?.toDateString() === date?.to?.toDateString(),
   );
   const buttonLabel = currentPreset?.label ?? "Custom Range"; // Default to Custom Range if no preset matches
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
   return (
     <div
       className={cn(
         "flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto",
-        className
+        className,
       )}
     >
       {/* --- Preset Dropdown --- */}
-      <DropdownMenu>
+      {/* <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="sm"
             className="w-full sm:w-[150px] justify-start text-left"
           >
-            {/* Show selected preset or 'Select Preset' */}
+          
             <span className="truncate">{buttonLabel}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[200px] sm:w-[150px]">
+        <DropdownMenuContent
+          align="end"
+          className="w-[200px] sm:w-[150px] z-50"
+        >
           <DropdownMenuLabel className="text-xs sm:text-sm">
             Date Presets
           </DropdownMenuLabel>
@@ -115,6 +131,37 @@ export function DateRangePicker({
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
+      </DropdownMenu> */}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-[150px] justify-start text-left"
+          >
+            <span className="truncate">{buttonLabel}</span>
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuPortal>
+          <DropdownMenuContent
+            align="start"
+            sideOffset={5}
+            className="w-[200px] sm:w-[150px] z-[9999]"
+          >
+            <DropdownMenuLabel>Date Presets</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {datePresets.map((preset) => (
+              <DropdownMenuItem
+                key={preset.label}
+                onSelect={() => handlePresetSelect(preset.range)}
+              >
+                {preset.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
       </DropdownMenu>
 
       {/* --- Custom Range Popover with Calendar --- */}
@@ -126,7 +173,7 @@ export function DateRangePicker({
             size="sm"
             className={cn(
               "w-full sm:w-[280px] md:w-[320px] justify-start text-left font-normal", // Responsive width
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -160,7 +207,7 @@ export function DateRangePicker({
             </span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent className="w-auto p-0 z-50" align="end">
           <Calendar
             initialFocus
             mode="range"
@@ -174,7 +221,8 @@ export function DateRangePicker({
                 setTimeout(() => setPopoverOpen(false), 100);
               }
             }}
-            numberOfMonths={window.innerWidth >= 768 ? 2 : 1} // Responsive month display
+            // numberOfMonths={window.innerWidth >= 768 ? 2 : 1} // Responsive month display
+            numberOfMonths={isDesktop ? 2 : 1}
           />
         </PopoverContent>
       </Popover>
