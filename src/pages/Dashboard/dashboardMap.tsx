@@ -52,7 +52,7 @@ export const DashboardMap = () => {
     const run = async () => {
       try {
         const res = await api.get<DevicesResponse>("/device/all");
-        console.log("Device API response:", res);
+
         setDevices(res.devices || []);
       } catch (err) {
         console.error("Device API error", err);
