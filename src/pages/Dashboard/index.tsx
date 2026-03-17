@@ -533,12 +533,12 @@ const Dashboard = () => {
                         bgColor="bg-indigo-50"
                       />
 
-                      <StatsCard
+                      {/* <StatsCard
                         title="Active Groups"
                         value={dynamicKpiData.activeGroupsInRange}
                         icon={<Server className="h-4 w-4 text-cyan-600" />}
                         bgColor="bg-cyan-50"
-                      />
+                      /> */}
 
                       <StatsCard
                         title="Active Devices"
