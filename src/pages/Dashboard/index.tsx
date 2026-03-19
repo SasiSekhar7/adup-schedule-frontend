@@ -432,8 +432,8 @@ const Dashboard = () => {
     //   <PerformanceTablesCard dateRange={date} />
     // </div>
 
-    <div className="min-h-screen w-full max-w-[350px] mx-auto md:mx-0 md:max-w-full bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="p-6 md:p-8">
+    <div className="min-h-screen w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full ">
+      <div className="">
         <div className="space-y-1 mb-4">
           <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
           <p className="text-sm md:text-base text-muted-foreground">
