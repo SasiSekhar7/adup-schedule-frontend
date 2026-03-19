@@ -245,7 +245,7 @@ const Dashboard = () => {
         const res = await api.get<DynamicKpiData>(
           `/dashboard/stats?${params.toString()}`,
         );
-        console.log("Dashboard Dynamic KPI API response:", res.data);
+
         setDynamicKpiData(res.data);
         setSystemHealth([
           {
@@ -270,7 +270,6 @@ const Dashboard = () => {
           },
         ]);
       } catch (error: any) {
-        console.error("Error fetching dynamic KPI data:", error);
         setDynamicKpiError(
           error.response?.data?.message ||
             error.message ||
@@ -533,12 +532,12 @@ const Dashboard = () => {
                         bgColor="bg-indigo-50"
                       />
 
-                      <StatsCard
+                      {/* <StatsCard
                         title="Active Groups"
                         value={dynamicKpiData.activeGroupsInRange}
                         icon={<Server className="h-4 w-4 text-cyan-600" />}
                         bgColor="bg-cyan-50"
-                      />
+                      /> */}
 
                       <StatsCard
                         title="Active Devices"
@@ -703,7 +702,6 @@ function TelemetryInsights({
       const data = await response.json();
       return data.display_name || "Unknown Location";
     } catch (error) {
-      console.error("Error fetching location:", error);
       return "Unknown Location";
     }
   }
