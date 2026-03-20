@@ -199,6 +199,19 @@ export const DashboardMap = () => {
                 left: 45% !important;
                 transform: translateX(-45%);
               }
+                /* 🔥 Force Leaflet BELOW sidebar */
+              .leaflet-container {
+                z-index: 0 !important;
+              }
+
+              .leaflet-pane,
+              .leaflet-top,
+              .leaflet-bottom,
+              .leaflet-control,
+              .leaflet-tooltip,
+              .leaflet-popup {
+                z-index: 0 !important;
+              }
         `}
       </style>
     </MapContainer>
