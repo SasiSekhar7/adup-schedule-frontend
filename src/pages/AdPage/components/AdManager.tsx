@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,7 @@ const getFileExtension = (filename: string): string => {
 // Single part upload function for files ≤ 50MB using signed URL
 async function uploadSingleFile(
   file: File,
-  onProgress?: (progress: number, status: string) => void
+  onProgress?: (progress: number, status: string) => void,
 ) {
   // Generate filename in the format: ad-{timestamp}{extension}
   const fileExtension = getFileExtension(file.name);
@@ -82,8 +82,8 @@ async function uploadLargeFile(
     progress: number,
     status: string,
     speed: string,
-    timeLeft: string
-  ) => void
+    timeLeft: string,
+  ) => void,
 ) {
   // Generate filename in the format: ad-{timestamp}{extension}
   const fileExtension = getFileExtension(file.name);
@@ -151,7 +151,7 @@ async function uploadLargeFile(
       progress,
       `Uploading part ${i + 1}/${urls.length}`,
       speedFormatted,
-      timeLeftFormatted
+      timeLeftFormatted,
     );
 
     console.log(`Uploaded part ${i + 1}/${urls.length}`);
@@ -172,6 +172,7 @@ export interface AdData {
   ad_id?: string;
   name: string;
   url: string;
+  fileSize: string;
   duration: number;
   client_id: string;
   status?: string;
@@ -188,9 +189,10 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     initialData || {
       name: "",
       url: "",
+      fileSize: "",
       duration: 0,
       client_id: "",
-    }
+    },
   );
   const [file, setFile] = useState<File | null>();
   const [isUploading, setIsUploading] = useState(false);
@@ -256,7 +258,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
             setUploadStatus(status);
             setUploadSpeed(speed);
             setTimeLeft(timeLeft);
-          }
+          },
         );
 
         // After successful multipart upload, update the ad record
@@ -275,7 +277,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
           (progress, status) => {
             setUploadProgress(progress);
             setUploadStatus(status);
-          }
+          },
         );
 
         // After successful upload, update the ad record
@@ -291,7 +293,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
       console.log(
         `Upload completed successfully using ${
           useMultipart ? "multipart" : "signed URL"
-        } method`
+        } method`,
       );
 
       // Reset progress after a short delay
@@ -373,7 +375,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 </DialogContent>
               </Dialog>
 
-              {!isEditing && (
+              {/* {!isEditing && (
                 <Button
                   onClick={() => navigate(`/ads/${formData.ad_id}/edit`)}
                   size="sm"
@@ -381,7 +383,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 >
                   Edit
                 </Button>
-              )}
+              )} */}
             </div>
           </CardHeader>
           <CardContent className="p-4 md:p-6">
@@ -452,12 +454,12 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                         formData.status === "pending"
                           ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                           : formData.status === "processing"
-                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                          : formData.status === "completed"
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : formData.status === "failed"
-                          ? "bg-red-100 text-red-800 border-red-200"
-                          : "bg-gray-100 text-gray-800 border-gray-200"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : formData.status === "completed"
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : formData.status === "failed"
+                                ? "bg-red-100 text-red-800 border-red-200"
+                                : "bg-gray-100 text-gray-800 border-gray-200"
                       }`}
                     >
                       {formData.status}
@@ -466,6 +468,15 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                 </div>
               )}
             </form>
+
+            <div className="text-sm flex flex-col text-gray-800 mt-4">
+              <Label className="text-sm font-medium mb-2">File Size: </Label>
+              <p className="text-sm text-muted-foreground">
+                {formData.fileSize
+                  ? formatBytes(Number(formData.fileSize))
+                  : "Unknown"}
+              </p>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-end p-4 md:p-6">
             {isEditing && (

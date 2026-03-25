@@ -83,7 +83,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
     const fetchDeviceGroups = async () => {
       try {
         const response = await api.get<{ groups: DeviceGroup[] }>(
-          "/device/group-list"
+          "/device/group-list",
         );
         console.log("Device groups:", response);
         setDeviceGroups((response as any).groups || []);
@@ -104,7 +104,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       const handler = setTimeout(async () => {
         try {
           const response = await api.get(
-            `/device/new-register/${deviceData.pairingCode}`
+            `/device/new-register/${deviceData.pairingCode}`,
           );
           const data = (response as any) || {};
 
@@ -166,14 +166,33 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
     }
   }, [deviceData.pairingCode]);
 
+  // const handleAddTag = (tagName: string) => {
+  //   const trimmedTag = tagName.trim();
+  //   if (trimmedTag && !deviceData.tags.includes(trimmedTag)) {
+  //     setDeviceData({
+  //       ...deviceData,
+  //       tags: [...deviceData.tags, trimmedTag],
+  //     });
+  //   }
+  //   setCurrentTagInput("");
+  // };
+
   const handleAddTag = (tagName: string) => {
     const trimmedTag = tagName.trim();
-    if (trimmedTag && !deviceData.tags.includes(trimmedTag)) {
-      setDeviceData({
-        ...deviceData,
-        tags: [...deviceData.tags, trimmedTag],
-      });
-    }
+
+    if (!trimmedTag) return;
+
+    setDeviceData((prev) => {
+      if (prev.tags.includes(trimmedTag)) {
+        return prev; // avoid duplicates
+      }
+
+      return {
+        ...prev,
+        tags: [...prev.tags, trimmedTag],
+      };
+    });
+
     setCurrentTagInput("");
   };
 
@@ -472,12 +491,22 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                   </div>
                 )}
                 {/* Input for adding new tags */}
-                <Input
+                {/* <Input
                   id="tags"
                   placeholder="Type a tag and press Enter to add"
                   value={currentTagInput}
                   onChange={(e) => setCurrentTagInput(e.target.value)}
                   onKeyDown={handleTagInputKeyDown}
+                /> */}
+                <Input
+                  id="tags"
+                  placeholder="Type a tag and press Enter or click outside"
+                  value={currentTagInput}
+                  onChange={(e) => setCurrentTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={() => {
+                    handleAddTag(currentTagInput);
+                  }}
                 />
               </div>
             </div>

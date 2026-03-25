@@ -11,6 +11,8 @@ import NotFoundPage from "./pages/Forbidden_403";
 import NotFound from "./pages/Notfound_404";
 import Account from "./pages/Account";
 import ApkVersionsPage from "./pages/ApkVersions";
+import Plans from "./pages/Plans";
+import AdminPlans from "./pages/Plans/admimIndex";
 import StreamProvidersPage from "./pages/StreamProviders";
 import ProviderChannelsPage from "./pages/StreamProviders/components/providerChannelsPage";
 import ChannelDetailPage from "./pages/StreamProviders/components/channelDetailsPage";
@@ -48,6 +50,24 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route
+              path="/plans/all"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <Plans />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/all-plans"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <AdminPlans />
+                </Suspense>
+              }
+            />
+
+            <Route
               path="/account"
               element={
                 <Suspense fallback={<Loading />}>
@@ -73,6 +93,7 @@ function App() {
                 </Suspense>
               }
             />
+
             <Route
               path="/ads/:ad_id"
               element={
