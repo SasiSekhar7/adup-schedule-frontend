@@ -160,7 +160,10 @@ export default function CreateLiveContent() {
       const payload = {
         name: formData.name,
         content_type: formData.content_type,
-        channel_id: formData.content_type === "provider" ? formData.channel_id : undefined,
+        channel_id:
+          formData.content_type === "provider"
+            ? formData.channel_id
+            : undefined,
         url: formData.url,
         duration: formData.duration,
         start_time: formData.start_time
@@ -330,7 +333,7 @@ export default function CreateLiveContent() {
                         </div>
                       </div>
                     </SelectItem>
-                  <SelectItem value="provider">
+                    {/*<SelectItem value="provider">
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4" />
                       <div>
@@ -340,7 +343,7 @@ export default function CreateLiveContent() {
                         </p>
                       </div>
                     </div>
-                  </SelectItem>
+                  </SelectItem>*/}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">

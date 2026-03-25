@@ -49,6 +49,9 @@ export default function ProviderChannelsPage() {
   const providerSlug = slug as string;
   //   const { provider: providerSlug } = use(params);
 
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<string>("");
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -75,6 +78,21 @@ export default function ProviderChannelsPage() {
   useEffect(() => {
     fetchChannels();
   }, []);
+
+  const fetchEligibleClients = async () => {
+    try {
+      const res = await api.get("/eligible-streaming-clients");
+      setClients(res.clients || res.data.clients || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (dialogOpen) {
+      fetchEligibleClients();
+    }
+  }, [dialogOpen]);
 
   const fetchChannels = async () => {
     try {
@@ -141,6 +159,7 @@ export default function ProviderChannelsPage() {
       const res = await api.post("/streaming/channel", {
         name: form.name,
         description: form.description,
+        client_id: selectedClient,
       });
 
       console.log("Channel Created:", res.data);
@@ -270,6 +289,35 @@ export default function ProviderChannelsPage() {
                   }}
                   className="grid gap-4"
                 >
+                  <div className="grid gap-2">
+                    <Label>Select Client</Label>
+
+                    <Select
+                      value={selectedClient}
+                      onValueChange={(val) => setSelectedClient(val)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select eligible client" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {clients.length === 0 && (
+                          <SelectItem value="no-data" disabled>
+                            No eligible clients
+                          </SelectItem>
+                        )}
+
+                        {clients.map((client) => (
+                          <SelectItem
+                            key={client.client_id}
+                            value={client.client_id}
+                          >
+                            {client.name} ({client.Tier?.name})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="channel-name">
                       Channel Name <span className="text-destructive">*</span>

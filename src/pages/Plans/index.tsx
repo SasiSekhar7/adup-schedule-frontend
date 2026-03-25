@@ -12,6 +12,9 @@ interface Tier {
   storage_limit_bytes: string; // comes as string from backend
   max_devices: number;
   max_ads: number;
+  is_active: boolean;
+  is_livestream: boolean;
+  is_proof_of_play_logs: boolean;
 }
 
 function Plans() {
@@ -53,8 +56,8 @@ function Plans() {
   // 🔹 Purchase Plan
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-pink-500 to-orange-400 p-10">
-      <h1 className="text-3xl font-bold text-white text-center mb-10">
+    <div className="min-h-screen">
+      <h1 className="text-3xl font-bold text-black text-start mb-10">
         Choose Your Plan
       </h1>
 
@@ -93,6 +96,8 @@ function Plans() {
                   </p>
                   <p>{tier.max_devices} Devices</p>
                   <p>{tier.max_ads} Ads</p>
+                  {tier.is_livestream && <p>Live Stream</p>}
+                  {tier.is_proof_of_play_logs && <p>Proof of Play Logs</p>}
                 </div>
 
                 {isCurrent && (

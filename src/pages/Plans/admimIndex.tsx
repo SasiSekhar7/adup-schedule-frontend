@@ -23,6 +23,9 @@ interface Tier {
   max_devices: number;
   max_ads: number;
   is_active: boolean;
+
+  is_livestream: boolean;
+  is_proof_of_play_logs: boolean;
 }
 
 function AdminPlans() {
@@ -38,6 +41,8 @@ function AdminPlans() {
     max_devices: 1,
     max_ads: 1,
     is_active: true,
+    is_livestream: false,
+    is_proof_of_play_logs: false,
   });
 
   useEffect(() => {
@@ -60,6 +65,8 @@ function AdminPlans() {
       max_devices: 1,
       max_ads: 1,
       is_active: true,
+      is_livestream: false,
+      is_proof_of_play_logs: false,
     });
     setOpen(true);
   };
@@ -141,6 +148,8 @@ function AdminPlans() {
                 <p>{tier.max_devices} Devices</p>
                 <p>{tier.max_ads} Ads</p>
                 <p>Status: {tier.is_active ? "Active" : "Inactive"}</p>
+                <p>Livestream: {tier.is_livestream ? "Yes" : "No"}</p>
+                <p>Proof Logs: {tier.is_proof_of_play_logs ? "Yes" : "No"}</p>
               </div>
 
               <div className="flex items-center  gap-2 mt-3">
@@ -171,25 +180,29 @@ function AdminPlans() {
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl font-semibold">
               {editMode ? "Update Plan" : "Create Plan"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Name */}
             <div>
-              <Label>Name</Label>
+              <Label className="text-sm">Name</Label>
               <Input
+                className="mt-1"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </div>
 
+            {/* Description */}
             <div>
-              <Label>Description</Label>
+              <Label className="text-sm">Description</Label>
               <Input
+                className="mt-1"
                 value={form.description}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
@@ -197,56 +210,90 @@ function AdminPlans() {
               />
             </div>
 
-            <div>
-              <Label>Price</Label>
-              <Input
-                type="number"
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: Number(e.target.value) })
+            {/* Price + Storage (Responsive Grid) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Price</Label>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  value={form.price}
+                  onChange={(e) =>
+                    setForm({ ...form, price: Number(e.target.value) })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm">Storage (GB)</Label>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  value={Number(form.storage_limit_bytes) / 1073741824}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      storage_limit_bytes: (
+                        Number(e.target.value) * 1073741824
+                      ).toString(),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Devices + Ads */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Max Devices</Label>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  value={form.max_devices}
+                  onChange={(e) =>
+                    setForm({ ...form, max_devices: Number(e.target.value) })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm">Max Ads</Label>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  value={form.max_ads}
+                  onChange={(e) =>
+                    setForm({ ...form, max_ads: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Switches */}
+            <div className="flex items-center justify-between border rounded-lg p-3">
+              <Label className="text-sm">Enable Livestream</Label>
+              <Switch
+                checked={form.is_livestream}
+                onCheckedChange={(val) =>
+                  setForm({ ...form, is_livestream: val })
                 }
+                className="data-[state=checked]:bg-green-500"
               />
             </div>
 
-            <div>
-              <Label>Storage (GB)</Label>
-              <Input
-                type="number"
-                value={Number(form.storage_limit_bytes) / 1073741824}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    storage_limit_bytes: (
-                      Number(e.target.value) * 1073741824
-                    ).toString(),
-                  })
+            <div className="flex items-center justify-between border rounded-lg p-3">
+              <Label className="text-sm">Proof of Play Logs</Label>
+              <Switch
+                checked={form.is_proof_of_play_logs}
+                onCheckedChange={(val) =>
+                  setForm({ ...form, is_proof_of_play_logs: val })
                 }
+                className="data-[state=checked]:bg-green-500"
               />
             </div>
 
-            <div>
-              <Label>Max Devices</Label>
-              <Input
-                type="number"
-                value={form.max_devices}
-                onChange={(e) =>
-                  setForm({ ...form, max_devices: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div>
-              <Label>Max Ads</Label>
-              <Input
-                type="number"
-                value={form.max_ads}
-                onChange={(e) =>
-                  setForm({ ...form, max_ads: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <Button className="w-full" onClick={handleSubmit}>
+            {/* Submit */}
+            <Button className="w-full mt-2" onClick={handleSubmit}>
               {editMode ? "Update Plan" : "Create Plan"}
             </Button>
           </div>
