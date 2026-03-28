@@ -231,6 +231,8 @@ function Ads() {
         end_date: endDate,
       };
 
+      // console.log(payload);
+
       // NEW API
       const response = await api.post("/exports", payload);
 
@@ -314,6 +316,32 @@ function Ads() {
                     </SelectContent>
                   </Select>
                 </div> */}
+
+                <div className="space-y-2">
+                  <Label htmlFor="adSelection">Ad Selection</Label>
+
+                  <Select
+                    value={selectedAdId ?? "all"}
+                    onValueChange={(value) =>
+                      setSelectedAdId(value === "all" ? null : value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select ad to export" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="all">All Ads</SelectItem>
+
+                      {data.map((ad) => (
+                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                          {ad.name}
+                          {/* {ad.ad_id} */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="exportFilter">Export Filter</Label>
