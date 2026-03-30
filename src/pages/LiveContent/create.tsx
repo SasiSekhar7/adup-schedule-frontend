@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import api from "@/api";
+import { getRole } from "@/helpers";
 
 interface LiveContentForm {
   name: string;
@@ -57,6 +58,13 @@ export default function CreateLiveContent() {
       loop: false,
     },
   });
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const role = getRole();
+
+    setUserRole(role);
+  }, []);
 
   const [channels, setChannels] = useState<any[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(false);
@@ -300,39 +308,44 @@ export default function CreateLiveContent() {
                         </div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="iframe">
-                      <div className="flex items-center gap-2">
-                        <Monitor className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">iFrame</p>
-                          <p className="text-xs text-muted-foreground">
-                            Embedded content
-                          </p>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="youtube">
-                      <div className="flex items-center gap-2">
-                        <Play className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">YouTube</p>
-                          <p className="text-xs text-muted-foreground">
-                            YouTube video/stream
-                          </p>
-                        </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="custom">
-                      <div className="flex items-center gap-2">
-                        <Monitor className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">Custom</p>
-                          <p className="text-xs text-muted-foreground">
-                            Custom content type
-                          </p>
-                        </div>
-                      </div>
-                    </SelectItem>
+                    {userRole === "Admin" && (
+                      <>
+                        <SelectItem value="iframe">
+                          <div className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4" />
+                            <div>
+                              <p className="font-medium">iFrame</p>
+                              <p className="text-xs text-muted-foreground">
+                                Embedded content
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="youtube">
+                          <div className="flex items-center gap-2">
+                            <Play className="h-4 w-4" />
+                            <div>
+                              <p className="font-medium">YouTube</p>
+                              <p className="text-xs text-muted-foreground">
+                                YouTube video/stream
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="custom">
+                          <div className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4" />
+                            <div>
+                              <p className="font-medium">Custom</p>
+                              <p className="text-xs text-muted-foreground">
+                                Custom content type
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </>
+                    )}
+
                     {/*<SelectItem value="provider">
                     <div className="flex items-center gap-2">
                       <Video className="h-4 w-4" />

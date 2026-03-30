@@ -16,6 +16,7 @@ import AdminPlans from "./pages/Plans/admimIndex";
 import StreamProvidersPage from "./pages/StreamProviders";
 import ProviderChannelsPage from "./pages/StreamProviders/components/providerChannelsPage";
 import ChannelDetailPage from "./pages/StreamProviders/components/channelDetailsPage";
+import ClientChannelDetails from "./pages/StreamProviders/components/clientChannelDetailsPage";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -277,15 +278,6 @@ function App() {
             />
           </Route>
           <Route
-            path="/forbidden"
-            element={
-              <Suspense fallback={<Loading />}>
-                <NotFoundPage />
-              </Suspense>
-            }
-          />
-
-          <Route
             path="/stream-providers"
             element={
               <Suspense fallback={<Loading />}>
@@ -307,6 +299,23 @@ function App() {
             element={
               <Suspense fallback={<Loading />}>
                 <ChannelDetailPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/stream-providers/dacast/channel"
+            element={
+              <Suspense fallback={<Loading />}>
+                <ClientChannelDetails />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/forbidden"
+            element={
+              <Suspense fallback={<Loading />}>
+                <NotFoundPage />
               </Suspense>
             }
           />
