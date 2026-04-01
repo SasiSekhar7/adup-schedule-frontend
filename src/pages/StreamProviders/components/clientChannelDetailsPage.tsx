@@ -81,7 +81,7 @@ export default function ClientChannelDetails() {
   const [isLive, setIsLive] = useState(false);
   const [viewers, setViewers] = useState(0);
 
-  const provider = getProvider(providerSlug as string);
+  // const provider = getProvider(providerSlug as string);
   //   const channel = getChannel(providerSlug as string, channelId as string);
 
   // Initialize live state from channel data
@@ -323,7 +323,7 @@ export default function ClientChannelDetails() {
   }, []);
 
   // THEN CONDITIONAL RENDER
-  if (!provider || !channel) {
+  if (!channel) {
     return <div className="p-6">No channel found</div>;
   }
 
@@ -409,7 +409,7 @@ export default function ClientChannelDetails() {
 
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
+            {/* <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
               {provider.logo}
             </div>
             <div>
@@ -419,7 +419,7 @@ export default function ClientChannelDetails() {
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {provider.name} Channel
               </p>
-            </div>
+            </div> */}
           </div>
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2">
             {channel.status === "live" ? (
@@ -535,9 +535,9 @@ export default function ClientChannelDetails() {
                 <h2 className="font-semibold text-foreground">
                   OBS Studio Setup Guide
                 </h2>
-                <p className="text-xs text-muted-foreground">
+                {/* <p className="text-xs text-muted-foreground">
                   Configure OBS to stream to {provider.name}
-                </p>
+                </p> */}
               </div>
             </div>
             <a
@@ -723,7 +723,7 @@ export default function ClientChannelDetails() {
                       {'"'}Output{'"'}
                     </strong>{" "}
                     tab and configure these recommended settings for{" "}
-                    {provider.name}:
+                    {/* {provider.name}: */}
                   </p>
                   <div className="mt-3 rounded-lg bg-muted p-3 grid gap-1.5 text-sm">
                     <div className="flex items-center justify-between">
@@ -874,7 +874,7 @@ export default function ClientChannelDetails() {
                       {'"'}Start Streaming{'"'}
                     </strong>{" "}
                     in the bottom-right of OBS. Your stream will go live on{" "}
-                    {provider.name} within a few seconds. You can monitor the
+                    {/* {provider.name} within a few seconds. You can monitor the */}
                     stream status, bitrate, and dropped frames in the OBS status
                     bar.
                   </p>
@@ -904,7 +904,7 @@ export default function ClientChannelDetails() {
                   OBS Studio Setup Guide
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Configure OBS to stream to {provider.name}
+                  {/* Configure OBS to stream to {provider.name} */}
                 </p>
               </div>
             </div>
