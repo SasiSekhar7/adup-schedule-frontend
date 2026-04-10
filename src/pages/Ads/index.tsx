@@ -333,7 +333,7 @@ function Ads() {
                     </SelectTrigger>
 
                     <SelectContent>
-                      <SelectItem value="all">All Ads</SelectItem>
+                      {/* <SelectItem value="all">All Ads</SelectItem> */}
 
                       {data.map((ad) => (
                         <SelectItem key={ad.ad_id} value={ad.ad_id}>

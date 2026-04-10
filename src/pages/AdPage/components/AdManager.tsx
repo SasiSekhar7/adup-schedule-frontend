@@ -213,6 +213,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
   const [exportStartDate, setExportStartDate] = useState("");
   const [exportEndDate, setExportEndDate] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [fullDeviceJobType, setFullDeviceJobType] = useState("PROOF_OF_PLAY");
 
   const handleExport = async () => {
     try {
@@ -266,8 +267,9 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
       }
 
       const payload = {
-        job_type: "PROOF_OF_PLAY",
-        ad_id: formData.ad_id, // 👈 important
+        // job_type: "PROOF_OF_PLAY",
+        job_type: fullDeviceJobType,
+        ad_id: formData.ad_id,
         start_date: startDate,
         end_date: endDate,
       };
@@ -456,6 +458,30 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
               </DialogHeader>
 
               <div className="space-y-4 py-4">
+                {/* ✅ Export Type */}
+                <div className="space-y-2">
+                  <Label>Export Type</Label>
+                  <Select
+                    value={fullDeviceJobType}
+                    onValueChange={setFullDeviceJobType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select export type" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="PROOF_OF_PLAY">
+                        Proof of Play
+                      </SelectItem>
+                      <SelectItem value="DEVICE_EVENTS">
+                        Device Events
+                      </SelectItem>
+                      <SelectItem value="DEVICE_TELEMETRY">
+                        Device Telemetry
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label>Export Filter</Label>
                   <Select value={exportFilter} onValueChange={setExportFilter}>

@@ -359,7 +359,7 @@ export default function AdDetailPage({
           {/* Area Chart - Performance Over Time */}
           <Card className="lg:col-span-2 border-slate-200">
             <CardHeader>
-              <CardTitle>Performance Trend (30 Days)</CardTitle>
+              <CardTitle>Performance Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -467,7 +467,7 @@ export default function AdDetailPage({
         {/* Hourly Performance Chart */}
         <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle>Plays by Hour (Today)</CardTitle>
+            <CardTitle>Plays by Hour</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>

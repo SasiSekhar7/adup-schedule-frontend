@@ -580,6 +580,7 @@ function DevicePage() {
   //   }
   // };
 
+  const [fullDeviceJobType, setFullDeviceJobType] = useState("PROOF_OF_PLAY");
   const handleFullDeviceExport = async () => {
     try {
       setIsFullDeviceExporting(true);
@@ -636,11 +637,14 @@ function DevicePage() {
       }
 
       const payload = {
-        job_type: "PROOF_OF_PLAY",
+        // job_type: "PROOF_OF_PLAY",
+        job_type: fullDeviceJobType,
         device_id: device_id,
         start_date: startDate,
         end_date: endDate,
       };
+
+      // console.log(payload);
 
       await api.post("/exports", payload);
 
@@ -817,6 +821,24 @@ function DevicePage() {
               </div>
             </DialogHeader>
             <div className="space-y-6 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="jobType">Export Type</Label>
+                <Select
+                  value={fullDeviceJobType}
+                  onValueChange={setFullDeviceJobType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select export type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PROOF_OF_PLAY">Proof of Play</SelectItem>
+                    <SelectItem value="DEVICE_EVENTS">Device Events</SelectItem>
+                    <SelectItem value="DEVICE_TELEMETRY">
+                      Device Telemetry
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="fullDeviceFilter">Export Filter</Label>
                 <Select
@@ -1119,10 +1141,20 @@ function DevicePage() {
         </Card>
       )} */}
 
-      <DeviceDetailPage device_id={device_id} device={device} />
+      <DeviceDetailPage
+        device_id={device_id}
+        device={device}
+        schedules={schedules}
+        schedulesPage={schedulesPage}
+        schedulesLimit={schedulesLimit}
+        schedulesTotal={schedulesTotal}
+        schedulesTotalPages={schedulesTotalPages}
+        setSchedulesPage={setSchedulesPage}
+        setSchedulesLimit={setSchedulesLimit}
+      />
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      {/* <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="schedules" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">Schedules</span>
@@ -1230,7 +1262,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  {/* Pagination Controls */}
+                  
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(schedulesPage - 1) * schedulesLimit + 1} to{" "}
@@ -1468,7 +1500,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  {/* Pagination Controls */}
+                  
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(proofOfPlayPage - 1) * proofOfPlayLimit + 1} to{" "}
@@ -1717,7 +1749,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  {/* Pagination Controls */}
+                  
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
                       Showing {(eventLogsPage - 1) * eventLogsLimit + 1} to{" "}
@@ -1833,7 +1865,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  {/* Pagination Controls */}
+                  
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
                       Showing {(terminologyPage - 1) * terminologyLimit + 1} to{" "}
@@ -1876,7 +1908,7 @@ function DevicePage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
     </div>
   );
 }
