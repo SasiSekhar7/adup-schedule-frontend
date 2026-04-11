@@ -13,9 +13,12 @@ import Account from "./pages/Account";
 import ApkVersionsPage from "./pages/ApkVersions";
 import Plans from "./pages/Plans";
 import AdminPlans from "./pages/Plans/admimIndex";
+
 import StreamProvidersPage from "./pages/StreamProviders";
 import ProviderChannelsPage from "./pages/StreamProviders/components/providerChannelsPage";
 import ChannelDetailPage from "./pages/StreamProviders/components/channelDetailsPage";
+
+import ExportDetails from "./pages/ExportDetails";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -63,6 +66,15 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <AdminPlans />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/all-exports"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ExportDetails />
                 </Suspense>
               }
             />
