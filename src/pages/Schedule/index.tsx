@@ -1245,6 +1245,7 @@ export default function Schedule() {
                 <SelectItem value="ad">Ad</SelectItem>
                 <SelectItem value="live content">Live Content</SelectItem>
                 <SelectItem value="carousel">Carousel</SelectItem>
+                <SelectItem value="layout">Layout</SelectItem>
               </SelectContent>
             </Select>
           </div>
