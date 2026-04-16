@@ -20,6 +20,7 @@ import ChannelDetailPage from "./pages/StreamProviders/components/channelDetails
 
 import ExportDetails from "./pages/ExportDetails";
 import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
+import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -67,6 +68,15 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <ScreenLayoutPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/layout-details/:layout_id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ScheduleAddPageDetails />
                 </Suspense>
               }
             />

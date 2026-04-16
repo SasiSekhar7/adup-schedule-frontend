@@ -83,8 +83,13 @@ export interface ContentItem {
   client_name?: string;
   duration: number;
   display_order: number;
-  start_time?: string; // HH:mm format
-  end_time?: string; // HH:mm format
+  start_time?: string;
+  end_time?: string;
+  // ✅ NEW
+  // start_time_date?: string; // ISO date (global range)
+  // end_time_date?: string;
+
+  time_slots?: { start: string; end: string }[];
 }
 
 export interface ZoneContent {
@@ -480,17 +485,31 @@ export function getSchedules(): ScheduleConfig[] {
   return data ? JSON.parse(data) : [];
 }
 
-export function saveSchedule(schedule: ScheduleConfig): void {
-  const schedules = getSchedules();
-  const existingIndex = schedules.findIndex(
-    (s) => s.schedule_id === schedule.schedule_id,
-  );
-  if (existingIndex >= 0) {
-    schedules[existingIndex] = schedule;
-  } else {
-    schedules.push(schedule);
+// export function saveSchedule(schedule: ScheduleConfig): void {
+//   const schedules = getSchedules();
+//   const existingIndex = schedules.findIndex(
+//     (s) => s.schedule_id === schedule.schedule_id,
+//   );
+//   if (existingIndex >= 0) {
+//     schedules[existingIndex] = schedule;
+//   } else {
+//     schedules.push(schedule);
+//   }
+//   localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
+// }
+
+export async function saveSchedule(schedule: ScheduleConfig) {
+  try {
+    const res = await api.post("/layout/schedule", schedule);
+
+    console.log("Schedule saved:", res.data);
+
+    toast.success(res?.data?.message || "Schedule saved successfully");
+    window.location.href = "/schedule";
+  } catch (error) {
+    console.error("Error saving schedule:", error);
+    toast.error(error?.message || "Something went wrong ❌");
   }
-  localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
 }
 
 export function deleteSchedule(scheduleId: string): void {

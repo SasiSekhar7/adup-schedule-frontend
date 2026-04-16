@@ -69,6 +69,7 @@ import {
   minutesToTime,
 } from "@/lib/store";
 import api from "@/api";
+import { toast } from "sonner";
 
 type DateType = "today" | "specific_date" | "one_week" | "one_month";
 type Step = "select_layout" | "configure_layout";
@@ -138,31 +139,78 @@ export default function ScheduleAddPage() {
     }
   }, [selectedLayout]);
 
+  // const getDateRange = () => {
+  //   const today = new Date();
+  //   let startDate = today.toISOString().split("T")[0];
+  //   let endDate = startDate;
+
+  //   switch (dateType) {
+  //     case "specific_date":
+  //       startDate = specificDate || startDate;
+  //       endDate = startDate;
+  //       break;
+  //     case "one_week":
+  //       endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+  //         .toISOString()
+  //         .split("T")[0];
+  //       break;
+  //     case "one_month":
+  //       endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+  //         .toISOString()
+  //         .split("T")[0];
+  //       break;
+  //   }
+
+  //   return { startDate, endDate };
+  // };
+
   const getDateRange = () => {
     const today = new Date();
-    let startDate = today.toISOString().split("T")[0];
-    let endDate = startDate;
+
+    // helper to format with time
+    const formatStart = (date) =>
+      // new Date(date).toISOString().split("T")[0] + "T00:00:00";
+      new Date(date).toISOString();
+
+    const formatEnd = (date) =>
+      // new Date(date).toISOString().split("T")[0] + "T23:59:59";
+      new Date(date).toISOString();
+
+    let startDate = formatStart(today);
+    let endDate = formatEnd(today);
 
     switch (dateType) {
-      case "specific_date":
-        startDate = specificDate || startDate;
-        endDate = startDate;
+      case "specific_date": {
+        const selected = specificDate || today;
+        startDate = formatStart(selected);
+        endDate = formatEnd(selected);
         break;
-      case "one_week":
-        endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0];
+      }
+
+      case "one_week": {
+        const end = new Date(today);
+        end.setDate(today.getDate() + 7);
+
+        startDate = formatStart(today);
+        endDate = formatEnd(end);
         break;
-      case "one_month":
-        endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0];
+      }
+
+      case "one_month": {
+        const end = new Date(today);
+        end.setDate(today.getDate() + 30);
+
+        startDate = formatStart(today);
+        endDate = formatEnd(end);
+        break;
+      }
+
+      default:
         break;
     }
 
     return { startDate, endDate };
   };
-
   const globalTimeInfo = useMemo(() => {
     if (timeSlots.length === 0)
       return { minTime: "00:00", maxTime: "23:59", totalMinutes: 0 };
@@ -221,6 +269,7 @@ export default function ScheduleAddPage() {
     type: "ad" | "carousel" | "live",
   ) => {
     if (!activeZone) return;
+    // const { startDate, endDate } = getDateRange();
 
     const newItem: ContentItem = {
       id: generateId(),
@@ -242,6 +291,11 @@ export default function ScheduleAddPage() {
             : 0,
       display_order:
         (zoneContents[activeZone.zone_id]?.content_items?.length || 0) + 1,
+
+      // ✅ default from global
+      // start_time_date: startDate,
+      // end_time_date: endDate,
+      time_slots: [...timeSlots], // copy global slots
     };
 
     setZoneContents((prev) => ({
@@ -309,6 +363,21 @@ export default function ScheduleAddPage() {
     });
   };
 
+  const updateItemSlots = (itemId: string, slots) => {
+    if (!activeZone) return;
+
+    setZoneContents((prev) => ({
+      ...prev,
+      [activeZone.zone_id]: {
+        ...prev[activeZone.zone_id],
+        content_items:
+          prev[activeZone.zone_id]?.content_items?.map((item) =>
+            item.id === itemId ? { ...item, time_slots: slots } : item,
+          ) || [],
+      },
+    }));
+  };
+
   const updateWidgetSchedule = (
     field: "widget_schedule_start" | "widget_schedule_end",
     value: string,
@@ -324,53 +393,126 @@ export default function ScheduleAddPage() {
     }));
   };
 
+  // const getZoneTimeAnalysis = (zoneId: string) => {
+  //   const content = zoneContents[zoneId];
+  //   if (!content?.content_items?.length) return null;
+
+  //   const scheduledItems = content.content_items.filter(
+  //     (i) => i.start_time && i.end_time,
+  //   );
+  //   if (scheduledItems.length === 0) return null;
+
+  //   let minTime = Infinity;
+  //   let maxTime = 0;
+  //   let totalScheduled = 0;
+  //   const gaps: { start: string; end: string; duration: number }[] = [];
+
+  //   const sorted = [...scheduledItems].sort(
+  //     (a, b) => timeToMinutes(a.start_time!) - timeToMinutes(b.start_time!),
+  //   );
+
+  //   sorted.forEach((item, idx) => {
+  //     const startMins = timeToMinutes(item.start_time!);
+  //     const endMins = timeToMinutes(item.end_time!);
+
+  //     minTime = Math.min(minTime, startMins);
+  //     maxTime = Math.max(maxTime, endMins);
+  //     totalScheduled += endMins - startMins;
+
+  //     if (idx < sorted.length - 1) {
+  //       const nextStart = timeToMinutes(sorted[idx + 1].start_time!);
+  //       if (nextStart > endMins) {
+  //         gaps.push({
+  //           start: minutesToTime(endMins),
+  //           end: minutesToTime(nextStart),
+  //           duration: nextStart - endMins,
+  //         });
+  //       }
+  //     }
+  //   });
+
+  //   return {
+  //     minTime: minutesToTime(minTime),
+  //     maxTime: minutesToTime(maxTime),
+  //     totalScheduled,
+  //     totalRemaining: globalTimeInfo.totalMinutes - totalScheduled,
+  //     gaps,
+  //   };
+  // };
+
   const getZoneTimeAnalysis = (zoneId: string) => {
     const content = zoneContents[zoneId];
     if (!content?.content_items?.length) return null;
 
-    const scheduledItems = content.content_items.filter(
-      (i) => i.start_time && i.end_time,
-    );
-    if (scheduledItems.length === 0) return null;
+    let allSlots: { start: number; end: number }[] = [];
 
-    let minTime = Infinity;
-    let maxTime = 0;
-    let totalScheduled = 0;
-    const gaps: { start: string; end: string; duration: number }[] = [];
+    // ✅ collect all slots from all items
+    content.content_items.forEach((item) => {
+      (item.time_slots || []).forEach((slot) => {
+        const start = timeToMinutes(slot.start);
+        const end = timeToMinutes(slot.end);
 
-    const sorted = [...scheduledItems].sort(
-      (a, b) => timeToMinutes(a.start_time!) - timeToMinutes(b.start_time!),
-    );
-
-    sorted.forEach((item, idx) => {
-      const startMins = timeToMinutes(item.start_time!);
-      const endMins = timeToMinutes(item.end_time!);
-
-      minTime = Math.min(minTime, startMins);
-      maxTime = Math.max(maxTime, endMins);
-      totalScheduled += endMins - startMins;
-
-      if (idx < sorted.length - 1) {
-        const nextStart = timeToMinutes(sorted[idx + 1].start_time!);
-        if (nextStart > endMins) {
-          gaps.push({
-            start: minutesToTime(endMins),
-            end: minutesToTime(nextStart),
-            duration: nextStart - endMins,
-          });
+        if (start < end) {
+          allSlots.push({ start, end });
         }
-      }
+      });
     });
 
+    if (allSlots.length === 0) return null;
+
+    // ✅ sort slots
+    const sorted = allSlots.sort((a, b) => a.start - b.start);
+
+    let totalScheduled = 0;
+    let gaps: { start: string; end: string; duration: number }[] = [];
+
+    // global limits
+    const globalStart = timeToMinutes(globalTimeInfo.minTime);
+    const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
+
+    // ✅ gap BEFORE first slot
+    if (sorted[0].start > globalStart) {
+      gaps.push({
+        start: minutesToTime(globalStart),
+        end: minutesToTime(sorted[0].start),
+        duration: sorted[0].start - globalStart,
+      });
+    }
+
+    for (let i = 0; i < sorted.length; i++) {
+      const current = sorted[i];
+      totalScheduled += current.end - current.start;
+
+      const next = sorted[i + 1];
+
+      // ✅ gap BETWEEN slots
+      if (next && next.start > current.end) {
+        gaps.push({
+          start: minutesToTime(current.end),
+          end: minutesToTime(next.start),
+          duration: next.start - current.end,
+        });
+      }
+    }
+
+    // ✅ gap AFTER last slot
+    const last = sorted[sorted.length - 1];
+    if (last.end < globalEnd) {
+      gaps.push({
+        start: minutesToTime(last.end),
+        end: minutesToTime(globalEnd),
+        duration: globalEnd - last.end,
+      });
+    }
+
     return {
-      minTime: minutesToTime(minTime),
-      maxTime: minutesToTime(maxTime),
+      minTime: minutesToTime(sorted[0].start),
+      maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
       totalScheduled,
-      totalRemaining: globalTimeInfo.totalMinutes - totalScheduled,
+      totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
       gaps,
     };
   };
-
   const getAllZoneGaps = () => {
     const allGaps: {
       zoneName: string;
@@ -387,16 +529,38 @@ export default function ScheduleAddPage() {
     return allGaps;
   };
 
+  // const filteredGroups = useMemo(() => {
+  //   if (!selectedLayout) return [];
+  //   return sampleGroups.filter((g) => {
+  //     const matchesOrientation = g.orientation === selectedLayout.orientation;
+  //     const matchesFilter = g.name
+  //       .toLowerCase()
+  //       .includes(groupFilter.toLowerCase());
+  //     return matchesOrientation && matchesFilter;
+  //   });
+  // }, [selectedLayout, groupFilter]);
+  const [groups, setGroups] = useState([]);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const res = await api.get("/device/fetch-groups");
+        console.log("groups:", res);
+
+        setGroups(res.groups || []); // handle both cases
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
   const filteredGroups = useMemo(() => {
-    if (!selectedLayout) return [];
-    return sampleGroups.filter((g) => {
-      const matchesOrientation = g.orientation === selectedLayout.orientation;
-      const matchesFilter = g.name
-        .toLowerCase()
-        .includes(groupFilter.toLowerCase());
-      return matchesOrientation && matchesFilter;
-    });
-  }, [selectedLayout, groupFilter]);
+    return groups
+      .filter((g) => g.name?.toLowerCase().includes(groupFilter.toLowerCase()))
+      .slice(0, 10); // ✅ limit to 10
+  }, [groups, groupFilter]);
 
   const handleSchedule = () => {
     const allGaps = getAllZoneGaps();
@@ -420,7 +584,16 @@ export default function ScheduleAddPage() {
       start_time: startDate,
       end_time: endDate,
       time_slots: timeSlots,
-      zone_contents: Object.values(zoneContents),
+      // zone_contents: Object.values(zoneContents),
+      zone_contents: Object.values(zoneContents).map((zone) => ({
+        ...zone,
+        content_items: zone.content_items?.map((item) => ({
+          ...item,
+          start_time: getDateRange().startDate,
+          end_time: getDateRange().endDate,
+          time_slots: item.time_slots || [],
+        })),
+      })),
       zone_mute_settings: zoneMuteSettings,
       selected_groups: selectedGroups,
       status: "scheduled",
@@ -430,7 +603,7 @@ export default function ScheduleAddPage() {
 
     saveSchedule(schedule);
     setShowConfirmDialog(false);
-    alert("Schedule saved successfully!");
+    // alert("Schedule saved successfully!");
   };
 
   const scheduleJson = useMemo(() => {
@@ -443,8 +616,8 @@ export default function ScheduleAddPage() {
       layout_id: selectedLayout.layout_id,
       name: selectedLayout.name,
       schedule_date_type: dateType,
-      start_time_date: startDate,
-      end_time_date: endDate,
+      start_time: startDate,
+      end_time: endDate,
       time_slots: timeSlots,
       zone_contents: Object.values(zoneContents),
       zone_mute_settings: zoneMuteSettings,
@@ -802,7 +975,7 @@ export default function ScheduleAddPage() {
 
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
-                    {filteredGroups.map((group) => (
+                    {/* {filteredGroups.map((group) => (
                       <div
                         key={group.group_id}
                         className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
@@ -841,6 +1014,51 @@ export default function ScheduleAddPage() {
                           </div>
                           <span className="text-xs text-muted-foreground">
                             {group.capacity}%
+                          </span>
+                        </div>
+                      </div>
+                    ))} */}
+                    {filteredGroups.map((group) => (
+                      <div
+                        key={group.group_id}
+                        className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
+                      >
+                        <Checkbox
+                          checked={selectedGroups.includes(group.group_id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedGroups([
+                                ...selectedGroups,
+                                group.group_id,
+                              ]);
+                            } else {
+                              setSelectedGroups(
+                                selectedGroups.filter(
+                                  (id) => id !== group.group_id,
+                                ),
+                              );
+                            }
+                          }}
+                        />
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {group.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {group.device_count || 0} devices
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-amber-500 rounded-full"
+                              style={{ width: `${group.capacity || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {group.capacity || 0}%
                           </span>
                         </div>
                       </div>
@@ -932,6 +1150,70 @@ export default function ScheduleAddPage() {
 
     fetchLive();
   }, []);
+
+  const validateZoneBeforeSave = () => {
+    if (!activeZone) return { valid: true };
+
+    const items = zoneContents[activeZone.zone_id]?.content_items || [];
+
+    if (items.length === 0) {
+      return {
+        valid: false,
+        message: "Please add at least one content item",
+      };
+    }
+
+    const min = timeToMinutes(globalTimeInfo.minTime);
+    const max = timeToMinutes(globalTimeInfo.maxTime);
+    const totalAllowed = globalTimeInfo.totalMinutes;
+
+    let totalScheduled = 0;
+
+    for (let item of items) {
+      if (!item.time_slots || item.time_slots.length === 0) {
+        return {
+          valid: false,
+          message: `${item.name}: Add at least one time slot`,
+        };
+      }
+
+      // const start = timeToMinutes(item.start_time);
+      // const end = timeToMinutes(item.end_time);
+
+      // if (start >= end) {
+      //   return {
+      //     valid: false,
+      //     message: `${item.name}: Start must be before End`,
+      //   };
+      // }
+
+      // if (start < min || end > max) {
+      //   return {
+      //     valid: false,
+      //     message: `${item.name}: Must be within ${globalTimeInfo.minTime} - ${globalTimeInfo.maxTime}`,
+      //   };
+      // }
+
+      // totalScheduled += end - start;
+    }
+
+    // ✅ 🚨 NEW CHECK (IMPORTANT)
+    // if (totalScheduled > totalAllowed) {
+    //   return {
+    //     valid: false,
+    //     message: "Total scheduled time exceeds allowed slot time",
+    //   };
+    // }
+
+    // if (totalScheduled < totalAllowed) {
+    //   return {
+    //     valid: false,
+    //     message: "Please fill entire time slot (no gaps allowed)",
+    //   };
+    // }
+
+    return { valid: true };
+  };
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6 overflow-auto">
@@ -1153,7 +1435,7 @@ export default function ScheduleAddPage() {
 
           {activeZone && (
             <div className="py-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              {/* <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-amber-800 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   <strong>Layout Time Constraint:</strong> Content schedules
@@ -1162,6 +1444,31 @@ export default function ScheduleAddPage() {
                   {Math.floor(globalTimeInfo.totalMinutes / 60)}h{" "}
                   {globalTimeInfo.totalMinutes % 60}m total)
                 </p>
+              </div> */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-800 text-sm font-medium">
+                  <AlertTriangle className="w-4 h-4" />
+                  Layout Time Constraint
+                </div>
+
+                {/* SHOW EACH SLOT (IMPORTANT) */}
+                <div className="flex flex-wrap gap-2">
+                  {timeSlots.map((slot, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="outline"
+                      className="text-sm border-amber-300 text-amber-800"
+                    >
+                      <Clock className="w-3 h-3 mr-1" />
+                      Allowed: {slot.start} - {slot.end}
+                    </Badge>
+                  ))}
+
+                  <Badge variant="secondary" className="text-sm">
+                    Total: {Math.floor(globalTimeInfo.totalMinutes / 60)}h{" "}
+                    {globalTimeInfo.totalMinutes % 60}m
+                  </Badge>
+                </div>
               </div>
 
               {activeZone.content_type_allowed === "media" ? (
@@ -1410,7 +1717,7 @@ export default function ScheduleAddPage() {
                                   </p> */}
 
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <Input
+                                    {/* <Input
                                       type="time"
                                       className="h-8 text-xs w-32"
                                       placeholder="Start"
@@ -1438,7 +1745,70 @@ export default function ScheduleAddPage() {
                                           e.target.value,
                                         )
                                       }
-                                    />
+                                    /> */}
+                                    <div className="space-y-2">
+                                      {item.time_slots?.map((slot, slotIdx) => (
+                                        <div
+                                          key={slotIdx}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <Input
+                                            type="time"
+                                            value={slot.start}
+                                            onChange={(e) => {
+                                              const updated = [
+                                                ...item.time_slots,
+                                              ];
+                                              updated[slotIdx].start =
+                                                e.target.value;
+                                              updateItemSlots(item.id, updated);
+                                            }}
+                                          />
+                                          <span>to</span>
+                                          <Input
+                                            type="time"
+                                            value={slot.end}
+                                            onChange={(e) => {
+                                              const updated = [
+                                                ...item.time_slots,
+                                              ];
+                                              updated[slotIdx].end =
+                                                e.target.value;
+                                              updateItemSlots(item.id, updated);
+                                            }}
+                                          />
+
+                                          <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            onClick={() => {
+                                              const updated =
+                                                item.time_slots.filter(
+                                                  (_, i) => i !== slotIdx,
+                                                );
+                                              updateItemSlots(item.id, updated);
+                                            }}
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      ))}
+
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          const updated = [
+                                            ...(item.time_slots || []),
+                                            { start: "09:00", end: "17:00" },
+                                          ];
+                                          updateItemSlots(item.id, updated);
+                                        }}
+                                      >
+                                        <Plus className="w-4 h-4 mr-1" />
+                                        Add Slot
+                                      </Button>
+                                    </div>
                                   </div>
 
                                   {item.start_time && item.end_time && (
@@ -1484,15 +1854,18 @@ export default function ScheduleAddPage() {
                         <h4 className="font-medium text-sm">
                           Schedule Analysis
                         </h4>
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Min Time</p>
                             <p className="font-medium">{analysis.minTime}</p>
                           </div>
+
                           <div>
                             <p className="text-muted-foreground">Max Time</p>
                             <p className="font-medium">{analysis.maxTime}</p>
                           </div>
+
                           <div>
                             <p className="text-muted-foreground">
                               Total Scheduled
@@ -1502,6 +1875,7 @@ export default function ScheduleAddPage() {
                               {analysis.totalScheduled % 60}m
                             </p>
                           </div>
+
                           <div>
                             <p className="text-muted-foreground">
                               Time Remaining
@@ -1513,12 +1887,13 @@ export default function ScheduleAddPage() {
                           </div>
                         </div>
 
-                        {analysis.gaps.length > 0 && (
+                        {/* {analysis.gaps.length > 0 && (
                           <div className="mt-3 pt-3 border-t">
                             <p className="text-amber-600 text-sm font-medium mb-2">
                               <AlertTriangle className="w-4 h-4 inline mr-1" />
                               Schedule Gaps Detected:
                             </p>
+
                             <div className="flex flex-wrap gap-2">
                               {analysis.gaps.map((gap, idx) => (
                                 <Badge
@@ -1531,7 +1906,7 @@ export default function ScheduleAddPage() {
                               ))}
                             </div>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     );
                   })()}
@@ -1685,7 +2060,21 @@ export default function ScheduleAddPage() {
             <Button variant="outline" onClick={() => setShowZoneDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setShowZoneDialog(false)}>
+            {/* <Button onClick={() => setShowZoneDialog(false)}>
+              Save Zone Assignment
+            </Button> */}
+            <Button
+              onClick={() => {
+                const result = validateZoneBeforeSave();
+
+                if (!result.valid) {
+                  toast.error(result.message); // or toast.error()
+                  return;
+                }
+
+                setShowZoneDialog(false);
+              }}
+            >
               Save Zone Assignment
             </Button>
           </DialogFooter>
