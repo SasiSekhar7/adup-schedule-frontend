@@ -1,6 +1,7 @@
 import api from "@/api";
 import { AdsResponse } from "@/pages/Ads/columns";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Types
@@ -473,7 +474,7 @@ export async function deleteLayout(layoutId: string): Promise<void> {
   try {
     const res = await api.delete(`/layout/template/${layoutId}`);
     toast.success(res?.data?.message || "Layout Deleted successfully");
-  } catch (error) {
+  } catch (error:any) {
     console.error("Delete failed:", error);
     toast.error(error?.message || "Deleted locally but API failed ❌");
   }
@@ -505,8 +506,7 @@ export async function saveSchedule(schedule: ScheduleConfig) {
     console.log("Schedule saved:", res.data);
 
     toast.success(res?.data?.message || "Schedule saved successfully");
-    window.location.href = "/schedule";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error saving schedule:", error);
     toast.error(error?.message || "Something went wrong ❌");
   }

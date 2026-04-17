@@ -70,6 +70,7 @@ import {
 } from "@/lib/store";
 import api from "@/api";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type DateType = "today" | "specific_date" | "one_week" | "one_month";
 type Step = "select_layout" | "configure_layout";
@@ -104,6 +105,8 @@ export default function ScheduleAddPage() {
   const [contentType, setContentType] = useState<"ad" | "carousel" | "live">(
     "ad",
   );
+
+  const navigate = useNavigate();
 
   // useEffect(() => {
   //   setLayouts(getLayouts());
@@ -603,6 +606,8 @@ export default function ScheduleAddPage() {
 
     saveSchedule(schedule);
     setShowConfirmDialog(false);
+    navigate("/schedule");
+
     // alert("Schedule saved successfully!");
   };
 
