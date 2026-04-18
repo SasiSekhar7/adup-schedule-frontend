@@ -79,7 +79,7 @@ export interface Widget {
 export interface ContentItem {
   id: string;
   content_id: string;
-  content_type: "ad" | "carousel" | "live";
+  content_type: "ad" | "carousel" | "live" | "widget";
   name: string;
   client_name?: string;
   duration: number;
@@ -89,6 +89,9 @@ export interface ContentItem {
   // ✅ NEW
   // start_time_date?: string; // ISO date (global range)
   // end_time_date?: string;
+
+  // ✅ NEW
+  widget_config?: Record<string, any>;
 
   time_slots?: { start: string; end: string }[];
 }
@@ -100,6 +103,7 @@ export interface ZoneContent {
   content_items?: ContentItem[];
   // For widget zones
   selected_widgets?: string[]; // widget_ids
+
   widget_schedule_start?: string;
   widget_schedule_end?: string;
 }
@@ -474,7 +478,7 @@ export async function deleteLayout(layoutId: string): Promise<void> {
   try {
     const res = await api.delete(`/layout/template/${layoutId}`);
     toast.success(res?.data?.message || "Layout Deleted successfully");
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Delete failed:", error);
     toast.error(error?.message || "Deleted locally but API failed ❌");
   }

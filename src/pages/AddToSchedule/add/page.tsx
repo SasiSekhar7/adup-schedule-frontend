@@ -106,6 +106,22 @@ export default function ScheduleAddPage() {
     "ad",
   );
 
+  const [widgets, setWidgets] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchWidgets = async () => {
+      try {
+        const res = await api.get("/widgets");
+        console.log("Widgets:", res.data);
+        setWidgets(res.data); // your response.data.data
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchWidgets();
+  }, []);
+
   const navigate = useNavigate();
 
   // useEffect(() => {
@@ -132,8 +148,8 @@ export default function ScheduleAddPage() {
           zone_id: zone.zone_id,
           content_type_allowed: zone.content_type_allowed,
           content_items: zone.content_type_allowed === "media" ? [] : undefined,
-          selected_widgets:
-            zone.content_type_allowed === "widget" ? [] : undefined,
+          // selected_widgets:
+          //   zone.content_type_allowed === "widget" ? [] : undefined,
         };
       });
 
@@ -347,25 +363,61 @@ export default function ScheduleAddPage() {
     }));
   };
 
-  const toggleWidget = (widgetId: string) => {
+  // const toggleWidget = (widgetId: string) => {
+  //   if (!activeZone) return;
+
+  //   setZoneContents((prev) => {
+  //     const currentWidgets = prev[activeZone.zone_id]?.selected_widgets || [];
+  //     const newWidgets = currentWidgets.includes(widgetId)
+  //       ? currentWidgets.filter((id) => id !== widgetId)
+  //       : [...currentWidgets, widgetId];
+
+  //     return {
+  //       ...prev,
+  //       [activeZone.zone_id]: {
+  //         ...prev[activeZone.zone_id],
+  //         selected_widgets: newWidgets,
+  //       },
+  //     };
+  //   });
+  // };
+
+  const selectWidget = (widget) => {
     if (!activeZone) return;
 
-    setZoneContents((prev) => {
-      const currentWidgets = prev[activeZone.zone_id]?.selected_widgets || [];
-      const newWidgets = currentWidgets.includes(widgetId)
-        ? currentWidgets.filter((id) => id !== widgetId)
-        : [...currentWidgets, widgetId];
+    // ✅ create default config from schema
+    const defaultConfig = {};
 
-      return {
-        ...prev,
-        [activeZone.zone_id]: {
-          ...prev[activeZone.zone_id],
-          selected_widgets: newWidgets,
-        },
-      };
-    });
+    Object.entries(widget.config_schema.properties).forEach(
+      ([key, prop]: any) => {
+        defaultConfig[key] = prop.default ?? (prop.enum ? prop.enum[0] : "");
+      },
+    );
+
+    const newItem = {
+      id: generateId(),
+      content_id: widget.widget_definition_id, // ✅ IMPORTANT
+      content_type: "widget",
+      name: widget.type,
+      duration: 0,
+      display_order: 1,
+
+      widget_config: defaultConfig, // ✅ SAVE CONFIG
+      // ✅ SAME AS MEDIA
+
+      time_slots: [...timeSlots],
+    };
+
+    setZoneContents((prev) => ({
+      ...prev,
+      [activeZone.zone_id]: {
+        ...prev[activeZone.zone_id],
+
+        // ✅ ONLY ONE WIDGET
+        content_items: [newItem],
+      },
+    }));
   };
-
   const updateItemSlots = (itemId: string, slots) => {
     if (!activeZone) return;
 
@@ -604,6 +656,8 @@ export default function ScheduleAddPage() {
       updated_at: new Date().toISOString(),
     };
 
+    // console.log("schedule:", schedule);
+
     saveSchedule(schedule);
     setShowConfirmDialog(false);
     navigate("/schedule");
@@ -813,7 +867,7 @@ export default function ScheduleAddPage() {
                         zone.content_type_allowed === "media"
                           ? (zoneContents[zone.zone_id]?.content_items
                               ?.length || 0) > 0
-                          : (zoneContents[zone.zone_id]?.selected_widgets
+                          : (zoneContents[zone.zone_id]?.content_items
                               ?.length || 0) > 0;
 
                       return (
@@ -916,7 +970,8 @@ export default function ScheduleAddPage() {
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 {zone.content_type_allowed === "media"
                                   ? `${content?.content_items?.length} items`
-                                  : `${content?.selected_widgets?.length} widgets`}
+                                  : // : `${content?.selected_widgets?.length} widgets`}
+                                    `${content?.content_items?.length || 0} widget`}
                               </Badge>
                             )}
                           </div>
@@ -1219,6 +1274,38 @@ export default function ScheduleAddPage() {
 
     return { valid: true };
   };
+
+  const updateWidgetConfig = (key, value) => {
+    if (!activeZone) return;
+
+    setZoneContents((prev) => {
+      const item = prev[activeZone.zone_id].content_items?.[0];
+
+      return {
+        ...prev,
+        [activeZone.zone_id]: {
+          ...prev[activeZone.zone_id],
+          content_items: [
+            {
+              ...item,
+              widget_config: {
+                ...item.widget_config,
+                [key]: value,
+              },
+            },
+          ],
+        },
+      };
+    });
+  };
+
+  // const widgetItem = zoneContents[activeZone?.zone_id]?.content_items?.[0];
+  const widgetItem =
+    activeZone && zoneContents[activeZone.zone_id]?.content_items?.[0];
+
+  const widgetDef = widgets.find(
+    (w) => w.widget_definition_id === widgetItem?.content_id,
+  );
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6 overflow-auto">
@@ -1922,8 +2009,8 @@ export default function ScheduleAddPage() {
                     <Label className="font-medium mb-3 block">
                       Select Widgets
                     </Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {defaultWidgets.map((widget) => {
+                    {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-3"> */}
+                    {/* {defaultWidgets.map((widget) => {
                         const isSelected = zoneContents[
                           activeZone.zone_id
                         ]?.selected_widgets?.includes(widget.widget_id);
@@ -1974,11 +2061,75 @@ export default function ScheduleAddPage() {
                             )}
                           </div>
                         );
+                      })} */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {widgets.map((widget) => {
+                        const isSelected =
+                          widgetItem?.content_id ===
+                          widget.widget_definition_id;
+
+                        return (
+                          <div
+                            key={widget.widget_definition_id}
+                            onClick={() => selectWidget(widget)}
+                            className={cn(
+                              "p-4 w-f border rounded-lg cursor-pointer text-center",
+                              isSelected
+                                ? "border-primary bg-primary/5 ring-2 ring-primary"
+                                : "hover:border-muted-foreground",
+                            )}
+                          >
+                            <p className="font-medium text-sm">{widget.type}</p>
+                            {isSelected && (
+                              <Badge className="mt-2 text-xs">Selected</Badge>
+                            )}
+                          </div>
+                        );
                       })}
+                      {/* </div> */}
                     </div>
                   </div>
+                  {widgetItem && widgetDef && (
+                    <div className="border p-4 rounded mt-4 space-y-3">
+                      <h4 className="font-medium">{widgetDef.type}</h4>
 
-                  <div className="border rounded-lg p-4">
+                      {Object.entries(widgetDef.config_schema.properties).map(
+                        ([key, schema]: any) => (
+                          <div key={key}>
+                            <Label>{key}</Label>
+
+                            {schema.enum ? (
+                              <Select
+                                value={widgetItem.widget_config[key]}
+                                onValueChange={(val) =>
+                                  updateWidgetConfig(key, val)
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {schema.enum.map((opt) => (
+                                    <SelectItem key={opt} value={opt}>
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                value={widgetItem.widget_config[key]}
+                                onChange={(e) =>
+                                  updateWidgetConfig(key, e.target.value)
+                                }
+                              />
+                            )}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                  {/* <div className="border rounded-lg p-4">
                     <Label className="font-medium mb-3 block">
                       Widget Display Schedule (Optional)
                     </Label>
@@ -2022,7 +2173,7 @@ export default function ScheduleAddPage() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="bg-muted p-4 rounded-lg">
                     <h4 className="font-medium text-sm mb-2">
@@ -2042,7 +2193,7 @@ export default function ScheduleAddPage() {
                               {widget.name}
                               <X
                                 className="w-3 h-3 ml-1 cursor-pointer"
-                                onClick={() => toggleWidget(widgetId)}
+                                onClick={() => selectWidget(widget)}
                               />
                             </Badge>
                           ) : null;
