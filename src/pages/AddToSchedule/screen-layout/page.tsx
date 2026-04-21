@@ -240,7 +240,7 @@ export default function ScreenLayoutPage() {
             )}
 
             {/* JSON Console */}
-            {currentLayout && (
+            {/* {currentLayout && (
               <Card>
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -280,7 +280,7 @@ export default function ScreenLayoutPage() {
                   </CardContent>
                 )}
               </Card>
-            )}
+            )} */}
           </>
         )}
       </main>
