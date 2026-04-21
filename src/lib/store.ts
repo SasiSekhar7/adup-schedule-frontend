@@ -52,15 +52,20 @@ export interface Carousel {
 }
 
 export interface LiveContent {
-  live_id: string;
+  live_content_id: string;
   name: string;
   stream_url: string;
   status: "active" | "inactive";
   type: "youtube" | "rtsp" | "hls";
 }
 
+export interface WidgetProperty {
+  default?: string;
+  enum?: string[];
+}
+
 export interface Widget {
-  widget_id: string;
+  widget_definition_id: string;
   name: string;
   type:
     | "clock"
@@ -74,12 +79,15 @@ export interface Widget {
   description: string;
   icon: string;
   configurable: boolean;
+  config_schema: {
+    properties: Record<string, WidgetProperty>;
+  };
 }
 
 export interface ContentItem {
   id: string;
   content_id: string;
-  content_type: "ad" | "carousel" | "live" | "widget";
+  content_type: "ad" | "carousel" | "live_content" | "widget";
   name: string;
   client_name?: string;
   duration: number;

@@ -75,6 +75,12 @@ import { useNavigate } from "react-router-dom";
 type DateType = "today" | "specific_date" | "one_week" | "one_month";
 type Step = "select_layout" | "configure_layout";
 
+// Helper function to get file extension
+const getFileExtension = (filename: string): string => {
+  const lastDotIndex = filename.lastIndexOf(".");
+  return lastDotIndex !== -1 ? filename.substring(lastDotIndex) : "";
+};
+
 export default function ScheduleAddPage() {
   const [currentStep, setCurrentStep] = useState<Step>("select_layout");
   const [layouts, setLayouts] = useState<Layout[]>([]);
@@ -102,9 +108,9 @@ export default function ScheduleAddPage() {
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [activeZone, setActiveZone] = useState<Zone | null>(null);
 
-  const [contentType, setContentType] = useState<"ad" | "carousel" | "live">(
-    "ad",
-  );
+  const [contentType, setContentType] = useState<
+    "ad" | "carousel" | "live_content"
+  >("ad");
 
   const [widgets, setWidgets] = useState<any[]>([]);
 
@@ -121,6 +127,29 @@ export default function ScheduleAddPage() {
 
     fetchWidgets();
   }, []);
+
+  const getZoneAspectRatio = (zone: Zone) => {
+    const { width, height } = zone;
+
+    const gcd = (a: number, b: number): number => {
+      return b === 0 ? a : gcd(b, a % b);
+    };
+
+    const divisor = gcd(width, height);
+
+    const aspectWidth = width / divisor;
+    const aspectHeight = height / divisor;
+
+    return `${aspectWidth}:${aspectHeight}`;
+  };
+
+  const filteredWidgets = useMemo(() => {
+    if (!activeZone) return [];
+
+    const zoneRatio = getZoneAspectRatio(activeZone);
+
+    return widgets.filter((w) => w.aspect_ratio === zoneRatio);
+  }, [widgets, activeZone]);
 
   const navigate = useNavigate();
 
@@ -187,11 +216,11 @@ export default function ScheduleAddPage() {
     const today = new Date();
 
     // helper to format with time
-    const formatStart = (date) =>
+    const formatStart = (date: Date | string) =>
       // new Date(date).toISOString().split("T")[0] + "T00:00:00";
       new Date(date).toISOString();
 
-    const formatEnd = (date) =>
+    const formatEnd = (date: Date | string) =>
       // new Date(date).toISOString().split("T")[0] + "T23:59:59";
       new Date(date).toISOString();
 
@@ -285,7 +314,7 @@ export default function ScheduleAddPage() {
 
   const addContentToZone = (
     content: Ad | Carousel | LiveContent,
-    type: "ad" | "carousel" | "live",
+    type: "ad" | "carousel" | "live_content",
   ) => {
     if (!activeZone) return;
     // const { startDate, endDate } = getDateRange();
@@ -297,11 +326,13 @@ export default function ScheduleAddPage() {
           ? (content as Ad).ad_id
           : type === "carousel"
             ? (content as Carousel).carousel_id
-            : (content as LiveContent).live_id,
+            : (content as LiveContent).live_content_id,
       content_type: type,
       name: content.name,
       client_name:
-        type !== "live" ? (content as Ad | Carousel).client_name : undefined,
+        type !== "live_content"
+          ? (content as Ad | Carousel).client_name
+          : undefined,
       duration:
         type === "ad"
           ? (content as Ad).duration
@@ -382,11 +413,83 @@ export default function ScheduleAddPage() {
   //   });
   // };
 
-  const selectWidget = (widget) => {
+  const [assets, setAssets] = useState<any[]>([]);
+  const [loadingAssets, setLoadingAssets] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fetchAssets = async () => {
+    try {
+      setLoadingAssets(true);
+      const res = await api.get("/assets");
+
+      console.log("Assets:", res.data);
+
+      // filter only logo type
+      const logos = res.data.filter((item: any) => item.asset_type === "logo");
+
+      setAssets(logos);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingAssets(false);
+    }
+  };
+
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (file: File) => {
+    try {
+      setUploading(true);
+      // Generate filename in the format: ad-{timestamp}{extension}
+      const fileExtension = getFileExtension(file.name);
+      // STEP 1: get upload URL
+      const res1 = await api.post("/asset/generate-upload-url", {
+        fileName: `logo-${Date.now()}${fileExtension}`,
+        fileType: file.type,
+      });
+
+      const { uploadUrl, key } = res1.data;
+
+      // STEP 2: upload file to S3
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      // STEP 3: confirm upload
+      await api.post("/asset/confirm-upload", {
+        key,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        assetType: "logo",
+      });
+
+      toast.success("Uploaded successfully");
+
+      // refresh dropdown
+      fetchAssets();
+    } catch (err) {
+      console.error(err);
+      toast.error("Upload failed");
+    } finally {
+      setUploading(false);
+      setSelectedFile(null); // ✅ reset
+    }
+  };
+
+  const selectWidget = (widget: Widget) => {
     if (!activeZone) return;
 
-    // ✅ create default config from schema
-    const defaultConfig = {};
+    // create default config from schema
+    const defaultConfig: Record<string, any> = {};
+
+    // 👇 IMPORTANT
+    if (widget.type === "logo") {
+      fetchAssets(); // API hit
+    }
 
     Object.entries(widget.config_schema.properties).forEach(
       ([key, prop]: any) => {
@@ -408,17 +511,17 @@ export default function ScheduleAddPage() {
       time_slots: [...timeSlots],
     };
 
-    setZoneContents((prev) => ({
+    setZoneContents((prev: any) => ({
       ...prev,
       [activeZone.zone_id]: {
         ...prev[activeZone.zone_id],
 
-        // ✅ ONLY ONE WIDGET
+        //  ONLY ONE WIDGET
         content_items: [newItem],
       },
     }));
   };
-  const updateItemSlots = (itemId: string, slots) => {
+  const updateItemSlots = (itemId: string, slots = []) => {
     if (!activeZone) return;
 
     setZoneContents((prev) => ({
@@ -656,11 +759,11 @@ export default function ScheduleAddPage() {
       updated_at: new Date().toISOString(),
     };
 
-    // console.log("schedule:", schedule);
+    console.log("schedule:", schedule);
 
-    saveSchedule(schedule);
-    setShowConfirmDialog(false);
-    navigate("/schedule");
+    // saveSchedule(schedule);
+    // setShowConfirmDialog(false);
+    // navigate("/schedule");
 
     // alert("Schedule saved successfully!");
   };
@@ -911,23 +1014,25 @@ export default function ScheduleAddPage() {
             <Card>
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Zone Assignments</CardTitle>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowJsonDialog(true)}
                 >
                   {"<>"} Show JSON
-                </Button>
+                </Button> */}
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {selectedLayout.zones.map((zone) => {
                     const content = zoneContents[zone.zone_id];
                     const is_muted = zoneMuteSettings[zone.zone_id];
+                    // const hasContent =
+                    //   zone.content_type_allowed === "media"
+                    //     ? (content?.content_items?.length || 0) > 0
+                    //     : (content?.selected_widgets?.length || 0) > 0;
                     const hasContent =
-                      zone.content_type_allowed === "media"
-                        ? (content?.content_items?.length || 0) > 0
-                        : (content?.selected_widgets?.length || 0) > 0;
+                      (content?.content_items?.length || 0) > 0;
                     const analysis = getZoneTimeAnalysis(zone.zone_id);
 
                     return (
@@ -1202,7 +1307,7 @@ export default function ScheduleAddPage() {
     const fetchLive = async () => {
       try {
         const res = await api.get("/live-content/all");
-        setLiveContent(res.data); // ✅ correct
+        setLiveContent(res.data); // correct
       } catch (err) {
         console.error(err);
       }
@@ -1275,10 +1380,10 @@ export default function ScheduleAddPage() {
     return { valid: true };
   };
 
-  const updateWidgetConfig = (key, value) => {
+  const updateWidgetConfig = (key: string, value: string) => {
     if (!activeZone) return;
 
-    setZoneContents((prev) => {
+    setZoneContents((prev: any) => {
       const item = prev[activeZone.zone_id].content_items?.[0];
 
       return {
@@ -1306,6 +1411,36 @@ export default function ScheduleAddPage() {
   const widgetDef = widgets.find(
     (w) => w.widget_definition_id === widgetItem?.content_id,
   );
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const getFilteredData = () => {
+    let data: any[] = [];
+
+    if (contentType === "ad") data = ads;
+    if (contentType === "carousel") data = carousels;
+    if (contentType === "live_content") data = liveContent;
+
+    // 🔍 SEARCH FILTER
+    const filtered = data.filter((item) =>
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    // 📄 PAGINATION
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+    return {
+      filtered,
+      paginated,
+      totalPages: Math.ceil(filtered.length / itemsPerPage),
+    };
+  };
+
+  const { filtered, paginated, totalPages } = getFilteredData();
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6 overflow-auto">
@@ -1569,7 +1704,7 @@ export default function ScheduleAddPage() {
                     <Label className="font-medium">Add Content Type:</Label>
                     <Select
                       value={contentType}
-                      onValueChange={(v: "ad" | "carousel" | "live") =>
+                      onValueChange={(v: "ad" | "carousel" | "live_content") =>
                         setContentType(v)
                       }
                     >
@@ -1589,7 +1724,7 @@ export default function ScheduleAddPage() {
                             Carousel
                           </div>
                         </SelectItem>
-                        <SelectItem value="live">
+                        <SelectItem value="live_content">
                           <div className="flex items-center gap-2">
                             <Radio className="w-4 h-4" />
                             Live Content
@@ -1609,10 +1744,18 @@ export default function ScheduleAddPage() {
                             ? "Carousels"
                             : "Live Content"}
                       </h4>
+                      <Input
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(1); // reset page on search
+                        }}
+                        className="mb-3"
+                      />
                       <ScrollArea className="h-72">
                         <div className="space-y-2 pr-2">
-                          {contentType === "ad" &&
-                            // sampleAds.slice(0, 10).map((ad) => (
+                          {/* {contentType === "ad" &&
                             ads.slice(0, 10).map((ad) => (
                               <div
                                 key={ad.ad_id}
@@ -1635,35 +1778,10 @@ export default function ScheduleAddPage() {
                                   <Plus className="w-4 h-4" />
                                 </Button>
                               </div>
-                            ))}
+                            ))} */}
 
-                          {contentType === "carousel" &&
-                            // sampleCarousels.map((carousel) => (
-                            //   <div
-                            //     key={carousel.carousel_id}
-                            //     className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
-                            //   >
-                            //     <div className="flex-1 min-w-0 mr-3">
-                            //       <p className="font-medium text-sm truncate">
-                            //         {carousel.name}
-                            //       </p>
-                            //       <p className="text-xs text-muted-foreground">
-                            //         {carousel.client_name} - {carousel.slides}{" "}
-                            //         slides - {formatDuration(carousel.duration)}
-                            //       </p>
-                            //     </div>
-                            //     <Button
-                            //       variant="outline"
-                            //       size="sm"
-                            //       onClick={() =>
-                            //         addContentToZone(carousel, "carousel")
-                            //       }
-                            //     >
-                            //       <Plus className="w-4 h-4" />
-                            //     </Button>
-                            //   </div>
-                            // ))
-                            carousels.map((carousel) => (
+                          {/* {contentType === "carousel" &&
+                            carousels.map((carousel : any) => (
                               <div
                                 key={carousel.carousel_id}
                                 className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
@@ -1690,50 +1808,27 @@ export default function ScheduleAddPage() {
                                   <Plus className="w-4 h-4" />
                                 </Button>
                               </div>
-                            ))}
+                            ))} */}
 
-                          {contentType === "live" &&
-                            // sampleLiveContent.map((live) => (
-                            //   <div
-                            //     key={live.live_id}
-                            //     className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
-                            //   >
-                            //     <div className="flex-1 min-w-0 mr-3">
-                            //       <p className="font-medium text-sm truncate">
-                            //         {live.name}
-                            //       </p>
-                            //       <p className="text-xs text-muted-foreground">
-                            //         {live.type.toUpperCase()} - {live.status}
-                            //       </p>
-                            //     </div>
-                            //     <Button
-                            //       variant="outline"
-                            //       size="sm"
-                            //       onClick={() => addContentToZone(live, "live")}
-                            //     >
-                            //       <Plus className="w-4 h-4" />
-                            //     </Button>
-                            //   </div>
-                            // ))
-
-                            liveContent.map((live) => (
+                          {/* {contentType === "live_content" &&
+                            liveContent.map((live: any) => (
                               <div
                                 key={live.live_content_id}
                                 className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
                               >
                                 <div className="flex-1 min-w-0 mr-3">
-                                  {/* Name */}
+                                 
                                   <p className="font-medium text-sm truncate">
                                     {live.name}
                                   </p>
 
-                                  {/* Meta */}
+                                  
                                   <p className="text-xs text-muted-foreground">
                                     {live.content_type?.toUpperCase()} -{" "}
                                     {live.status}
                                   </p>
 
-                                  {/* Optional extra */}
+                                 
                                   <p className="text-[11px] text-muted-foreground truncate">
                                     {live.Client?.name} •{" "}
                                     {formatDuration(live.duration)}
@@ -1743,14 +1838,129 @@ export default function ScheduleAddPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => addContentToZone(live, "live")}
+                                  onClick={() =>
+                                    addContentToZone(live, "live_content")
+                                  }
                                 >
                                   <Plus className="w-4 h-4" />
                                 </Button>
                               </div>
-                            ))}
+                            ))} */}
+                          {paginated.map((item: any) => {
+                            if (contentType === "ad") {
+                              return (
+                                <div
+                                  key={item.ad_id}
+                                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
+                                >
+                                  <div className="flex-1 min-w-0 mr-3">
+                                    <p className="font-medium text-sm truncate">
+                                      {item.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {item.client_name} -{" "}
+                                      {formatDuration(item.duration)}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => addContentToZone(item, "ad")}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              );
+                            }
+
+                            if (contentType === "carousel") {
+                              return (
+                                <div
+                                  key={item.carousel_id}
+                                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
+                                >
+                                  <div className="flex-1 min-w-0 mr-3">
+                                    <p className="font-medium text-sm truncate">
+                                      {item.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {item.Client?.name} -{" "}
+                                      {item.items?.length || 0} slides -{" "}
+                                      {formatDuration(item.total_duration)}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      addContentToZone(item, "carousel")
+                                    }
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              );
+                            }
+
+                            if (contentType === "live_content") {
+                              return (
+                                <div
+                                  key={item.live_content_id}
+                                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
+                                >
+                                  <div className="flex-1 min-w-0 mr-3">
+                                    <p className="font-medium text-sm truncate">
+                                      {item.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {item.content_type?.toUpperCase()} -{" "}
+                                      {item.status}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground truncate">
+                                      {item.Client?.name} •{" "}
+                                      {formatDuration(item.duration)}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      addContentToZone(item, "live_content")
+                                    }
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              );
+                            }
+
+                            return null;
+                          })}
                         </div>
                       </ScrollArea>
+                      <div className="flex justify-between items-center mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage((p) => p - 1)}
+                        >
+                          Prev
+                        </Button>
+
+                        <span className="text-sm">
+                          Page {currentPage} of {totalPages || 1}
+                        </span>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage((p) => p + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="border rounded-lg p-4">
@@ -2009,6 +2219,9 @@ export default function ScheduleAddPage() {
                     <Label className="font-medium mb-3 block">
                       Select Widgets
                     </Label>
+                    <p className="text-xs mb-3 text-muted-foreground">
+                      Zone Aspect Ratio: {getZoneAspectRatio(activeZone)}
+                    </p>
                     {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-3"> */}
                     {/* {defaultWidgets.map((widget) => {
                         const isSelected = zoneContents[
@@ -2063,7 +2276,7 @@ export default function ScheduleAddPage() {
                         );
                       })} */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {widgets.map((widget) => {
+                      {/*{widgets.map((widget) => {
                         const isSelected =
                           widgetItem?.content_id ===
                           widget.widget_definition_id;
@@ -2085,7 +2298,49 @@ export default function ScheduleAddPage() {
                             )}
                           </div>
                         );
-                      })}
+                      })} */}
+                      {filteredWidgets.length > 0 ? (
+                        filteredWidgets.map((widget) => {
+                          const isSelected =
+                            widgetItem?.content_id ===
+                            widget.widget_definition_id;
+
+                          return (
+                            <div
+                              key={widget.widget_definition_id}
+                              onClick={() => selectWidget(widget)}
+                              className={cn(
+                                "p-4 border rounded-lg cursor-pointer text-center",
+                                isSelected
+                                  ? "border-primary bg-primary/5 ring-2 ring-primary"
+                                  : "hover:border-muted-foreground",
+                              )}
+                            >
+                              <p className="font-medium text-sm">
+                                {widget.type}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {widget.aspect_ratio}
+                              </p>
+
+                              {isSelected && (
+                                <Badge className="mt-2 text-xs">Selected</Badge>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="col-span-full text-center py-10">
+                          <AlertTriangle className="w-8 h-8 mx-auto text-amber-500 mb-2" />
+                          <p className="text-sm font-medium">
+                            No compatible widgets
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            This zone supports aspect ratio:{" "}
+                            <strong>{getZoneAspectRatio(activeZone)}</strong>
+                          </p>
+                        </div>
+                      )}
                       {/* </div> */}
                     </div>
                   </div>
@@ -2093,7 +2348,7 @@ export default function ScheduleAddPage() {
                     <div className="border p-4 rounded mt-4 space-y-3">
                       <h4 className="font-medium">{widgetDef.type}</h4>
 
-                      {Object.entries(widgetDef.config_schema.properties).map(
+                      {/* {Object.entries(widgetDef.config_schema.properties).map(
                         ([key, schema]: any) => (
                           <div key={key}>
                             <Label>{key}</Label>
@@ -2126,6 +2381,117 @@ export default function ScheduleAddPage() {
                             )}
                           </div>
                         ),
+                      )} */}
+                      {Object.entries(widgetDef.config_schema.properties).map(
+                        ([key, schema]: any) => {
+                          // ✅ LOGO SPECIAL CASE
+                          if (widgetDef.type === "logo" && key === "url") {
+                            return (
+                              <div key={key} className="space-y-2">
+                                <Label>Select Logo</Label>
+
+                                {/* Dropdown */}
+                                <Select
+                                  value={widgetItem.widget_config[key]}
+                                  onValueChange={(val) =>
+                                    updateWidgetConfig(key, val)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select logo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {assets.map((asset) => (
+                                      <SelectItem
+                                        key={asset.id}
+                                        value={asset.storage_key}
+                                      >
+                                        {asset.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+
+                                {/* Upload button */}
+                                {/* <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleUpload(file);
+                                  }}
+                                /> */}
+                                <div className="space-y-2">
+                                  <div className="flex gap-2 items-center">
+                                    {/* File input */}
+                                    <Input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={uploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        setSelectedFile(file || null); // ❗ only store file
+                                      }}
+                                    />
+
+                                    {/* Upload Button */}
+                                    <Button
+                                      disabled={!selectedFile || uploading}
+                                      onClick={() =>
+                                        selectedFile &&
+                                        handleUpload(selectedFile)
+                                      }
+                                    >
+                                      {uploading ? "Uploading..." : "Upload"}
+                                    </Button>
+                                  </div>
+
+                                  {/* Loader */}
+                                  {uploading && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                                      Uploading...
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // DEFAULT INPUT
+                          return (
+                            <div key={key}>
+                              <Label>{key}</Label>
+
+                              {schema.enum ? (
+                                <Select
+                                  value={widgetItem.widget_config[key]}
+                                  onValueChange={(val) =>
+                                    updateWidgetConfig(key, val)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {schema.enum.map((opt) => (
+                                      <SelectItem key={opt} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  value={widgetItem.widget_config[key]}
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                />
+                              )}
+                            </div>
+                          );
+                        },
                       )}
                     </div>
                   )}
@@ -2178,32 +2544,34 @@ export default function ScheduleAddPage() {
                   <div className="bg-muted p-4 rounded-lg">
                     <h4 className="font-medium text-sm mb-2">
                       Selected Widgets (
-                      {zoneContents[activeZone.zone_id]?.selected_widgets
+                      {zoneContents[activeZone.zone_id]?.content_items
                         ?.length || 0}
                       )
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {zoneContents[activeZone.zone_id]?.selected_widgets?.map(
-                        (widgetId) => {
-                          const widget = defaultWidgets.find(
-                            (w) => w.widget_id === widgetId,
+                      {zoneContents[activeZone.zone_id]?.content_items?.map(
+                        (item) => {
+                          const widget = widgets.find(
+                            (w) => w.widget_definition_id === item.content_id,
                           );
+
                           return widget ? (
-                            <Badge key={widgetId} variant="secondary">
-                              {widget.name}
+                            <Badge key={item.id} variant="secondary">
+                              {widget.type}
                               <X
                                 className="w-3 h-3 ml-1 cursor-pointer"
-                                onClick={() => selectWidget(widget)}
+                                onClick={() => removeContentFromZone(item.id)}
                               />
                             </Badge>
                           ) : null;
                         },
                       )}
-                      {!zoneContents[activeZone.zone_id]?.selected_widgets
-                        ?.length && (
-                        <span className="text-sm text-muted-foreground">
+
+                      {zoneContents[activeZone.zone_id]?.content_items
+                        ?.length === 0 && (
+                        <div className="text-muted-foreground">
                           No widgets selected
-                        </span>
+                        </div>
                       )}
                     </div>
                   </div>
