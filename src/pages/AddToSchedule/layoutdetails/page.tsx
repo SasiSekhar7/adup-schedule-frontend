@@ -225,8 +225,13 @@ export default function LayoutViewer() {
                                 {item.display_order}
                               </span>
                             </div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            {/* <p className="text-sm font-semibold text-gray-900">
                               {item?.content_data.name}
+                            </p> */}
+                            <p className="text-sm font-semibold text-gray-900">
+                              {item?.content_data?.name ||
+                                item?.content_data?.type ||
+                                "Unknown"}
                             </p>
                             <div className="flex flex-col gap-1 mt-1.5 text-xs text-blue-500">
                               {/* Date Time */}

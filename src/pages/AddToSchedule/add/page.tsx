@@ -471,9 +471,9 @@ export default function ScheduleAddPage() {
 
       // refresh dropdown
       fetchAssets();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Upload failed");
+      toast.error(err.error || err.message || "Upload failed");
     } finally {
       setUploading(false);
       setSelectedFile(null); // ✅ reset
@@ -504,8 +504,11 @@ export default function ScheduleAddPage() {
       name: widget.type,
       duration: 0,
       display_order: 1,
+      widget_type: widget.type, // ADD THIS
+      asset_id: null,
 
       widget_config: defaultConfig, // ✅ SAVE CONFIG
+
       // ✅ SAME AS MEDIA
 
       time_slots: [...timeSlots],
@@ -698,7 +701,8 @@ export default function ScheduleAddPage() {
   //   });
   // }, [selectedLayout, groupFilter]);
   const [groups, setGroups] = useState([]);
-
+  const [groupPage, setGroupPage] = useState(1);
+  const groupsPerPage = 10;
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -714,13 +718,43 @@ export default function ScheduleAddPage() {
     fetchGroups();
   }, []);
 
-  const filteredGroups = useMemo(() => {
-    return groups
-      .filter((g) => g.name?.toLowerCase().includes(groupFilter.toLowerCase()))
-      .slice(0, 10); // ✅ limit to 10
-  }, [groups, groupFilter]);
+  // const filteredGroups = useMemo(() => {
+  //   return groups
+  //     .filter((g) => g.name?.toLowerCase().includes(groupFilter.toLowerCase()))
+  //     .slice(0, 10); // ✅ limit to 10
+  // }, [groups, groupFilter]);
+
+  const getFilteredGroups = () => {
+    // 🔍 search filter
+    const filtered = groups.filter((g: any) =>
+      g.name?.toLowerCase().includes(groupFilter.toLowerCase()),
+    );
+
+    // 📄 pagination
+    const startIndex = (groupPage - 1) * groupsPerPage;
+    const paginated = filtered.slice(startIndex, startIndex + groupsPerPage);
+
+    return {
+      filtered,
+      paginated,
+      totalPages: Math.ceil(filtered.length / groupsPerPage),
+    };
+  };
+
+  const {
+    filtered: filteredGroups,
+    paginated: paginatedGroups,
+    totalPages: groupTotalPages,
+  } = getFilteredGroups();
 
   const handleSchedule = () => {
+    // NEW VALIDATION
+    const zoneValidation = validateAllZonesAssigned();
+
+    if (!zoneValidation.valid) {
+      toast.error(zoneValidation.message);
+      return;
+    }
     const allGaps = getAllZoneGaps();
     if (allGaps.length > 0) {
       setShowConfirmDialog(true);
@@ -761,9 +795,9 @@ export default function ScheduleAddPage() {
 
     console.log("schedule:", schedule);
 
-    // saveSchedule(schedule);
-    // setShowConfirmDialog(false);
-    // navigate("/schedule");
+    saveSchedule(schedule);
+    setShowConfirmDialog(false);
+    navigate("/schedule");
 
     // alert("Schedule saved successfully!");
   };
@@ -1135,7 +1169,10 @@ export default function ScheduleAddPage() {
                 <Input
                   placeholder="Filter Name..."
                   value={groupFilter}
-                  onChange={(e) => setGroupFilter(e.target.value)}
+                  onChange={(e) => {
+                    setGroupFilter(e.target.value);
+                    setGroupPage(1); // ✅ reset page
+                  }}
                 />
 
                 <ScrollArea className="h-64">
@@ -1183,7 +1220,7 @@ export default function ScheduleAddPage() {
                         </div>
                       </div>
                     ))} */}
-                    {filteredGroups.map((group) => (
+                    {paginatedGroups.map((group: any) => (
                       <div
                         key={group.group_id}
                         className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
@@ -1230,6 +1267,29 @@ export default function ScheduleAddPage() {
                     ))}
                   </div>
                 </ScrollArea>
+                <div className="flex justify-between items-center mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={groupPage === 1}
+                    onClick={() => setGroupPage((p) => p - 1)}
+                  >
+                    Prev
+                  </Button>
+
+                  <span className="text-sm">
+                    Page {groupPage} of {groupTotalPages || 1}
+                  </span>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={groupPage === groupTotalPages}
+                    onClick={() => setGroupPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
 
                 {selectedGroups.length > 0 && (
                   <div className="pt-2 border-t">
@@ -1380,7 +1440,33 @@ export default function ScheduleAddPage() {
     return { valid: true };
   };
 
-  const updateWidgetConfig = (key: string, value: string) => {
+  // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
+  //   if (!activeZone) return;
+
+  //   setZoneContents((prev: any) => {
+  //     const item = prev[activeZone.zone_id].content_items?.[0];
+
+  //     return {
+  //       ...prev,
+  //       [activeZone.zone_id]: {
+  //         ...prev[activeZone.zone_id],
+  //         content_items: [
+  //           {
+  //             ...item,
+  //             widget_config: {
+  //               ...item.widget_config,
+  //               [key]: value,
+  //             },
+  //           },
+  //         ],
+  //       },
+  //     };
+  //   });
+  // };
+
+  // const widgetItem = zoneContents[activeZone?.zone_id]?.content_items?.[0];
+
+  const updateWidgetConfig = (key: string, value: string, asset?: any) => {
     if (!activeZone) return;
 
     setZoneContents((prev: any) => {
@@ -1393,18 +1479,24 @@ export default function ScheduleAddPage() {
           content_items: [
             {
               ...item,
+
               widget_config: {
                 ...item.widget_config,
                 [key]: value,
               },
+
+              // ONLY for logo
+              ...(item.widget_type === "logo" && asset
+                ? {
+                    asset_id: asset.asset_id,
+                  }
+                : {}),
             },
           ],
         },
       };
     });
   };
-
-  // const widgetItem = zoneContents[activeZone?.zone_id]?.content_items?.[0];
   const widgetItem =
     activeZone && zoneContents[activeZone.zone_id]?.content_items?.[0];
 
@@ -1440,6 +1532,25 @@ export default function ScheduleAddPage() {
   };
 
   const { filtered, paginated, totalPages } = getFilteredData();
+  const validateAllZonesAssigned = () => {
+    if (!selectedLayout) return { valid: true };
+
+    const unassignedZones = selectedLayout.zones.filter((zone) => {
+      const content = zoneContents[zone.zone_id];
+      return !content?.content_items || content.content_items.length === 0;
+    });
+
+    if (unassignedZones.length > 0) {
+      return {
+        valid: false,
+        message: `Please assign content to: ${unassignedZones
+          .map((z) => z.name)
+          .join(", ")}`,
+      };
+    }
+
+    return { valid: true };
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -1973,7 +2084,7 @@ export default function ScheduleAddPage() {
                       <ScrollArea className="h-72">
                         <div className="space-y-3 pr-2">
                           {zoneContents[activeZone.zone_id]?.content_items?.map(
-                            (item, idx) => {
+                            (item: any, idx) => {
                               const isTimeValid =
                                 !item.start_time ||
                                 !item.end_time ||
@@ -2049,52 +2160,63 @@ export default function ScheduleAddPage() {
                                       }
                                     /> */}
                                     <div className="space-y-2">
-                                      {item.time_slots?.map((slot, slotIdx) => (
-                                        <div
-                                          key={slotIdx}
-                                          className="flex items-center gap-2"
-                                        >
-                                          <Input
-                                            type="time"
-                                            value={slot.start}
-                                            onChange={(e) => {
-                                              const updated = [
-                                                ...item.time_slots,
-                                              ];
-                                              updated[slotIdx].start =
-                                                e.target.value;
-                                              updateItemSlots(item.id, updated);
-                                            }}
-                                          />
-                                          <span>to</span>
-                                          <Input
-                                            type="time"
-                                            value={slot.end}
-                                            onChange={(e) => {
-                                              const updated = [
-                                                ...item.time_slots,
-                                              ];
-                                              updated[slotIdx].end =
-                                                e.target.value;
-                                              updateItemSlots(item.id, updated);
-                                            }}
-                                          />
-
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            onClick={() => {
-                                              const updated =
-                                                item.time_slots.filter(
-                                                  (_, i) => i !== slotIdx,
-                                                );
-                                              updateItemSlots(item.id, updated);
-                                            }}
+                                      {item.time_slots?.map(
+                                        (slot: any, slotIdx: any) => (
+                                          <div
+                                            key={slotIdx}
+                                            className="flex items-center gap-2"
                                           >
-                                            <Trash2 className="w-4 h-4" />
-                                          </Button>
-                                        </div>
-                                      ))}
+                                            <Input
+                                              type="time"
+                                              value={slot.start}
+                                              onChange={(e) => {
+                                                const updated = [
+                                                  ...item.time_slots,
+                                                ] as any;
+                                                updated[slotIdx].start =
+                                                  e.target.value;
+                                                updateItemSlots(
+                                                  item.id,
+                                                  updated,
+                                                );
+                                              }}
+                                            />
+                                            <span>to</span>
+                                            <Input
+                                              type="time"
+                                              value={slot.end}
+                                              onChange={(e) => {
+                                                const updated = [
+                                                  ...item.time_slots,
+                                                ] as any;
+                                                updated[slotIdx].end =
+                                                  e.target.value;
+                                                updateItemSlots(
+                                                  item.id,
+                                                  updated,
+                                                );
+                                              }}
+                                            />
+
+                                            <Button
+                                              size="icon"
+                                              variant="ghost"
+                                              onClick={() => {
+                                                const updated =
+                                                  item.time_slots.filter(
+                                                    (_, i) => i !== slotIdx,
+                                                  );
+                                                updateItemSlots(
+                                                  item.id,
+                                                  updated,
+                                                );
+                                              }}
+                                            >
+                                              <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                          </div>
+                                        ),
+                                      )}
 
                                       <Button
                                         size="sm"
@@ -2103,7 +2225,7 @@ export default function ScheduleAddPage() {
                                           const updated = [
                                             ...(item.time_slots || []),
                                             { start: "09:00", end: "17:00" },
-                                          ];
+                                          ] as any;
                                           updateItemSlots(item.id, updated);
                                         }}
                                       >
@@ -2391,11 +2513,21 @@ export default function ScheduleAddPage() {
                                 <Label>Select Logo</Label>
 
                                 {/* Dropdown */}
-                                <Select
+                                {/* <Select
                                   value={widgetItem.widget_config[key]}
                                   onValueChange={(val) =>
                                     updateWidgetConfig(key, val)
                                   }
+                                > */}
+                                <Select
+                                  value={widgetItem.widget_config[key]}
+                                  onValueChange={(val) => {
+                                    const selectedAsset = assets.find(
+                                      (a) => a.storage_key === val,
+                                    );
+
+                                    updateWidgetConfig(key, val, selectedAsset);
+                                  }}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select logo" />
