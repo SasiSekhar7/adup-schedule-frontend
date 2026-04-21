@@ -2276,7 +2276,7 @@ export default function ScheduleAddPage() {
                         );
                       })} */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {/*{widgets.map((widget) => {
+                      {widgets.map((widget) => {
                         const isSelected =
                           widgetItem?.content_id ===
                           widget.widget_definition_id;
@@ -2298,8 +2298,8 @@ export default function ScheduleAddPage() {
                             )}
                           </div>
                         );
-                      })} */}
-                      {filteredWidgets.length > 0 ? (
+                      })}
+                      {/* {filteredWidgets.length > 0 ? (
                         filteredWidgets.map((widget) => {
                           const isSelected =
                             widgetItem?.content_id ===
@@ -2340,7 +2340,7 @@ export default function ScheduleAddPage() {
                             <strong>{getZoneAspectRatio(activeZone)}</strong>
                           </p>
                         </div>
-                      )}
+                      )} */}
                       {/* </div> */}
                     </div>
                   </div>
