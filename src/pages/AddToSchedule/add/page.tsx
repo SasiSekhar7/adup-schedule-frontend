@@ -885,6 +885,7 @@ export default function ScheduleAddPage() {
                     style={{
                       width: layout.orientation === "landscape" ? 160 : 100,
                       height: layout.orientation === "landscape" ? 90 : 160,
+                      backgroundColor: layout.background_color,
                     }}
                   >
                     {layout.zones.map((zone) => (
@@ -897,6 +898,7 @@ export default function ScheduleAddPage() {
                           width: `${zone.width}%`,
                           height: `${zone.height}%`,
                           backgroundColor: zone.color,
+                          borderRadius: `${zone.border_radius}px`,
                         }}
                       >
                         <span className="text-white text-[8px] truncate px-0.5">
@@ -997,6 +999,7 @@ export default function ScheduleAddPage() {
                         selectedLayout.orientation === "landscape" ? 500 : 280,
                       height:
                         selectedLayout.orientation === "landscape" ? 280 : 500,
+                      backgroundColor: selectedLayout.background_color,
                     }}
                   >
                     {selectedLayout.zones.map((zone) => {
@@ -1024,6 +1027,7 @@ export default function ScheduleAddPage() {
                             width: `${zone.width}%`,
                             height: `${zone.height}%`,
                             backgroundColor: zone.color,
+                            borderRadius: `${zone.border_radius}px`,
                           }}
                         >
                           <span className="font-medium text-sm">

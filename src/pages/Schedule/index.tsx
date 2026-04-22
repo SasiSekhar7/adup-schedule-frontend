@@ -941,7 +941,7 @@ export default function Schedule() {
                 //     ? `/carousels/${schedule.id}`
                 //     : `/ads/${schedule.id}`
                 schedule.contentType === "live_content"
-                  ? `/live-content/${schedule.id}`
+                  ? `/live-content-preview/${schedule.id}`
                   : schedule.contentType === "carousel"
                     ? `/carousels/${schedule.id}`
                     : schedule.contentType === "ad"
@@ -1064,8 +1064,6 @@ export default function Schedule() {
     setDateRange({ from: fromDate, to: toDate });
     setShowDatePicker(false);
   };
-
- 
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0">
@@ -1359,7 +1357,7 @@ export default function Schedule() {
                         <Link
                           to={
                             schedule.contentType === "live_content"
-                              ? `/live-content/${schedule.id}`
+                              ? `/live-content-preview/${schedule.id}`
                               : schedule.contentType === "carousel"
                                 ? `/carousels/${schedule.id}`
                                 : `/ads/${schedule.id}`

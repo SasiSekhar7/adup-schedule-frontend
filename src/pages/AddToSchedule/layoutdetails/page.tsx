@@ -630,18 +630,23 @@ export default function LayoutViewer() {
           <div className="flex justify-center bg-slate-50 py-12 rounded-2xl border-2 border-dashed border-slate-200">
             <div
               className="rounded-sm overflow-hidden bg-black shadow-2xl border-[8px] border-slate-900 relative"
-              style={{ width: previewW, height: previewH }}
+              style={{
+                width: previewW,
+                height: previewH,
+                backgroundColor: layout.background_color,
+              }}
             >
               {layout.zones?.map((zone: any) => (
                 <div
                   key={zone.zone_id}
-                  className="absolute"
+                  className="absolute overflow-hidden"
                   style={{
                     left: `${zone.x}%`,
                     top: `${zone.y}%`,
                     width: `${zone.width}%`,
                     height: `${zone.height}%`,
                     zIndex: zone.z_index,
+                    borderRadius: `${zone.border_radius}px`,
                   }}
                 >
                   <ZonePlayer
