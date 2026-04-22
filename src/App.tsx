@@ -21,6 +21,7 @@ import ChannelDetailPage from "./pages/StreamProviders/components/channelDetails
 import ExportDetails from "./pages/ExportDetails";
 import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
 import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
+import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -304,6 +305,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <CreateLiveContent />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/live-content-preview/:id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <PreviewLiveContent />
                 </Suspense>
               }
             />
