@@ -198,6 +198,9 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
   );
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
+  const [backgroundColor, setBackgroundColor] = useState(
+    initialLayout?.background_color || "#000000",
+  );
   const addZone = () => {
     const newZone: Zone = {
       zone_id: `zone-${Date.now()}`,
@@ -210,6 +213,7 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
       is_muted: true,
       content_type_allowed: "media",
       z_index: zones.length + 1,
+      border_radius: 0,
     };
     setZones([...zones, newZone]);
     setSelectedZone(newZone.zone_id);
@@ -234,7 +238,8 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
     setZones(
       preset.zones.map((z, i) => ({
         ...z,
-        z_index: i + 1, // ✅ add this
+        z_index: i + 1,
+        border_radius: 0, // ✅ add this
       })),
     );
     setSelectedZone(null);
@@ -250,6 +255,7 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
       orientation,
       zones,
       is_active: true,
+      background_color: backgroundColor,
       created_at: initialLayout?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -329,6 +335,17 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
                 Portrait
               </Button>
             </div>
+          </div>
+
+          {/* ✅ ADD HERE */}
+          <div>
+            <Label>Background Color</Label>
+            <Input
+              type="color"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+              className="h-10 p-1"
+            />
           </div>
 
           {/* Presets */}
@@ -548,6 +565,23 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
                     className="h-8"
                   />
                 </div>
+                <div>
+                  <Label className="text-xs">Border Radius (px)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={
+                      zones.find((z) => z.zone_id === selectedZone)
+                        ?.border_radius || 0
+                    }
+                    onChange={(e) =>
+                      updateZone(selectedZone, {
+                        border_radius: Number(e.target.value),
+                      })
+                    }
+                    className="h-8"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -570,8 +604,12 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
         <CardContent>
           <div className="flex items-center justify-center p-4 bg-muted rounded-lg">
             <div
-              className="relative bg-black rounded-lg overflow-hidden shadow-lg"
-              style={{ width: canvasWidth, height: canvasHeight }}
+              className="relative rounded-lg overflow-hidden shadow-lg"
+              style={{
+                width: canvasWidth,
+                height: canvasHeight,
+                backgroundColor: backgroundColor,
+              }}
             >
               {zones.map((zone) => (
                 <div
@@ -589,6 +627,7 @@ export function LayoutBuilder({ initialLayout, onSave }: LayoutBuilderProps) {
                     height: `${zone.height}%`,
                     backgroundColor: zone.color,
                     zIndex: zone.z_index,
+                    borderRadius: `${zone.border_radius || 0}px`,
                   }}
                 >
                   <span className="text-center px-1 truncate">{zone.name}</span>
