@@ -18,6 +18,8 @@ export interface Zone {
   is_muted: boolean;
   content_type_allowed: ZoneType;
   z_index: number;
+
+  border_radius?: number;
 }
 
 export interface Layout {
@@ -30,6 +32,7 @@ export interface Layout {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  background_color?: string;
 }
 
 export interface Ad {
