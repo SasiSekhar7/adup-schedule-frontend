@@ -307,7 +307,16 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import api from "@/api";
-import { Volume2, VolumeX, Monitor, PlayCircle, Layers, Type, Radio, AlertCircle } from "lucide-react";
+import {
+  Volume2,
+  VolumeX,
+  Monitor,
+  PlayCircle,
+  Layers,
+  Type,
+  Radio,
+  AlertCircle,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import Hls from "hls.js";
 
@@ -324,7 +333,7 @@ const HlsPlayer = ({ url, muted }: { url: string; muted: boolean }) => {
       hls.loadSource(url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(e => console.error("Autoplay blocked", e));
+        video.play().catch((e) => console.error("Autoplay blocked", e));
       });
       return () => hls.destroy();
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -332,7 +341,14 @@ const HlsPlayer = ({ url, muted }: { url: string; muted: boolean }) => {
     }
   }, [url]);
 
-  return <video ref={videoRef} autoPlay muted={muted} className="w-full h-full object-fill bg-black" />;
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      muted={muted}
+      className="w-full h-full object-fill bg-black"
+    />
+  );
 };
 
 // ================== TIZEN-STYLE WIDGET RENDERER ==================
@@ -349,20 +365,36 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
   // SCALING LOGIC: Makes huge TV fonts small for web preview
   const getScaledFont = (sizeStr: string) => {
     const num = parseInt(sizeStr || "24");
-    return Math.max(num * 0.4, 12) + "px"; 
+    return Math.max(num * 0.4, 12) + "px";
   };
 
   const containerStyle: React.CSSProperties = {
-    width: "100%", height: "100%", display: "flex", flexDirection: "column",
-    justifyContent: "center", alignItems: "center", backgroundColor: config.background || "#000",
-    color: config.color || "#fff", fontFamily: "sans-serif", overflow: "hidden", position: "relative"
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: config.background || "#000",
+    color: config.color || "#fff",
+    fontFamily: "sans-serif",
+    overflow: "hidden",
+    position: "relative",
   };
 
   if (widgetType === "clock_digital") {
     return (
       <div style={containerStyle}>
-        <div style={{ fontSize: getScaledFont(config.fontSize), fontWeight: "bold" }}>
-          {time.toLocaleTimeString('en-US', { timeZone: config.timezone || "Asia/Kolkata", hour12: config.format === "12h" })}
+        <div
+          style={{
+            fontSize: getScaledFont(config.fontSize),
+            fontWeight: "bold",
+          }}
+        >
+          {time.toLocaleTimeString("en-US", {
+            timeZone: config.timezone || "Asia/Kolkata",
+            hour12: config.format === "12h",
+          })}
         </div>
       </div>
     );
@@ -371,31 +403,64 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
   if (widgetType === "calendar") {
     return (
       <div style={containerStyle}>
-        <div style={{ fontSize: "12px", opacity: 0.8 }}>{time.toLocaleDateString('en-US', { month: 'short' })}</div>
-        <div style={{ fontSize: "28px", fontWeight: "bold" }}>{time.getDate()}</div>
+        <div style={{ fontSize: "12px", opacity: 0.8 }}>
+          {time.toLocaleDateString("en-US", { month: "short" })}
+        </div>
+        <div style={{ fontSize: "28px", fontWeight: "bold" }}>
+          {time.getDate()}
+        </div>
       </div>
     );
   }
 
   if (widgetType === "sliding_text" || widgetType === "ticker") {
     const speed = config.speed || 50;
-    const direction = config.direction === 'right' ? 'reverse' : 'normal';
+    const direction = config.direction === "right" ? "reverse" : "normal";
     return (
       <div style={{ ...containerStyle, alignItems: "flex-start" }}>
         <style>{`
           @keyframes marquee_loop { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-          .ticker-track { display: flex; width: max-content; animation: marquee_loop ${200/speed * 10}s linear infinite ${direction}; }
+          .ticker-track { display: flex; width: max-content; animation: marquee_loop ${(200 / speed) * 10}s linear infinite ${direction}; }
         `}</style>
         <div className="ticker-track">
-          <div style={{ whiteSpace: "nowrap", paddingRight: "100px", fontSize: getScaledFont(config.fontSize), fontWeight: "bold" }}>{config.text}</div>
-          <div style={{ whiteSpace: "nowrap", paddingRight: "100px", fontSize: getScaledFont(config.fontSize), fontWeight: "bold" }}>{config.text}</div>
+          <div
+            style={{
+              whiteSpace: "nowrap",
+              paddingRight: "100px",
+              fontSize: getScaledFont(config.fontSize),
+              fontWeight: "bold",
+            }}
+          >
+            {config.text}
+          </div>
+          <div
+            style={{
+              whiteSpace: "nowrap",
+              paddingRight: "100px",
+              fontSize: getScaledFont(config.fontSize),
+              fontWeight: "bold",
+            }}
+          >
+            {config.text}
+          </div>
         </div>
       </div>
     );
   }
 
   if (widgetType === "logo") {
-    return <div style={containerStyle}><img src={config.url} style={{ width: "100%", height: "100%", objectFit: config.fit || "contain" }} /></div>;
+    return (
+      <div style={containerStyle}>
+        <img
+          src={config.url}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: config.fit || "contain",
+          }}
+        />
+      </div>
+    );
   }
 
   return <div style={containerStyle}>{widgetType}</div>;
@@ -404,9 +469,12 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
 // ================== ZONE PLAYER (Handles Rotation & Carousels) ==================
 const ZonePlayer = ({ zone, scheduleData, zoneWidth, zoneHeight }: any) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0); 
+  const [subIndex, setSubIndex] = useState(0);
 
-  const items = useMemo(() => scheduleData?.content_items || [], [scheduleData]);
+  const items = useMemo(
+    () => scheduleData?.content_items || [],
+    [scheduleData],
+  );
   const activeItem = items[currentIndex];
 
   const nextItem = () => {
@@ -421,43 +489,71 @@ const ZonePlayer = ({ zone, scheduleData, zoneWidth, zoneHeight }: any) => {
     if (activeItem.content_type === "carousel") {
       const subItems = activeItem.content_data?.items || [];
       const currentSub = subItems[subIndex]?.Ad;
-      const timer = setTimeout(() => {
-        if (subIndex < subItems.length - 1) setSubIndex(s => s + 1);
-        else nextItem();
-      }, (currentSub?.duration || 10) * 1000);
+      const timer = setTimeout(
+        () => {
+          if (subIndex < subItems.length - 1) setSubIndex((s) => s + 1);
+          else nextItem();
+        },
+        (currentSub?.duration || 10) * 1000,
+      );
       return () => clearTimeout(timer);
     }
 
     // 2. STATIC CONTENT LOGIC (Images / Widgets)
-    const isVideo = activeItem.content_data?.url?.toLowerCase().endsWith(".mp4");
+    const isVideo = activeItem.content_data?.url
+      ?.toLowerCase()
+      .endsWith(".mp4");
     if (activeItem.content_type !== "live_content" && !isVideo) {
-      const timer = setTimeout(nextItem, (activeItem.content_data?.duration || 10) * 1000);
+      const timer = setTimeout(
+        nextItem,
+        (activeItem.content_data?.duration || 10) * 1000,
+      );
       return () => clearTimeout(timer);
     }
   }, [currentIndex, subIndex, items, activeItem]);
 
   if (!activeItem) return <div className="w-full h-full bg-[#0a0a0a]" />;
 
-  if (activeItem.content_type === "widget") return <WidgetRenderer item={activeItem} zoneWidth={zoneWidth} />;
+  if (activeItem.content_type === "widget")
+    return <WidgetRenderer item={activeItem} zoneWidth={zoneWidth} />;
 
-  if (activeItem.content_type === "live_content") return <HlsPlayer url={activeItem.content_data.url} muted={zone.is_muted} />;
+  if (activeItem.content_type === "live_content")
+    return (
+      <HlsPlayer url={activeItem.content_data.url} muted={zone.is_muted} />
+    );
 
   // Render Carousel or Single Ad
-  const mediaUrl = activeItem.content_type === "carousel" 
-    ? activeItem.content_data.items[subIndex]?.Ad?.url 
-    : activeItem.content_data?.url;
+  const mediaUrl =
+    activeItem.content_type === "carousel"
+      ? activeItem.content_data.items[subIndex]?.Ad?.url
+      : activeItem.content_data?.url;
 
   const isVideo = mediaUrl?.toLowerCase().includes(".mp4");
 
   return (
     <div className="w-full h-full bg-black">
       {isVideo ? (
-        <video key={mediaUrl} src={mediaUrl} autoPlay muted={zone.is_muted} onEnded={() => {
-          if (activeItem.content_type === "carousel" && subIndex < activeItem.content_data.items.length -1) setSubIndex(s => s + 1);
-          else nextItem();
-        }} className="w-full h-full object-fill" />
+        <video
+          key={mediaUrl}
+          src={mediaUrl}
+          autoPlay
+          muted={zone.is_muted}
+          onEnded={() => {
+            if (
+              activeItem.content_type === "carousel" &&
+              subIndex < activeItem.content_data.items.length - 1
+            )
+              setSubIndex((s) => s + 1);
+            else nextItem();
+          }}
+          className="w-full h-full object-fill"
+        />
       ) : (
-        <img key={mediaUrl} src={mediaUrl} className="w-full h-full object-fill" />
+        <img
+          key={mediaUrl}
+          src={mediaUrl}
+          className="w-full h-full object-fill"
+        />
       )}
     </div>
   );
@@ -477,13 +573,21 @@ export default function LayoutViewer() {
         const apiData = res.data;
         setLayout(apiData.layout);
         setGroupWiseData(apiData.group_wise_data || []);
-        if (apiData.group_wise_data?.length > 0) setSelectedGroup(apiData.group_wise_data[0]);
-      } catch (e) { console.error(e); }
+        if (apiData.group_wise_data?.length > 0)
+          setSelectedGroup(apiData.group_wise_data[0]);
+      } catch (e) {
+        console.error(e);
+      }
     };
     fetchSchedule();
   }, [layout_id]);
 
-  if (!layout) return <div className="h-screen flex items-center justify-center text-slate-400">Booting Signage Engine...</div>;
+  if (!layout)
+    return (
+      <div className="h-screen flex items-center justify-center text-slate-400">
+        Booting Signage Engine...
+      </div>
+    );
 
   const schedule = selectedGroup?.schedules?.[0];
   const previewW = layout.orientation === "landscape" ? 720 : 405;
@@ -492,59 +596,112 @@ export default function LayoutViewer() {
   return (
     <div className="p-8 bg-slate-50 min-h-screen text-slate-900 font-sans">
       <div className="max-w-[1400px] mx-auto space-y-8">
-        
         {/* PREVIEW CARD */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <div className="bg-white border border-slate-200  p-8 hover:shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
-               <div className="p-2 bg-blue-50 rounded-lg"><Monitor className="text-blue-600" size={24} /></div>
-               <div>
-                  <h1 className="text-xl font-bold">{layout.name}</h1>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{layout.resolution} • {layout.orientation}</p>
-               </div>
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Monitor className="text-blue-600" size={24} />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">{layout.name}</h1>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                  {layout.resolution} • {layout.orientation}
+                </p>
+              </div>
             </div>
-            <select className="bg-slate-100 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none" value={selectedGroup?.group_id} onChange={(e) => setSelectedGroup(groupWiseData.find(g => g.group_id === e.target.value))}>
-              {groupWiseData.map(g => <option key={g.group_id} value={g.group_id}>Group: {g.group_id.slice(0,8)}</option>)}
+            <select
+              className="bg-slate-100 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none"
+              value={selectedGroup?.group_id}
+              onChange={(e) =>
+                setSelectedGroup(
+                  groupWiseData.find((g) => g.group_id === e.target.value),
+                )
+              }
+            >
+              {groupWiseData.map((g) => (
+                <option key={g.group_id} value={g.group_id}>
+                  Group: {g.group_id.slice(0, 8)}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="flex justify-center bg-slate-50 py-12 rounded-2xl border-2 border-dashed border-slate-200">
-             <div className="rounded-sm overflow-hidden bg-black shadow-2xl border-[8px] border-slate-900 relative" style={{ width: previewW, height: previewH }}>
-                {layout.zones?.map((zone: any) => (
-                  <div key={zone.zone_id} className="absolute" style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.width}%`, height: `${zone.height}%`, zIndex: zone.z_index }}>
-                    <ZonePlayer zone={zone} zoneWidth={(zone.width/100)*previewW} zoneHeight={(zone.height/100)*previewH} scheduleData={schedule?.zones?.find((z: any) => z.zone_id === zone.zone_id)} />
-                  </div>
-                ))}
-             </div>
+            <div
+              className="rounded-sm overflow-hidden bg-black shadow-2xl border-[8px] border-slate-900 relative"
+              style={{ width: previewW, height: previewH }}
+            >
+              {layout.zones?.map((zone: any) => (
+                <div
+                  key={zone.zone_id}
+                  className="absolute"
+                  style={{
+                    left: `${zone.x}%`,
+                    top: `${zone.y}%`,
+                    width: `${zone.width}%`,
+                    height: `${zone.height}%`,
+                    zIndex: zone.z_index,
+                  }}
+                >
+                  <ZonePlayer
+                    zone={zone}
+                    zoneWidth={(zone.width / 100) * previewW}
+                    zoneHeight={(zone.height / 100) * previewH}
+                    scheduleData={schedule?.zones?.find(
+                      (z: any) => z.zone_id === zone.zone_id,
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* DETAILS BREAKDOWN */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {layout.zones.map((zone: any) => {
-            const zoneData = schedule?.zones?.find((z: any) => z.zone_id === zone.zone_id);
+            const zoneData = schedule?.zones?.find(
+              (z: any) => z.zone_id === zone.zone_id,
+            );
             return (
-              <div key={zone.zone_id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div
+                key={zone.zone_id}
+                className="bg-white border border-slate-200  overflow-hidden hover:shadow-sm"
+              >
                 <div className="px-5 py-4 bg-slate-50 border-b flex justify-between items-center">
                   <span className="font-bold text-slate-700">{zone.name}</span>
-                  <span className="text-[10px] font-black px-2 py-0.5 bg-blue-100 text-blue-700 rounded uppercase">{zone.content_type_allowed}</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 bg-gray-200 text-gray-700 rounded uppercase">
+                    {zone.content_type_allowed}
+                  </span>
                 </div>
                 <div className="p-4 space-y-4">
                   {zoneData?.content_items?.map((item: any) => (
-                    <div key={item.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <div
+                      key={item.id}
+                      className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3"
+                    >
                       <div className="flex justify-between">
-                         <span className={`text-[9px] px-2 py-0.5 rounded font-black text-white uppercase ${item.content_type === 'widget' ? 'bg-indigo-500' : item.content_type === 'carousel' ? 'bg-orange-500' : item.content_type === 'live_content' ? 'bg-red-500' : 'bg-blue-500'}`}>
-                           {item.content_type}
-                         </span>
-                         <span className="text-[10px] font-bold text-slate-300">ORD: {item.display_order}</span>
+                        <span
+                          className={`text-[9px] px-2 py-0.5 rounded font-black text-gray-500 uppercase bg-gray-200 `}
+                        >
+                          {item.content_type}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-300">
+                          ORD: {item.display_order}
+                        </span>
                       </div>
-                      <p className="text-sm font-bold text-slate-800">{item.content_data?.name || item.content_data?.type}</p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {item.content_data?.name || item.content_data?.type}
+                      </p>
 
                       {/* Widget Details */}
-                      {item.content_type === 'widget' && item.widget_config && (
+                      {item.content_type === "widget" && item.widget_config && (
                         <div className="bg-white p-3 rounded-xl border border-slate-200 text-[11px] space-y-1">
-                          <p className="text-slate-500 italic">"{item.widget_config.text}"</p>
-                          <div className="flex gap-3 text-[9px] font-black text-indigo-400 uppercase">
+                          <p className="text-slate-500 italic">
+                            "{item.widget_config.text}"
+                          </p>
+                          <div className="flex gap-3 text-[9px] font-black text-gray-400 uppercase">
                             <span>Size: {item.widget_config.fontSize}</span>
                             <span>Speed: {item.widget_config.speed}</span>
                           </div>
@@ -552,17 +709,29 @@ export default function LayoutViewer() {
                       )}
 
                       {/* Carousel Details */}
-                      {item.content_type === 'carousel' && item.content_data?.items && (
-                        <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-                          <p className="text-[9px] font-black text-orange-400 uppercase mb-1">Rotation Items:</p>
-                          {item.content_data.items.map((c:any, i:number) => (
-                            <div key={i} className="text-[10px] flex justify-between text-slate-600 font-medium">
-                              <span className="truncate w-3/4">{i+1}. {c.Ad?.name}</span>
-                              <span className="font-mono">{c.Ad?.duration}s</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {item.content_type === "carousel" &&
+                        item.content_data?.items && (
+                          <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
+                            <p className="text-[9px] font-black text-orange-400 uppercase mb-1">
+                              Rotation Items:
+                            </p>
+                            {item.content_data.items.map(
+                              (c: any, i: number) => (
+                                <div
+                                  key={i}
+                                  className="text-[10px] flex justify-between text-slate-600 font-medium"
+                                >
+                                  <span className="truncate w-3/4">
+                                    {i + 1}. {c.Ad?.name}
+                                  </span>
+                                  <span className="font-mono">
+                                    {c.Ad?.duration}s
+                                  </span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>
