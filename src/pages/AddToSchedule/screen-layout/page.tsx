@@ -2782,6 +2782,21 @@ export default function ScreenLayoutPage() {
 
   const handleSaveLayout = async () => {
     if (!currentBuilderState) return;
+
+    // VALIDATION
+    if (!currentBuilderState.zones || currentBuilderState.zones.length === 0) {
+      toast.error("Please add at least one zone before saving layout.");
+      return;
+    }
+
+    const invalidZones = currentBuilderState.zones.some(
+      (z: any) => z.width <= 0 || z.height <= 0,
+    );
+
+    if (invalidZones) {
+      toast.error("Invalid zone size detected.");
+      return;
+    }
     try {
       await saveLayout(currentBuilderState);
       await loadData();
