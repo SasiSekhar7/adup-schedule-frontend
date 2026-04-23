@@ -499,7 +499,7 @@ export default function ScheduleAddPage() {
         } else if (prop.enum) {
           defaultConfig[key] = prop.enum[0];
         } else if (prop.format === "date-time") {
-          defaultConfig[key] = new Date().toISOString().slice(0, 16); //  datetime-local format
+          defaultConfig[key] = new Date().toISOString(); //  datetime-local format
         } else if (prop.type === "number") {
           defaultConfig[key] = 0;
         } else {
@@ -1527,6 +1527,10 @@ export default function ScheduleAddPage() {
     if (schema.type === "number") return "number";
     return "text";
   };
+  const toLocalInput = (iso: string) => {
+    if (!iso) return "";
+    return new Date(iso).toISOString().slice(0, 16);
+  };
   // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
   //   if (!activeZone) return;
 
@@ -1553,8 +1557,47 @@ export default function ScheduleAddPage() {
 
   // const widgetItem = zoneContents[activeZone?.zone_id]?.content_items?.[0];
 
+  // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
+  //   if (!activeZone) return;
+
+  //   setZoneContents((prev: any) => {
+  //     const item = prev[activeZone.zone_id].content_items?.[0];
+
+  //     return {
+  //       ...prev,
+  //       [activeZone.zone_id]: {
+  //         ...prev[activeZone.zone_id],
+  //         content_items: [
+  //           {
+  //             ...item,
+
+  //             widget_config: {
+  //               ...item.widget_config,
+  //               [key]: value,
+  //             },
+
+  //             // ONLY for logo
+  //             ...(item.widget_type === "logo" && asset
+  //               ? {
+  //                   asset_id: asset.asset_id,
+  //                 }
+  //               : {}),
+  //           },
+  //         ],
+  //       },
+  //     };
+  //   });
+  // };
+
   const updateWidgetConfig = (key: string, value: string, asset?: any) => {
     if (!activeZone) return;
+
+    let finalValue = value;
+
+    // ✅ convert datetime-local → ISO
+    if (value && value.includes("T") && value.length === 16) {
+      finalValue = new Date(value).toISOString();
+    }
 
     setZoneContents((prev: any) => {
       const item = prev[activeZone.zone_id].content_items?.[0];
@@ -1566,13 +1609,11 @@ export default function ScheduleAddPage() {
           content_items: [
             {
               ...item,
-
               widget_config: {
                 ...item.widget_config,
-                [key]: value,
+                [key]: finalValue, // 👈 use converted value
               },
 
-              // ONLY for logo
               ...(item.widget_type === "logo" && asset
                 ? {
                     asset_id: asset.asset_id,
@@ -2800,7 +2841,12 @@ export default function ScheduleAddPage() {
                               ) : (
                                 <Input
                                   type={getInputType(schema)} //  IMPORTANT
-                                  value={value || ""}
+                                  // value={value || ""}
+                                  value={
+                                    schema.format === "date-time"
+                                      ? toLocalInput(value)
+                                      : value || ""
+                                  }
                                   onChange={(e) =>
                                     updateWidgetConfig(key, e.target.value)
                                   }
