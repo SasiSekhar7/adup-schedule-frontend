@@ -43,6 +43,9 @@ import {
   X,
   CalendarDays,
   Tv,
+  Smile,
+  Type,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -71,6 +74,17 @@ import {
 import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+
+const widgetIcons: any = {
+  clock_analog: Clock,
+  clock_digital: Clock,
+  calendar: CalendarDays,
+  logo: Image,
+  emoji: Smile,
+  sliding_text: Type,
+  ticker: Type,
+  countdown_timer: Timer,
+};
 
 type DateType = "today" | "specific_date" | "one_week" | "one_month";
 type Step = "select_layout" | "configure_layout";
@@ -2540,7 +2554,7 @@ export default function ScheduleAddPage() {
                         );
                       })} */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {widgets.map((widget) => {
+                      {/* {widgets.map((widget) => {
                         const isSelected =
                           widgetItem?.content_id ===
                           widget.widget_definition_id;
@@ -2562,7 +2576,53 @@ export default function ScheduleAddPage() {
                             )}
                           </div>
                         );
+                      })} */}
+
+                      {widgets.map((widget) => {
+                        const isSelected =
+                          widgetItem?.content_id ===
+                          widget.widget_definition_id;
+
+                        const Icon = widgetIcons[widget.type] || Type;
+
+                        return (
+                          <div
+                            key={widget.widget_definition_id}
+                            onClick={() => selectWidget(widget)}
+                            className={cn(
+                              "group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2",
+                              isSelected
+                                ? "border-primary bg-primary/5 ring-2 ring-primary shadow-sm"
+                                : "border-gray-200 hover:border-primary hover:shadow-sm",
+                            )}
+                          >
+                            {/* ICON */}
+                            <div
+                              className={cn(
+                                "p-3 rounded-lg transition",
+                                isSelected
+                                  ? "bg-primary text-white"
+                                  : "bg-gray-100 text-gray-600 group-hover:bg-primary/10",
+                              )}
+                            >
+                              <Icon size={20} />
+                            </div>
+
+                            {/* LABEL */}
+                            <p className="text-sm font-medium capitalize text-gray-700">
+                              {widget.type.replace("_", " ")}
+                            </p>
+
+                            {/* SELECTED BADGE */}
+                            {isSelected && (
+                              <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 bg-primary text-white rounded-full">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+                        );
                       })}
+
                       {/* {filteredWidgets.length > 0 ? (
                         filteredWidgets.map((widget) => {
                           const isSelected =
