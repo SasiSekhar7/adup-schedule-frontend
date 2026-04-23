@@ -507,19 +507,6 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
     return (
       <div style={containerStyle}>
         {/* TEXT */}
-        <div
-          style={{
-            fontSize: getScaledFont(config.fontSize),
-            fontWeight: "bold",
-          }}
-        >
-          {isBeforeStart
-            ? "Starting Soon"
-            : isAfterEnd
-              ? config.endedText || "Ended"
-              : formatTime(diff)}
-        </div>
-
         {/* RUNNING TEXT */}
         {!isBeforeStart && !isAfterEnd && config.runningText && (
           <div
@@ -532,6 +519,18 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
             {config.runningText}
           </div>
         )}
+        <div
+          style={{
+            fontSize: getScaledFont(config.fontSize),
+            fontWeight: "bold",
+          }}
+        >
+          {isBeforeStart
+            ? "Starting Soon"
+            : isAfterEnd
+              ? config.endedText || "Ended"
+              : formatTime(diff)}
+        </div>
       </div>
     );
   }
