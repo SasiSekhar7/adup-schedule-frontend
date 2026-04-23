@@ -833,7 +833,7 @@ export default function ScheduleAddPage() {
     setShowConfirmDialog(false);
     navigate("/schedule"); // only on success
 
-    alert("Schedule saved successfully!");
+    // alert("Schedule saved successfully!");
   };
 
   const scheduleJson = useMemo(() => {
