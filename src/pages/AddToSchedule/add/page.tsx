@@ -1444,6 +1444,34 @@ export default function ScheduleAddPage() {
     return { valid: true };
   };
 
+  const validateWidgetConfig = () => {
+    if (!activeZone) return { valid: true };
+
+    const item = zoneContents[activeZone.zone_id]?.content_items?.[0];
+    if (!item) return { valid: false, message: "Please select a widget" };
+
+    const widgetDef = widgets.find(
+      (w) => w.widget_definition_id === item.content_id,
+    );
+
+    if (!widgetDef) return { valid: true };
+
+    const requiredFields = widgetDef.config_schema.required || [];
+
+    for (let field of requiredFields) {
+      const value = item.widget_config?.[field];
+
+      if (value === undefined || value === null || value === "") {
+        return {
+          valid: false,
+          message: `${widgetDef.type}: "${field}" is required`,
+        };
+      }
+    }
+
+    return { valid: true };
+  };
+
   // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
   //   if (!activeZone) return;
 
@@ -2730,6 +2758,15 @@ export default function ScheduleAddPage() {
                 if (!result.valid) {
                   toast.error(result.message); // or toast.error()
                   return;
+                }
+
+                if (activeZone?.content_type_allowed === "widget") {
+                  const widgetValidation = validateWidgetConfig();
+
+                  if (!widgetValidation.valid) {
+                    toast.error(widgetValidation.message);
+                    return;
+                  }
                 }
 
                 setShowZoneDialog(false);

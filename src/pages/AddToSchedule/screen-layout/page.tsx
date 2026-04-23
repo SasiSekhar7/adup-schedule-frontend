@@ -2367,7 +2367,7 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
   return (
     <div className="flex gap-6 h-[calc(100vh-250px)] select-none">
       {/* SIDEBAR: CONTROLS */}
-      <div className="w-[340px] flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
+      <div className="w-[30%] flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
         <Card className="p-4 space-y-4 border-slate-200 shadow-sm flex-shrink-0">
           <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">
@@ -2811,7 +2811,7 @@ export default function ScreenLayoutPage() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 overflow-auto">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
