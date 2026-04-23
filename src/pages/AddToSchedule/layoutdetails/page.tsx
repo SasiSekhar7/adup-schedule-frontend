@@ -463,6 +463,79 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
     );
   }
 
+  if (widgetType === "countdown_timer") {
+    const [now, setNow] = useState(new Date());
+
+    useEffect(() => {
+      const interval = setInterval(() => setNow(new Date()), 1000);
+      return () => clearInterval(interval);
+    }, []);
+
+    const start = new Date(config.startTime);
+    const end = new Date(config.endTime);
+
+    const isBeforeStart = now < start;
+    const isAfterEnd = now > end;
+
+    let diff = 0;
+
+    if (!isBeforeStart && !isAfterEnd) {
+      diff = Math.max(end.getTime() - now.getTime(), 0);
+    }
+
+    // format helper
+    const formatTime = (ms: number) => {
+      const totalSeconds = Math.floor(ms / 1000);
+
+      const days = Math.floor(totalSeconds / (24 * 3600));
+      const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      switch (config.format) {
+        case "dd:hh:mm:ss":
+          return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        case "mm:ss":
+          return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        default:
+          return `${hours}:${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+    };
+
+    return (
+      <div style={containerStyle}>
+        {/* TEXT */}
+        <div
+          style={{
+            fontSize: getScaledFont(config.fontSize),
+            fontWeight: "bold",
+          }}
+        >
+          {isBeforeStart
+            ? "Starting Soon"
+            : isAfterEnd
+              ? config.endedText || "Ended"
+              : formatTime(diff)}
+        </div>
+
+        {/* RUNNING TEXT */}
+        {!isBeforeStart && !isAfterEnd && config.runningText && (
+          <div
+            style={{
+              marginTop: "6px",
+              fontSize: "12px",
+              opacity: 0.8,
+            }}
+          >
+            {config.runningText}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return <div style={containerStyle}>{widgetType}</div>;
 };
 
