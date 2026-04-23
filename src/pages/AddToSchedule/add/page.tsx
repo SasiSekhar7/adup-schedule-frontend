@@ -342,7 +342,7 @@ export default function ScheduleAddPage() {
       display_order:
         (zoneContents[activeZone.zone_id]?.content_items?.length || 0) + 1,
 
-      // ✅ default from global
+      //  default from global
       // start_time_date: startDate,
       // end_time_date: endDate,
       time_slots: [...timeSlots], // copy global slots
@@ -476,7 +476,7 @@ export default function ScheduleAddPage() {
       toast.error(err.error || err.message || "Upload failed");
     } finally {
       setUploading(false);
-      setSelectedFile(null); // ✅ reset
+      setSelectedFile(null); //  reset
     }
   };
 
@@ -493,13 +493,24 @@ export default function ScheduleAddPage() {
 
     Object.entries(widget.config_schema.properties).forEach(
       ([key, prop]: any) => {
-        defaultConfig[key] = prop.default ?? (prop.enum ? prop.enum[0] : "");
+        // defaultConfig[key] = prop.default ?? (prop.enum ? prop.enum[0] : "");
+        if (prop.default !== undefined) {
+          defaultConfig[key] = prop.default;
+        } else if (prop.enum) {
+          defaultConfig[key] = prop.enum[0];
+        } else if (prop.format === "date-time") {
+          defaultConfig[key] = new Date().toISOString().slice(0, 16); //  datetime-local format
+        } else if (prop.type === "number") {
+          defaultConfig[key] = 0;
+        } else {
+          defaultConfig[key] = "";
+        }
       },
     );
 
     const newItem = {
       id: generateId(),
-      content_id: widget.widget_definition_id, // ✅ IMPORTANT
+      content_id: widget.widget_definition_id, //  IMPORTANT
       content_type: "widget",
       name: widget.type,
       duration: 0,
@@ -507,9 +518,9 @@ export default function ScheduleAddPage() {
       widget_type: widget.type, // ADD THIS
       asset_id: null,
 
-      widget_config: defaultConfig, // ✅ SAVE CONFIG
+      widget_config: defaultConfig, //  SAVE CONFIG
 
-      // ✅ SAME AS MEDIA
+      //  SAME AS MEDIA
 
       time_slots: [...timeSlots],
     };
@@ -524,6 +535,7 @@ export default function ScheduleAddPage() {
       },
     }));
   };
+
   const updateItemSlots = (itemId: string, slots = []) => {
     if (!activeZone) return;
 
@@ -607,7 +619,7 @@ export default function ScheduleAddPage() {
 
     let allSlots: { start: number; end: number }[] = [];
 
-    // ✅ collect all slots from all items
+    //  collect all slots from all items
     content.content_items.forEach((item) => {
       (item.time_slots || []).forEach((slot) => {
         const start = timeToMinutes(slot.start);
@@ -621,7 +633,7 @@ export default function ScheduleAddPage() {
 
     if (allSlots.length === 0) return null;
 
-    // ✅ sort slots
+    //  sort slots
     const sorted = allSlots.sort((a, b) => a.start - b.start);
 
     let totalScheduled = 0;
@@ -631,7 +643,7 @@ export default function ScheduleAddPage() {
     const globalStart = timeToMinutes(globalTimeInfo.minTime);
     const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
 
-    // ✅ gap BEFORE first slot
+    //  gap BEFORE first slot
     if (sorted[0].start > globalStart) {
       gaps.push({
         start: minutesToTime(globalStart),
@@ -646,7 +658,7 @@ export default function ScheduleAddPage() {
 
       const next = sorted[i + 1];
 
-      // ✅ gap BETWEEN slots
+      //  gap BETWEEN slots
       if (next && next.start > current.end) {
         gaps.push({
           start: minutesToTime(current.end),
@@ -656,7 +668,7 @@ export default function ScheduleAddPage() {
       }
     }
 
-    // ✅ gap AFTER last slot
+    //  gap AFTER last slot
     const last = sorted[sorted.length - 1];
     if (last.end < globalEnd) {
       gaps.push({
@@ -721,7 +733,7 @@ export default function ScheduleAddPage() {
   // const filteredGroups = useMemo(() => {
   //   return groups
   //     .filter((g) => g.name?.toLowerCase().includes(groupFilter.toLowerCase()))
-  //     .slice(0, 10); // ✅ limit to 10
+  //     .slice(0, 10); //  limit to 10
   // }, [groups, groupFilter]);
 
   const getFilteredGroups = () => {
@@ -763,7 +775,7 @@ export default function ScheduleAddPage() {
     }
   };
 
-  const confirmSchedule = () => {
+  const confirmSchedule = async () => {
     if (!selectedLayout) return;
 
     const { startDate, endDate } = getDateRange();
@@ -795,9 +807,17 @@ export default function ScheduleAddPage() {
 
     console.log("schedule:", schedule);
 
-    saveSchedule(schedule);
+    // saveSchedule(schedule);
+    // setShowConfirmDialog(false);
+    // navigate("/schedule");
+    const result = await saveSchedule(schedule);
+
+    if (!result.success) {
+      return; //  stop navigation
+    }
+
     setShowConfirmDialog(false);
-    navigate("/schedule");
+    navigate("/schedule"); // only on success
 
     // alert("Schedule saved successfully!");
   };
@@ -1175,7 +1195,7 @@ export default function ScheduleAddPage() {
                   value={groupFilter}
                   onChange={(e) => {
                     setGroupFilter(e.target.value);
-                    setGroupPage(1); // ✅ reset page
+                    setGroupPage(1); //  reset page
                   }}
                 />
 
@@ -1341,7 +1361,7 @@ export default function ScheduleAddPage() {
           updated_at: new Date(ad.updated_at).toLocaleString(),
         }));
 
-        setAds(formatted); // ✅ IMPORTANT
+        setAds(formatted); //  IMPORTANT
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
@@ -1356,7 +1376,7 @@ export default function ScheduleAddPage() {
       try {
         const response = await api.get("/carousel/all");
 
-        setCarousels(response.data); // ✅ correct path
+        setCarousels(response.data); //  correct path
       } catch (err) {
         console.error(err);
       }
@@ -1426,7 +1446,7 @@ export default function ScheduleAddPage() {
       // totalScheduled += end - start;
     }
 
-    // ✅ 🚨 NEW CHECK (IMPORTANT)
+    //  🚨 NEW CHECK (IMPORTANT)
     // if (totalScheduled > totalAllowed) {
     //   return {
     //     valid: false,
@@ -1443,6 +1463,34 @@ export default function ScheduleAddPage() {
 
     return { valid: true };
   };
+
+  // const validateWidgetConfig = () => {
+  //   if (!activeZone) return { valid: true };
+
+  //   const item = zoneContents[activeZone.zone_id]?.content_items?.[0];
+  //   if (!item) return { valid: false, message: "Please select a widget" };
+
+  //   const widgetDef = widgets.find(
+  //     (w) => w.widget_definition_id === item.content_id,
+  //   );
+
+  //   if (!widgetDef) return { valid: true };
+
+  //   const requiredFields = widgetDef.config_schema.required || [];
+
+  //   for (let field of requiredFields) {
+  //     const value = item.widget_config?.[field];
+
+  //     if (value === undefined || value === null || value === "") {
+  //       return {
+  //         valid: false,
+  //         message: `${widgetDef.type}: "${field}" is required`,
+  //       };
+  //     }
+  //   }
+
+  //   return { valid: true };
+  // };
 
   const validateWidgetConfig = () => {
     if (!activeZone) return { valid: true };
@@ -1464,14 +1512,21 @@ export default function ScheduleAddPage() {
       if (value === undefined || value === null || value === "") {
         return {
           valid: false,
-          message: `${widgetDef.type}: "${field}" is required`,
+          message:
+            field === "url"
+              ? "Please select a logo"
+              : `${widgetDef.type}: "${field}" is required`,
         };
       }
     }
 
     return { valid: true };
   };
-
+  const getInputType = (schema: any) => {
+    if (schema.format === "date-time") return "datetime-local";
+    if (schema.type === "number") return "number";
+    return "text";
+  };
   // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
   //   if (!activeZone) return;
 
@@ -2536,21 +2591,15 @@ export default function ScheduleAddPage() {
                           </div>
                         ),
                       )} */}
-                      {Object.entries(widgetDef.config_schema.properties).map(
+                      {/* {Object.entries(widgetDef.config_schema.properties).map(
                         ([key, schema]: any) => {
-                          // ✅ LOGO SPECIAL CASE
+                         
                           if (widgetDef.type === "logo" && key === "url") {
                             return (
                               <div key={key} className="space-y-2">
                                 <Label>Select Logo</Label>
 
-                                {/* Dropdown */}
-                                {/* <Select
-                                  value={widgetItem.widget_config[key]}
-                                  onValueChange={(val) =>
-                                    updateWidgetConfig(key, val)
-                                  }
-                                > */}
+                                
                                 <Select
                                   value={widgetItem.widget_config[key]}
                                   onValueChange={(val) => {
@@ -2576,18 +2625,10 @@ export default function ScheduleAddPage() {
                                   </SelectContent>
                                 </Select>
 
-                                {/* Upload button */}
-                                {/* <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleUpload(file);
-                                  }}
-                                /> */}
+                                
                                 <div className="space-y-2">
                                   <div className="flex gap-2 items-center">
-                                    {/* File input */}
+                                  
                                     <Input
                                       type="file"
                                       accept="image/*"
@@ -2598,7 +2639,7 @@ export default function ScheduleAddPage() {
                                       }}
                                     />
 
-                                    {/* Upload Button */}
+                                    
                                     <Button
                                       disabled={!selectedFile || uploading}
                                       onClick={() =>
@@ -2610,7 +2651,7 @@ export default function ScheduleAddPage() {
                                     </Button>
                                   </div>
 
-                                  {/* Loader */}
+                                 
                                   {uploading && (
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                       <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
@@ -2648,6 +2689,118 @@ export default function ScheduleAddPage() {
                               ) : (
                                 <Input
                                   value={widgetItem.widget_config[key]}
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                />
+                              )}
+                            </div>
+                          );
+                        },
+                      )} */}
+                      {Object.entries(widgetDef.config_schema.properties).map(
+                        ([key, schema]: any) => {
+                          const value = widgetItem.widget_config[key];
+
+                          //  LOGO special case (already correct, keep it)
+                          if (widgetDef.type === "logo" && key === "url") {
+                            return (
+                              <div key={key} className="space-y-2">
+                                <Label>Select Logo</Label>
+
+                                <Select
+                                  value={widgetItem.widget_config[key]}
+                                  onValueChange={(val) => {
+                                    const selectedAsset = assets.find(
+                                      (a) => a.storage_key === val,
+                                    );
+
+                                    updateWidgetConfig(key, val, selectedAsset);
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select logo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {assets.map((asset) => (
+                                      <SelectItem
+                                        key={asset.id}
+                                        value={asset.storage_key}
+                                      >
+                                        {asset.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+
+                                <div className="space-y-2">
+                                  <div className="flex gap-2 items-center">
+                                    <Input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={uploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        setSelectedFile(file || null); // ❗ only store file
+                                      }}
+                                    />
+
+                                    <Button
+                                      disabled={!selectedFile || uploading}
+                                      onClick={() =>
+                                        selectedFile &&
+                                        handleUpload(selectedFile)
+                                      }
+                                    >
+                                      {uploading ? "Uploading..." : "Upload"}
+                                    </Button>
+                                  </div>
+
+                                  {uploading && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                                      Uploading...
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={key}>
+                              <Label>
+                                {key}
+                                {widgetDef.config_schema.required?.includes(
+                                  key,
+                                ) && (
+                                  <span className="text-red-500 ml-1">*</span>
+                                )}
+                              </Label>
+
+                              {/* ENUM */}
+                              {schema.enum ? (
+                                <Select
+                                  value={value}
+                                  onValueChange={(val) =>
+                                    updateWidgetConfig(key, val)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {schema.enum.map((opt: any) => (
+                                      <SelectItem key={opt} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  type={getInputType(schema)} //  IMPORTANT
+                                  value={value || ""}
                                   onChange={(e) =>
                                     updateWidgetConfig(key, e.target.value)
                                   }
