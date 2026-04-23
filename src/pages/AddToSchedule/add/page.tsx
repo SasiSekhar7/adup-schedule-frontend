@@ -824,16 +824,16 @@ export default function ScheduleAddPage() {
     // saveSchedule(schedule);
     // setShowConfirmDialog(false);
     // navigate("/schedule");
-    // const result = await saveSchedule(schedule);
+    const result = await saveSchedule(schedule);
 
-    // if (!result.success) {
-    //   return; //  stop navigation
-    // }
+    if (!result.success) {
+      return; //  stop navigation
+    }
 
-    // setShowConfirmDialog(false);
-    // navigate("/schedule"); // only on success
+    setShowConfirmDialog(false);
+    navigate("/schedule"); // only on success
 
-    // alert("Schedule saved successfully!");
+    alert("Schedule saved successfully!");
   };
 
   const scheduleJson = useMemo(() => {
@@ -1546,16 +1546,11 @@ export default function ScheduleAddPage() {
   //   return new Date(iso).toISOString().slice(0, 16);
   // };
 
-  const toLocalInput = (iso) => {
+const toLocalInput = (iso: string) => {
   if (!iso) return "";
-  // If the stored value is already a local string, just return it
-  if (!iso.endsWith("Z") && iso.includes("T")) return iso;
-  
-  // If it IS an ISO string, convert it to local for the input
-  const date = new Date(iso);
-  const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
-  const localISOTime = new Date(date - offset).toISOString().slice(0, 16);
-  return localISOTime;
+  // Just take the date and time part, ignore the 'Z' and seconds
+  // This ensures "2026-04-23T17:00:00.000Z" shows as "2026-04-23T17:00"
+  return iso.substring(0, 16);
 };
 
   // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
@@ -1625,10 +1620,14 @@ export default function ScheduleAddPage() {
     const schema = widgetDef?.config_schema?.properties?.[key];
 
     //  convert datetime-local → ISO
-    if (value && value.includes("T") && value.length === 16) {
-      // finalValue = new Date(value).toISOString();
-      finalValue = value
-    }
+   if (value && value.includes("T") && value.length === 16) {
+    const localDate = new Date(value);
+    
+    // This is the standard way to get an ISO string while 
+    // preserving the local time you actually picked.
+    const offset = localDate.getTimezoneOffset() * 60000;
+    finalValue = new Date(localDate.getTime() - offset).toISOString();
+  }
 
     // FIX 1: number conversion
     if (schema?.type === "number") {
