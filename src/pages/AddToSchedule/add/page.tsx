@@ -824,14 +824,14 @@ export default function ScheduleAddPage() {
     // saveSchedule(schedule);
     // setShowConfirmDialog(false);
     // navigate("/schedule");
-    const result = await saveSchedule(schedule);
+    // const result = await saveSchedule(schedule);
 
-    if (!result.success) {
-      return; //  stop navigation
-    }
+    // if (!result.success) {
+    //   return; //  stop navigation
+    // }
 
-    setShowConfirmDialog(false);
-    navigate("/schedule"); // only on success
+    // setShowConfirmDialog(false);
+    // navigate("/schedule"); // only on success
 
     // alert("Schedule saved successfully!");
   };
@@ -1619,12 +1619,20 @@ export default function ScheduleAddPage() {
   const updateWidgetConfig = (key: string, value: string, asset?: any) => {
     if (!activeZone) return;
 
-    let finalValue = value;
+    let finalValue: any = value;
 
-    // ✅ convert datetime-local → ISO
+    //get schema
+    const schema = widgetDef?.config_schema?.properties?.[key];
+
+    //  convert datetime-local → ISO
     if (value && value.includes("T") && value.length === 16) {
       // finalValue = new Date(value).toISOString();
       finalValue = value
+    }
+
+    // FIX 1: number conversion
+    if (schema?.type === "number") {
+      finalValue = value === "" ? "" : Number(value);
     }
 
     setZoneContents((prev: any) => {
