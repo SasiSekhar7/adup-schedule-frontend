@@ -2797,6 +2797,7 @@ export default function ScreenLayoutPage() {
       toast.error("Invalid zone size detected.");
       return;
     }
+
     try {
       await saveLayout(currentBuilderState);
       await loadData();
