@@ -682,6 +682,8 @@ export default function Schedule() {
         throw new Error("Failed to fetch schedules");
       }
 
+      console.log("response", response);
+
       const transformedSchedules: Schedule[] = [];
 
       // Helper functions for transformation
@@ -724,8 +726,8 @@ export default function Schedule() {
 
       const transformContent = (
         content: any,
-        type: "Ad" | "Live Content" | "Carousel",
-        contentType: "ad" | "live_content" | "carousel",
+        type: "Ad" | "Live Content" | "Carousel" | "Layout",
+        contentType: "ad" | "live_content" | "carousel" | "layout",
       ) => {
         const avgProgress =
           content.groups.reduce((sum: number, group: ApiGroup) => {
@@ -812,6 +814,14 @@ export default function Schedule() {
             transformContent(carousel, "Carousel", "carousel"),
         );
         transformedSchedules.push(...carouselSchedules);
+      }
+
+      // Transform layouts
+      if ((response as any).layouts) {
+        const layoutSchedules = (response as any).layouts.map((layout: any) =>
+          transformContent(layout, "Layout", "layout"),
+        );
+        transformedSchedules.push(...layoutSchedules);
       }
 
       setSchedules(transformedSchedules);
@@ -925,16 +935,23 @@ export default function Schedule() {
           <div>
             <Link
               to={
+                // schedule.contentType === "live_content"
+                //   ? `/live-content/${schedule.id}`
+                //   : schedule.contentType === "carousel"
+                //     ? `/carousels/${schedule.id}`
+                //     : `/ads/${schedule.id}`
                 schedule.contentType === "live_content"
-                  ? `/live-content/${schedule.id}`
+                  ? `/live-content-preview/${schedule.id}`
                   : schedule.contentType === "carousel"
                     ? `/carousels/${schedule.id}`
-                    : `/ads/${schedule.id}`
+                    : schedule.contentType === "ad"
+                      ? `/ads/${schedule.id}`
+                      : `/layout-details/${schedule.id}`
               }
               className="flex items-center gap-1"
             >
               <p className="font-medium text-foreground cursor-pointer flex justify-center align-middle gap-1 ">
-                {schedule.name}{" "}
+                {schedule.name}
               </p>
               <ExternalLinkIcon className="h-4 w-4 text-center text-blue-900 " />
             </Link>
@@ -1245,6 +1262,7 @@ export default function Schedule() {
                 <SelectItem value="ad">Ad</SelectItem>
                 <SelectItem value="live content">Live Content</SelectItem>
                 <SelectItem value="carousel">Carousel</SelectItem>
+                <SelectItem value="layout">Layout</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1339,7 +1357,7 @@ export default function Schedule() {
                         <Link
                           to={
                             schedule.contentType === "live_content"
-                              ? `/live-content/${schedule.id}`
+                              ? `/live-content-preview/${schedule.id}`
                               : schedule.contentType === "carousel"
                                 ? `/carousels/${schedule.id}`
                                 : `/ads/${schedule.id}`

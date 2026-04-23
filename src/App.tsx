@@ -13,9 +13,15 @@ import Account from "./pages/Account";
 import ApkVersionsPage from "./pages/ApkVersions";
 import Plans from "./pages/Plans";
 import AdminPlans from "./pages/Plans/admimIndex";
+
 import StreamProvidersPage from "./pages/StreamProviders";
 import ProviderChannelsPage from "./pages/StreamProviders/components/providerChannelsPage";
 import ChannelDetailPage from "./pages/StreamProviders/components/channelDetailsPage";
+
+import ExportDetails from "./pages/ExportDetails";
+import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
+import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
+import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -59,10 +65,37 @@ function App() {
             />
 
             <Route
+              path="/screen-layout"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ScreenLayoutPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/layout-details/:layout_id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ScheduleAddPageDetails />
+                </Suspense>
+              }
+            />
+
+            <Route
               path="/all-plans"
               element={
                 <Suspense fallback={<Loading />}>
                   <AdminPlans />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/all-exports"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ExportDetails />
                 </Suspense>
               }
             />
@@ -272,6 +305,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <CreateLiveContent />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/live-content-preview/:id"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <PreviewLiveContent />
                 </Suspense>
               }
             />

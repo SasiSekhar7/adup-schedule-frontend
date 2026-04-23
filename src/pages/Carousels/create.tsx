@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Trash2,
-  GripVertical,
-  Upload,
-  ArrowLeft,
-  Save
-} from "lucide-react";
+import { Trash2, GripVertical, Upload, ArrowLeft, Save } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,21 +18,21 @@ import api from "@/api";
 
 // File upload utility functions
 const getFileExtension = (filename: string): string => {
-  return filename.substring(filename.lastIndexOf('.'));
+  return filename.substring(filename.lastIndexOf("."));
 };
 
 const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 // Single part upload function for files ≤ 50MB using signed URL
 async function uploadSingleFile(
   file: File,
-  onProgress?: (progress: number, status: string) => void
+  onProgress?: (progress: number, status: string) => void,
 ) {
   const fileExtension = getFileExtension(file.name);
   const generatedFileName = `ad-${Date.now()}${fileExtension}`;
@@ -71,7 +65,12 @@ async function uploadSingleFile(
 // Multipart upload function for large files
 async function uploadLargeFile(
   file: File,
-  onProgress?: (progress: number, status: string, speed: string, timeLeft: string) => void
+  onProgress?: (
+    progress: number,
+    status: string,
+    speed: string,
+    timeLeft: string,
+  ) => void,
 ) {
   const fileExtension = getFileExtension(file.name);
   const generatedFileName = `ad-${Date.now()}${fileExtension}`;
@@ -110,7 +109,9 @@ async function uploadLargeFile(
     });
 
     if (!uploadResponse.ok) {
-      throw new Error(`Part ${i + 1} upload failed: ${uploadResponse.statusText}`);
+      throw new Error(
+        `Part ${i + 1} upload failed: ${uploadResponse.statusText}`,
+      );
     }
 
     const etag = uploadResponse.headers.get("ETag");
@@ -127,14 +128,14 @@ async function uploadLargeFile(
     const remainingBytes = file.size - uploadedBytes;
     const timeLeft = remainingBytes / speed;
 
-    const speedFormatted = formatBytes(speed) + '/s';
-    const timeLeftFormatted = timeLeft > 0 ? Math.round(timeLeft) + 's' : '0s';
+    const speedFormatted = formatBytes(speed) + "/s";
+    const timeLeftFormatted = timeLeft > 0 ? Math.round(timeLeft) + "s" : "0s";
 
     onProgress?.(
       progress,
       `Uploading part ${i + 1}/${urls.length}... ${formatBytes(uploadedBytes)} / ${formatBytes(file.size)}`,
       speedFormatted,
-      timeLeftFormatted
+      timeLeftFormatted,
     );
   }
 
@@ -154,17 +155,15 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Ad {
   ad_id: string;
@@ -194,20 +193,15 @@ function SortableCarouselItem({
   item,
   onRemove,
   onDurationChange,
-  onItemUpdate
+  onItemUpdate,
 }: {
   item: CarouselItem;
   onRemove: () => void;
   onDurationChange: (duration: number) => void;
   onItemUpdate?: (updates: Partial<CarouselItem>) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
 
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -233,21 +227,15 @@ function SortableCarouselItem({
       let uploadResult;
 
       if (useMultipart) {
-        uploadResult = await uploadLargeFile(
-          file,
-          (progress, status) => {
-            setUploadProgress(progress);
-            setUploadStatus(status);
-          }
-        );
+        uploadResult = await uploadLargeFile(file, (progress, status) => {
+          setUploadProgress(progress);
+          setUploadStatus(status);
+        });
       } else {
-        uploadResult = await uploadSingleFile(
-          file,
-          (progress, status) => {
-            setUploadProgress(progress);
-            setUploadStatus(status);
-          }
-        );
+        uploadResult = await uploadSingleFile(file, (progress, status) => {
+          setUploadProgress(progress);
+          setUploadStatus(status);
+        });
       }
 
       onItemUpdate({ file_url: uploadResult.url });
@@ -291,7 +279,9 @@ function SortableCarouselItem({
                 type="number"
                 placeholder="Duration (seconds)"
                 value={item.duration || ""}
-                onChange={(e) => onDurationChange(parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  onDurationChange(parseInt(e.target.value) || 0)
+                }
               />
             </div>
 
@@ -318,7 +308,9 @@ function SortableCarouselItem({
                   {uploading ? "Uploading..." : "Upload File"}
                 </Button>
                 {item.file_url && (
-                  <span className="text-sm text-green-600">✓ File uploaded</span>
+                  <span className="text-sm text-green-600">
+                    ✓ File uploaded
+                  </span>
                 )}
               </div>
 
@@ -342,7 +334,9 @@ function SortableCarouselItem({
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-medium">{item.ad?.name || item.name || "Unknown Ad"}</p>
+                <p className="font-medium">
+                  {item.ad?.name || item.name || "Unknown Ad"}
+                </p>
                 <Badge variant="outline">Existing</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -351,7 +345,9 @@ function SortableCarouselItem({
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
-                <Label htmlFor={`duration-${item.id}`} className="text-xs">Duration:</Label>
+                <Label htmlFor={`duration-${item.id}`} className="text-xs">
+                  Duration:
+                </Label>
                 <Input
                   id={`duration-${item.id}`}
                   type="number"
@@ -382,18 +378,21 @@ export default function CreateCarousel() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
-  
+
   const [carouselName, setCarouselName] = useState("");
   const [items, setItems] = useState<CarouselItem[]>([]);
   const [availableAds, setAvailableAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingAds, setLoadingAds] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectOpen, setSelectOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -407,7 +406,13 @@ export default function CreateCarousel() {
     try {
       setLoadingAds(true);
       const response = await api.get<AdsResponse>("/ads/all");
-      setAvailableAds(response?.ads?.filter((ad: Ad) => ad.status === "completed") || (response as any).ads?.filter((ad: Ad) => ad.status === "completed") || []);
+      setAvailableAds(
+        response?.ads?.filter((ad: Ad) => ad.status === "completed") ||
+          (response as any).ads?.filter(
+            (ad: Ad) => ad.status === "completed",
+          ) ||
+          [],
+      );
     } catch (error) {
       console.error("Error fetching ads:", error);
       toast.error("Failed to fetch available ads");
@@ -418,21 +423,23 @@ export default function CreateCarousel() {
 
   const fetchCarouselData = async () => {
     if (!id) return;
-    
+
     try {
       setLoading(true);
       const response = await api.get(`/carousel/${id}`);
       const carousel = response.data;
-      
+
       setCarouselName(carousel.name);
-      setItems(carousel.items?.map((item: any) => ({
-        id: item.carousel_item_id,
-        ad_id: item.Ad.ad_id,
-        name: item.Ad.name,
-        duration: item.Ad.duration,
-        display_order: item.display_order,
-        isNew: false
-      })) || []);
+      setItems(
+        carousel.items?.map((item: any) => ({
+          id: item.carousel_item_id,
+          ad_id: item.Ad.ad_id,
+          name: item.Ad.name,
+          duration: item.Ad.duration,
+          display_order: item.display_order,
+          isNew: false,
+        })) || [],
+      );
     } catch (error) {
       console.error("Error fetching carousel:", error);
       toast.error("Failed to fetch carousel data");
@@ -443,7 +450,7 @@ export default function CreateCarousel() {
   };
 
   const addExistingAd = (adId: string) => {
-    const ad = availableAds.find(a => a.ad_id === adId);
+    const ad = availableAds.find((a) => a.ad_id === adId);
     if (!ad) return;
 
     const newItem: CarouselItem = {
@@ -452,10 +459,13 @@ export default function CreateCarousel() {
       name: ad.name,
       duration: ad.duration,
       display_order: items.length + 1,
-      isNew: false
+      isNew: false,
     };
 
     setItems([...items, newItem]);
+    
+    setSearch("");
+    setSelectOpen(false);
   };
 
   const addNewAd = () => {
@@ -465,26 +475,28 @@ export default function CreateCarousel() {
       duration: 0,
       file_url: "",
       display_order: items.length + 1,
-      isNew: true
+      isNew: true,
     };
 
     setItems([...items, newItem]);
   };
 
   const removeItem = (itemId: string) => {
-    setItems(items.filter(item => item.id !== itemId));
+    setItems(items.filter((item) => item.id !== itemId));
   };
 
   const updateItem = (itemId: string, updates: Partial<CarouselItem>) => {
-    setItems(items.map(item =>
-      item.id === itemId ? { ...item, ...updates } : item
-    ));
+    setItems(
+      items.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item,
+      ),
+    );
   };
 
   const updateItemDuration = (itemId: string, duration: number) => {
-    setItems(items.map(item =>
-      item.id === itemId ? { ...item, duration } : item
-    ));
+    setItems(
+      items.map((item) => (item.id === itemId ? { ...item, duration } : item)),
+    );
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -500,7 +512,7 @@ export default function CreateCarousel() {
         // Update display_order
         return newItems.map((item, index) => ({
           ...item,
-          display_order: index + 1
+          display_order: index + 1,
         }));
       });
     }
@@ -518,8 +530,10 @@ export default function CreateCarousel() {
     }
 
     // Validate new ads
-    const invalidNewAds = items.filter(item => 
-      item.isNew && (!item.name?.trim() || !item.duration || !item.file_url?.trim())
+    const invalidNewAds = items.filter(
+      (item) =>
+        item.isNew &&
+        (!item.name?.trim() || !item.duration || !item.file_url?.trim()),
     );
 
     if (invalidNewAds.length > 0) {
@@ -529,24 +543,24 @@ export default function CreateCarousel() {
 
     try {
       setLoading(true);
-      
+
       const payload = {
         name: carouselName,
-        items: items.map(item => {
+        items: items.map((item) => {
           if (item.isNew) {
             return {
               name: item.name,
               duration: item.duration,
               file_url: item.file_url,
-              display_order: item.display_order
+              display_order: item.display_order,
             };
           } else {
             return {
               ad_id: item.ad_id,
-              display_order: item.display_order
+              display_order: item.display_order,
             };
           }
-        })
+        }),
       };
 
       if (isEdit) {
@@ -581,7 +595,11 @@ export default function CreateCarousel() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/carousels")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/carousels")}
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -589,7 +607,9 @@ export default function CreateCarousel() {
             {isEdit ? "Edit Carousel" : "Create Carousel"}
           </h1>
           <p className="text-muted-foreground">
-            {isEdit ? "Update your carousel configuration" : "Create a new carousel with multiple ads"}
+            {isEdit
+              ? "Update your carousel configuration"
+              : "Create a new carousel with multiple ads"}
           </p>
         </div>
       </div>
@@ -621,16 +641,42 @@ export default function CreateCarousel() {
               <div className="flex items-center justify-between">
                 <CardTitle>Carousel Items</CardTitle>
                 <div className="flex gap-2">
-                  <Select onValueChange={addExistingAd}>
-                    <SelectTrigger className="w-[200px]">
+                  <Select
+  value={selectedValue}
+  onValueChange={(value) => {
+    addExistingAd(value);
+    setSelectedValue(""); // ✅ reset selection
+    setSearch("");        // ✅ clear search
+  }}
+>
+                    <SelectTrigger className="w-[220px]">
                       <SelectValue placeholder="Add existing ad" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {availableAds.map((ad) => (
-                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
-                          {ad.name}
-                        </SelectItem>
-                      ))}
+
+                    <SelectContent className="w-[220px]">
+                      <div
+                        className="p-2"
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Input
+                          placeholder="Search ads..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="h-8"
+                        />
+                      </div>
+
+                      {availableAds
+                        .filter((ad) =>
+                          ad.name.toLowerCase().includes(search.toLowerCase()),
+                        )
+                        .map((ad) => (
+                          <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                            {ad.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <Button onClick={addNewAd} variant="outline" size="sm">
@@ -643,7 +689,9 @@ export default function CreateCarousel() {
             <CardContent>
               {items.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>No items added yet. Add existing ads or create new ones.</p>
+                  <p>
+                    No items added yet. Add existing ads or create new ones.
+                  </p>
                 </div>
               ) : (
                 <DndContext
@@ -651,15 +699,22 @@ export default function CreateCarousel() {
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
                 >
-                  <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+                  <SortableContext
+                    items={items.map((item) => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
                     <div className="space-y-3">
                       {items.map((item) => (
                         <SortableCarouselItem
                           key={item.id}
                           item={item}
                           onRemove={() => removeItem(item.id)}
-                          onDurationChange={(duration) => updateItemDuration(item.id, duration)}
-                          onItemUpdate={(updates) => updateItem(item.id, updates)}
+                          onDurationChange={(duration) =>
+                            updateItemDuration(item.id, duration)
+                          }
+                          onItemUpdate={(updates) =>
+                            updateItem(item.id, updates)
+                          }
                         />
                       ))}
                     </div>
@@ -685,13 +740,21 @@ export default function CreateCarousel() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Duration:</span>
                 <span className="font-medium">
-                  {Math.floor(items.reduce((sum, item) => sum + (item.duration || 0), 0) / 60)}m{" "}
-                  {items.reduce((sum, item) => sum + (item.duration || 0), 0) % 60}s
+                  {Math.floor(
+                    items.reduce((sum, item) => sum + (item.duration || 0), 0) /
+                      60,
+                  )}
+                  m{" "}
+                  {items.reduce((sum, item) => sum + (item.duration || 0), 0) %
+                    60}
+                  s
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">New Ads:</span>
-                <span className="font-medium">{items.filter(item => item.isNew).length}</span>
+                <span className="font-medium">
+                  {items.filter((item) => item.isNew).length}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -702,7 +765,9 @@ export default function CreateCarousel() {
               <div className="space-y-3">
                 <Button
                   onClick={handleSubmit}
-                  disabled={loading || !carouselName.trim() || items.length === 0}
+                  disabled={
+                    loading || !carouselName.trim() || items.length === 0
+                  }
                   className="w-full"
                 >
                   {loading ? (
