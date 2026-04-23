@@ -97,11 +97,11 @@ export interface ContentItem {
   display_order: number;
   start_time?: string;
   end_time?: string;
-  // ✅ NEW
+  //  NEW
   // start_time_date?: string; // ISO date (global range)
   // end_time_date?: string;
 
-  // ✅ NEW
+  //  NEW
   widget_config?: Record<string, any>;
 
   time_slots?: { start: string; end: string }[];
@@ -427,7 +427,7 @@ export async function getLayouts(): Promise<Layout[]> {
 
     console.log("res", res.data);
 
-    // ✅ Assuming API response:
+    //  Assuming API response:
     // { status: true, data: [...] }
 
     return res.data || [];
@@ -466,10 +466,10 @@ export async function saveLayout(layout: Layout): Promise<void> {
     let res;
 
     if (layout.layout_id && layout.layout_id !== "") {
-      // ✅ EDIT (UPDATE)
+      //  EDIT (UPDATE)
       res = await api.put(`/layout/template/${layout.layout_id}`, layout);
     } else {
-      // ✅ CREATE
+      //  CREATE
       res = await api.post("/layout/template", layout);
     }
 
@@ -514,6 +514,18 @@ export function getSchedules(): ScheduleConfig[] {
 //   localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
 // }
 
+// export async function saveSchedule(schedule: ScheduleConfig) {
+//   try {
+//     const res = await api.post("/layout/schedule", schedule);
+
+//     console.log("Schedule saved:", res.data);
+
+//     toast.success(res?.data?.message || "Schedule saved successfully");
+//   } catch (error: any) {
+//     console.error("Error saving schedule:", error);
+//     toast.error(error?.message || "Something went wrong ❌");
+//   }
+// }
 export async function saveSchedule(schedule: ScheduleConfig) {
   try {
     const res = await api.post("/layout/schedule", schedule);
@@ -521,9 +533,19 @@ export async function saveSchedule(schedule: ScheduleConfig) {
     console.log("Schedule saved:", res.data);
 
     toast.success(res?.data?.message || "Schedule saved successfully");
+
+    return { success: true }; //  IMPORTANT
   } catch (error: any) {
     console.error("Error saving schedule:", error);
-    toast.error(error?.message || "Something went wrong ❌");
+
+    toast.error(
+      error?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong ",
+    );
+
+    return { success: false }; // IMPORTANT
   }
 }
 
