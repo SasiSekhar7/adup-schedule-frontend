@@ -1547,16 +1547,16 @@ export default function ScheduleAddPage() {
   // };
 
   const toLocalInput = (iso) => {
-  if (!iso) return "";
-  // If the stored value is already a local string, just return it
-  if (!iso.endsWith("Z") && iso.includes("T")) return iso;
-  
-  // If it IS an ISO string, convert it to local for the input
-  const date = new Date(iso);
-  const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
-  const localISOTime = new Date(date - offset).toISOString().slice(0, 16);
-  return localISOTime;
-};
+    if (!iso) return "";
+    // If the stored value is already a local string, just return it
+    if (!iso.endsWith("Z") && iso.includes("T")) return iso;
+
+    // If it IS an ISO string, convert it to local for the input
+    const date = new Date(iso);
+    const offset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+    const localISOTime = new Date(date - offset).toISOString().slice(0, 16);
+    return localISOTime;
+  };
 
   // const updateWidgetConfig = (key: string, value: string, asset?: any) => {
   //   if (!activeZone) return;
@@ -1627,7 +1627,7 @@ export default function ScheduleAddPage() {
     //  convert datetime-local → ISO
     if (value && value.includes("T") && value.length === 16) {
       // finalValue = new Date(value).toISOString();
-      finalValue = value
+      finalValue = value;
     }
 
     // FIX 1: number conversion
