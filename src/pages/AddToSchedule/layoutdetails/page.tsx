@@ -535,6 +535,85 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
       </div>
     );
   }
+  if (widgetType === "clock_analog") {
+    const seconds = time.getSeconds();
+    const minutes = time.getMinutes();
+    const hours = time.getHours();
+
+    const secDeg = seconds * 6;
+    const minDeg = minutes * 6 + seconds * 0.1;
+    const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+
+    return (
+      <div style={containerStyle}>
+        <div
+          style={{
+            width: "80%",
+            height: "80%",
+            borderRadius: "50%",
+            border: "4px solid white",
+            position: "relative",
+          }}
+        >
+          {/* Hour */}
+          <div
+            style={{
+              position: "absolute",
+              width: "4px",
+              height: "25%",
+              background: "white",
+              top: "25%",
+              left: "50%",
+              transform: `translateX(-50%) rotate(${hourDeg}deg)`,
+              transformOrigin: "bottom",
+            }}
+          />
+
+          {/* Minute */}
+          <div
+            style={{
+              position: "absolute",
+              width: "3px",
+              height: "35%",
+              background: "white",
+              top: "15%",
+              left: "50%",
+              transform: `translateX(-50%) rotate(${minDeg}deg)`,
+              transformOrigin: "bottom",
+            }}
+          />
+
+          {/* Second */}
+          <div
+            style={{
+              position: "absolute",
+              width: "2px",
+              height: "40%",
+              background: "red",
+              top: "10%",
+              left: "50%",
+              transform: `translateX(-50%) rotate(${secDeg}deg)`,
+              transformOrigin: "bottom",
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (widgetType === "emoji") {
+    return (
+      <div style={containerStyle}>
+        <div
+          style={{
+            fontSize: (config.size || 48) * 0.8,
+          }}
+        >
+          {config.emoji || "🙂"}
+        </div>
+      </div>
+    );
+  }
 
   return <div style={containerStyle}>{widgetType}</div>;
 };
