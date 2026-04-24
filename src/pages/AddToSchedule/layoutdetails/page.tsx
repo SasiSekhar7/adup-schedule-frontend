@@ -471,8 +471,10 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
       return () => clearInterval(interval);
     }, []);
 
-    const start = new Date(config.startTime);
-    const end = new Date(config.endTime);
+    // const start = new Date(config.startTime);
+    // const end = new Date(config.endTime);
+    const start = useMemo(() => new Date(config.startTime), [config.startTime]);
+    const end = useMemo(() => new Date(config.endTime), [config.endTime]);
 
     const isBeforeStart = now < start;
     const isAfterEnd = now > end;
