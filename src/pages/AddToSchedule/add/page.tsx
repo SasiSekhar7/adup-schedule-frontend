@@ -2888,7 +2888,9 @@ export default function ScheduleAddPage() {
                               </div>
                             );
                           }
-
+                          const isColorField =
+                            key.toLowerCase().includes("color") ||
+                            key === "background";
                           return (
                             <div key={key}>
                               <Label>
@@ -2901,7 +2903,7 @@ export default function ScheduleAddPage() {
                               </Label>
 
                               {/* ENUM */}
-                              {schema.enum ? (
+                              {/* {schema.enum ? (
                                 <Select
                                   value={value}
                                   onValueChange={(val) =>
@@ -2923,6 +2925,58 @@ export default function ScheduleAddPage() {
                                 <Input
                                   type={getInputType(schema)} //  IMPORTANT
                                   // value={value || ""}
+                                  value={
+                                    schema.format === "date-time"
+                                      ? toLocalInput(value)
+                                      : value || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                />
+                              )} */}
+                              {schema.enum ? (
+                                <Select
+                                  value={value}
+                                  onValueChange={(val) =>
+                                    updateWidgetConfig(key, val)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {schema.enum.map((opt: any) => (
+                                      <SelectItem key={opt} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : isColorField ? (
+                                /* 🎨 COLOR PICKER (NEW - DOES NOT BREAK ANYTHING) */
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={value || "#000000"}
+                                    onChange={(e) =>
+                                      updateWidgetConfig(key, e.target.value)
+                                    }
+                                    className="w-10 h-10 p-0 border rounded cursor-pointer"
+                                  />
+
+                                  <Input
+                                    value={value || ""}
+                                    onChange={(e) =>
+                                      updateWidgetConfig(key, e.target.value)
+                                    }
+                                    placeholder="#ffffff"
+                                  />
+                                </div>
+                              ) : (
+                                /* 📝 EXISTING INPUT (UNCHANGED) */
+                                <Input
+                                  type={getInputType(schema)}
                                   value={
                                     schema.format === "date-time"
                                       ? toLocalInput(value)
