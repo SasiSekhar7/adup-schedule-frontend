@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/dialog";
 import { Search, MoreHorizontal, Edit2, Trash2, Eye } from "lucide-react";
 import api from "@/api";
-import { toast } from "sonner";
 
 const mockClients = [
   {
@@ -119,7 +118,7 @@ const mockSubscriptions = [
   },
 ];
 
-// ONLY CREATE MODAL UPDATED — REST SAME
+// ✅ ONLY CREATE MODAL UPDATED — REST SAME
 
 // 🔽 ADD THIS ABOVE COMPONENT (you already have it, keep it)
 const plans = [
@@ -155,17 +154,8 @@ export default function ManageSubscriptionsPage() {
       console.error("Error fetching clients:", error);
     }
   };
-
-  const [tiers, setTiers] = useState([]);
-  const fetchTiers = async () => {
-    const res = await api.get("/tiers_v2/all");
-    console.log("tiers:-", res);
-    setTiers(res.data); //  correct
-  };
-
   useEffect(() => {
     fetchClients();
-    fetchTiers();
   }, []);
 
   const [renewalPeriod, setRenewalPeriod] = useState("1-month");
@@ -174,36 +164,30 @@ export default function ManageSubscriptionsPage() {
   const [billingType, setBillingType] = useState("monthly"); // monthly | yearly
   const [duration, setDuration] = useState(1); // number of months or years
 
-  const selectedPlanData = tiers.find((t) => t.tier_id === editFormData.plan);
+  const selectedPlanData = plans.find((p) => p.name === editFormData.plan);
 
-  const pricePerUnit = selectedPlanData?.price || 0;
+  const pricePerUnit =
+    billingType === "monthly"
+      ? selectedPlanData?.monthlyPrice || 0
+      : selectedPlanData?.yearlyPrice || 0;
+
   const totalAmount = pricePerUnit * duration;
-
-  const combinedData = clients.map((client: any) => {
-    const sub = client.currentSubscription;
-
-    return {
-      id: client.client_id,
-      clientName: client.name,
-      email: client.email,
-
-      plan: sub?.Tier?.name || "-", // adjust if API structure differs
-      status: sub?.status || "no-subscription",
-
-      startDate: sub?.start_date
-        ? new Date(sub.start_date).toISOString().split("T")[0]
-        : "-",
-
-      renewalDate: sub?.end_date
-        ? new Date(sub.end_date).toISOString().split("T")[0]
-        : "-",
-
-      amount: sub?.Tier?.price || 0,
+  const combinedData = [
+    ...mockSubscriptions.map((sub) => ({
+      ...sub,
+      hasSubscription: true,
+    })),
+    ...mockClients.map((client) => ({
+      ...client,
+      plan: "-",
+      status: "no-subscription",
+      startDate: "-",
+      renewalDate: "-",
+      amount: 0,
       currency: "₹",
-
-      hasSubscription: !!sub,
-    };
-  });
+      hasSubscription: false,
+    })),
+  ];
 
   const filteredSubscriptions = combinedData.filter((sub) => {
     const matchesSearch =
@@ -288,110 +272,6 @@ export default function ManageSubscriptionsPage() {
     setIsEditOpen(true);
   };
 
-  const handleCreateSubscription = async () => {
-    try {
-      // 🔍 find selected tier
-      const selectedTier = tiers.find((t) => t.tier_id === editFormData.plan);
-
-      if (!selectedTier) {
-        alert("Please select a valid plan");
-        return;
-      }
-
-      //  convert duration to months
-      const no_of_months = billingType === "monthly" ? duration : duration * 12;
-
-      const payload = {
-        client_id: selectedSubscription.id, // ⚠️ make sure this is UUID from API
-        tier_id: selectedTier.tier_id,
-        no_of_months,
-        is_trial: selectedTier.is_trial === true, // you can make this dynamic later
-      };
-
-      console.log("FINAL PAYLOAD:", payload);
-
-      const res = await api.post("/subscription/create", payload);
-
-      console.log("CREATE RESPONSE:", res);
-
-      // close modal
-      setIsCreateOpen(false);
-
-      // optional refresh
-      fetchClients();
-    } catch (error) {
-      console.error("CREATE ERROR:", error);
-      toast.error(error?.message || "Something went wrong");
-    }
-  };
-
-  const handleUpdateSubscription = async () => {
-    try {
-      const selectedTier = tiers.find((t) => t.tier_id === editFormData.plan);
-
-      if (!selectedTier) {
-        alert("Select valid plan");
-        return;
-      }
-
-      //  convert to months
-      const no_of_months = billingType === "monthly" ? duration : duration * 12;
-
-      const payload = {
-        client_id: selectedSubscription.id,
-        new_tier_id: selectedTier.tier_id,
-        no_of_months,
-        immediate: selectedSubscription.status !== "expired",
-        is_trial: selectedTier.is_trial === true, //  you can toggle later //false in renew
-      };
-
-      console.log("UPDATE PAYLOAD:", payload);
-
-      const res = await api.put("/subscription/change", payload);
-
-      console.log("UPDATE RESPONSE:", res);
-
-      // close modal
-      setIsEditOpen(false);
-
-      // refresh
-      fetchClients();
-    } catch (error) {
-      console.error("UPDATE ERROR:", error);
-      toast.error(error?.message || "Something went wrong");
-    }
-  };
-
-  const handleCancelSubscriptionApi = async () => {
-    try {
-      if (!selectedSubscription?.id) {
-        alert("Invalid client");
-        return;
-      }
-
-      const payload = {
-        client_id: selectedSubscription.id, // UUID from your table
-      };
-
-      console.log("CANCEL PAYLOAD:", payload);
-
-      const res = await api.post("/subscription/cancel", payload);
-
-      console.log("CANCEL RESPONSE:", res);
-
-      // close dialogs
-      setIsCancelConfirmOpen(false);
-      setIsDetailOpen(false);
-      setIsEditOpen(false);
-
-      // refresh data
-      fetchClients();
-    } catch (error) {
-      console.error("CANCEL ERROR:", error);
-      toast.error(error?.message || "Something went wrong");
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
@@ -438,9 +318,8 @@ export default function ManageSubscriptionsPage() {
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
                   <option value="expired">Expired</option>
-                  <option value="changed">Changed</option>
+                  <option value="paused">Paused</option>
                   <option value="inactive">Inactive</option>
-                  <option value="no-subscription">No Subscription</option>
                 </select>
               </div>
               <div className="flex-1">
@@ -453,12 +332,9 @@ export default function ManageSubscriptionsPage() {
                   onChange={(e) => setPlanFilter(e.target.value)}
                 >
                   <option value="all">All Plans</option>
-
-                  {tiers.map((tier) => (
-                    <option key={tier.tier_id} value={tier.name}>
-                      {tier.name}
-                    </option>
-                  ))}
+                  <option value="Starter">Starter</option>
+                  <option value="Professional">Professional</option>
+                  <option value="Enterprise">Enterprise</option>
                 </select>
               </div>
               <div className="flex items-end">
@@ -478,7 +354,7 @@ export default function ManageSubscriptionsPage() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <Card className="rounded-lg border-slate-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600">
@@ -537,6 +413,25 @@ export default function ManageSubscriptionsPage() {
                     .filter((s) => s.status === "active")
                     .reduce((acc, s) => acc + s.amount, 0)
                     .toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-lg border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Churn Rate
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">
+                  {(
+                    (mockSubscriptions.filter((s) => s.status !== "active")
+                      .length /
+                      mockSubscriptions.length) *
+                    100
+                  ).toFixed(1)}
+                  %
                 </div>
               </CardContent>
             </Card>
@@ -665,36 +560,24 @@ export default function ManageSubscriptionsPage() {
                                 onClick={() => {
                                   setSelectedSubscription(subscription);
 
-                                  const client = clients.find(
-                                    (c: any) => c.client_id === subscription.id,
-                                  );
-
-                                  const sub = client?.currentSubscription;
-
                                   if (!subscription.hasSubscription) {
-                                    // 👉 CREATE FLOW
+                                    // 👉 OPEN CREATE MODAL
                                     setEditFormData({
-                                      plan: "",
+                                      plan: "Starter",
                                       status: "active",
                                       renewalPeriod: "1-month",
                                     });
-
-                                    setBillingType("monthly");
-                                    setDuration(1);
-
                                     setIsCreateOpen(true);
                                   } else {
-                                    // 👉 EDIT FLOW CORRECT DATA
+                                    // 👉 EDIT FLOW
                                     setEditFormData({
-                                      plan: sub?.tier_id || "", // USE tier_id
-                                      status: sub?.status || "active",
+                                      plan: subscription.plan,
+                                      status: subscription.status,
                                       renewalPeriod: "1-month",
                                     });
 
-                                    setBillingType(
-                                      sub?.billing_cycle || "monthly",
-                                    ); // correct
-                                    setDuration(sub?.no_of_months || 1); // correct
+                                    setBillingType("monthly"); // default
+                                    setDuration(1);
 
                                     setIsEditOpen(true);
                                   }
@@ -894,14 +777,15 @@ export default function ManageSubscriptionsPage() {
                     })
                   }
                 >
-                  {tiers
-                    .filter((tier) => tier.billing_cycle === billingType)
-                    .map((tier) => (
-                      <option key={tier.tier_id} value={tier.tier_id}>
-                        {tier.name} ( ₹{tier.price}/
-                        {billingType === "monthly" ? "mo" : "yr"} )
-                      </option>
-                    ))}
+                  {plans.map((plan) => (
+                    <option key={plan.name} value={plan.name}>
+                      {plan.name} ( ₹
+                      {billingType === "monthly"
+                        ? plan.monthlyPrice + "/mo"
+                        : plan.yearlyPrice + "/yr"}
+                      )
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -953,7 +837,21 @@ export default function ManageSubscriptionsPage() {
                 </Button>
                 <Button
                   className={`flex-1 rounded-lg ${selectedSubscription.status === "expired" ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
-                  onClick={handleUpdateSubscription}
+                  onClick={() => {
+                    const payload = {
+                      id: selectedSubscription?.id,
+                      plan: editFormData.plan,
+                      status: editFormData.status,
+                      billingType,
+                      duration,
+                      pricePerUnit,
+                      totalAmount,
+                    };
+
+                    console.log("UPDATE SUBSCRIPTION:", payload);
+
+                    setIsEditOpen(false);
+                  }}
                 >
                   {selectedSubscription.status === "expired"
                     ? "Renew & Save"
@@ -1014,7 +912,7 @@ export default function ManageSubscriptionsPage() {
                 </Button>
                 <Button
                   className="flex-1 bg-red-600 hover:bg-red-700 rounded-lg"
-                  onClick={handleCancelSubscriptionApi}
+                  onClick={handleCancelSubscription}
                 >
                   Yes, Cancel
                 </Button>
@@ -1076,14 +974,15 @@ export default function ManageSubscriptionsPage() {
                     })
                   }
                 >
-                  {tiers
-                    .filter((tier) => tier.billing_cycle === billingType)
-                    .map((tier) => (
-                      <option key={tier.tier_id} value={tier.tier_id}>
-                        {tier.name} ( ₹{tier.price}/
-                        {billingType === "monthly" ? "mo" : "yr"} )
-                      </option>
-                    ))}
+                  {plans.map((plan) => (
+                    <option key={plan.name} value={plan.name}>
+                      {plan.name} ( ₹
+                      {billingType === "monthly"
+                        ? plan.monthlyPrice + "/mo"
+                        : plan.yearlyPrice + "/yr"}
+                      )
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -1136,7 +1035,20 @@ export default function ManageSubscriptionsPage() {
 
                 <Button
                   className="bg-green-600 text-white"
-                  onClick={handleCreateSubscription}
+                  onClick={() => {
+                    const payload = {
+                      clientId: selectedSubscription.id,
+                      plan: editFormData.plan,
+                      billingType,
+                      duration,
+                      pricePerUnit,
+                      totalAmount,
+                    };
+
+                    console.log("CREATE SUBSCRIPTION:", payload);
+
+                    setIsCreateOpen(false);
+                  }}
                 >
                   Create
                 </Button>
