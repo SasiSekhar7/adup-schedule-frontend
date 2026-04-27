@@ -359,7 +359,8 @@ export default function ScheduleAddPage() {
       //  default from global
       // start_time_date: startDate,
       // end_time_date: endDate,
-      time_slots: [...timeSlots], // copy global slots
+      // time_slots: [...timeSlots], // copy global slots
+      time_slots: timeSlots.map((slot) => ({ ...slot })),
     };
 
     setZoneContents((prev) => ({
@@ -536,7 +537,8 @@ export default function ScheduleAddPage() {
 
       //  SAME AS MEDIA
 
-      time_slots: [...timeSlots],
+      // time_slots: [...timeSlots],
+      time_slots: timeSlots.map((slot) => ({ ...slot })),
     };
 
     setZoneContents((prev: any) => ({
@@ -627,13 +629,86 @@ export default function ScheduleAddPage() {
   //   };
   // };
 
+  // const getZoneTimeAnalysis = (zoneId: string) => {
+  //   const content = zoneContents[zoneId];
+  //   if (!content?.content_items?.length) return null;
+
+  //   let allSlots: { start: number; end: number }[] = [];
+
+  //   //  collect all slots from all items
+  //   content.content_items.forEach((item) => {
+  //     (item.time_slots || []).forEach((slot) => {
+  //       const start = timeToMinutes(slot.start);
+  //       const end = timeToMinutes(slot.end);
+
+  //       if (start < end) {
+  //         allSlots.push({ start, end });
+  //       }
+  //     });
+  //   });
+
+  //   if (allSlots.length === 0) return null;
+
+  //   //  sort slots
+  //   const sorted = allSlots.sort((a, b) => a.start - b.start);
+
+  //   let totalScheduled = 0;
+  //   let gaps: { start: string; end: string; duration: number }[] = [];
+
+  //   // global limits
+  //   const globalStart = timeToMinutes(globalTimeInfo.minTime);
+  //   const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
+
+  //   //  gap BEFORE first slot
+  //   if (sorted[0].start > globalStart) {
+  //     gaps.push({
+  //       start: minutesToTime(globalStart),
+  //       end: minutesToTime(sorted[0].start),
+  //       duration: sorted[0].start - globalStart,
+  //     });
+  //   }
+
+  //   for (let i = 0; i < sorted.length; i++) {
+  //     const current = sorted[i];
+  //     totalScheduled += current.end - current.start;
+
+  //     const next = sorted[i + 1];
+
+  //     //  gap BETWEEN slots
+  //     if (next && next.start > current.end) {
+  //       gaps.push({
+  //         start: minutesToTime(current.end),
+  //         end: minutesToTime(next.start),
+  //         duration: next.start - current.end,
+  //       });
+  //     }
+  //   }
+
+  //   //  gap AFTER last slot
+  //   const last = sorted[sorted.length - 1];
+  //   if (last.end < globalEnd) {
+  //     gaps.push({
+  //       start: minutesToTime(last.end),
+  //       end: minutesToTime(globalEnd),
+  //       duration: globalEnd - last.end,
+  //     });
+  //   }
+
+  //   return {
+  //     minTime: minutesToTime(sorted[0].start),
+  //     maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
+  //     totalScheduled,
+  //     totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
+  //     gaps,
+  //   };
+  // };
   const getZoneTimeAnalysis = (zoneId: string) => {
     const content = zoneContents[zoneId];
     if (!content?.content_items?.length) return null;
 
     let allSlots: { start: number; end: number }[] = [];
 
-    //  collect all slots from all items
+    // 🔹 Collect all slots from all items
     content.content_items.forEach((item) => {
       (item.time_slots || []).forEach((slot) => {
         const start = timeToMinutes(slot.start);
@@ -647,33 +722,56 @@ export default function ScheduleAddPage() {
 
     if (allSlots.length === 0) return null;
 
-    //  sort slots
+    // 🔹 Sort slots by start time
     const sorted = allSlots.sort((a, b) => a.start - b.start);
 
-    let totalScheduled = 0;
-    let gaps: { start: string; end: string; duration: number }[] = [];
+    // 🔥 STEP 1: MERGE OVERLAPPING SLOTS (IMPORTANT FIX)
+    let merged: { start: number; end: number }[] = [];
 
-    // global limits
+    sorted.forEach((slot) => {
+      if (merged.length === 0) {
+        merged.push({ ...slot });
+        return;
+      }
+
+      const last = merged[merged.length - 1];
+
+      // overlap or same time
+      if (slot.start <= last.end) {
+        last.end = Math.max(last.end, slot.end);
+      } else {
+        merged.push({ ...slot });
+      }
+    });
+
+    // 🔹 STEP 2: Calculate totalScheduled from merged slots
+    let totalScheduled = 0;
+    merged.forEach((m) => {
+      totalScheduled += m.end - m.start;
+    });
+
+    // 🔹 Global limits
     const globalStart = timeToMinutes(globalTimeInfo.minTime);
     const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
 
-    //  gap BEFORE first slot
-    if (sorted[0].start > globalStart) {
+    // 🔹 STEP 3: Calculate gaps
+    let gaps: { start: string; end: string; duration: number }[] = [];
+
+    // gap BEFORE first
+    if (merged[0].start > globalStart) {
       gaps.push({
         start: minutesToTime(globalStart),
-        end: minutesToTime(sorted[0].start),
-        duration: sorted[0].start - globalStart,
+        end: minutesToTime(merged[0].start),
+        duration: merged[0].start - globalStart,
       });
     }
 
-    for (let i = 0; i < sorted.length; i++) {
-      const current = sorted[i];
-      totalScheduled += current.end - current.start;
+    // gaps BETWEEN
+    for (let i = 0; i < merged.length - 1; i++) {
+      const current = merged[i];
+      const next = merged[i + 1];
 
-      const next = sorted[i + 1];
-
-      //  gap BETWEEN slots
-      if (next && next.start > current.end) {
+      if (next.start > current.end) {
         gaps.push({
           start: minutesToTime(current.end),
           end: minutesToTime(next.start),
@@ -682,8 +780,8 @@ export default function ScheduleAddPage() {
       }
     }
 
-    //  gap AFTER last slot
-    const last = sorted[sorted.length - 1];
+    // gap AFTER last
+    const last = merged[merged.length - 1];
     if (last.end < globalEnd) {
       gaps.push({
         start: minutesToTime(last.end),
@@ -693,8 +791,8 @@ export default function ScheduleAddPage() {
     }
 
     return {
-      minTime: minutesToTime(sorted[0].start),
-      maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
+      minTime: minutesToTime(merged[0].start),
+      maxTime: minutesToTime(merged[merged.length - 1].end),
       totalScheduled,
       totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
       gaps,
@@ -2333,11 +2431,15 @@ export default function ScheduleAddPage() {
                                               type="time"
                                               value={slot.start}
                                               onChange={(e) => {
-                                                const updated = [
-                                                  ...item.time_slots,
-                                                ] as any;
-                                                updated[slotIdx].start =
-                                                  e.target.value;
+                                                const updated =
+                                                  item.time_slots.map((s, i) =>
+                                                    i === slotIdx
+                                                      ? {
+                                                          ...s,
+                                                          start: e.target.value,
+                                                        }
+                                                      : s,
+                                                  );
                                                 updateItemSlots(
                                                   item.id,
                                                   updated,
@@ -2349,11 +2451,15 @@ export default function ScheduleAddPage() {
                                               type="time"
                                               value={slot.end}
                                               onChange={(e) => {
-                                                const updated = [
-                                                  ...item.time_slots,
-                                                ] as any;
-                                                updated[slotIdx].end =
-                                                  e.target.value;
+                                                const updated =
+                                                  item.time_slots.map((s, i) =>
+                                                    i === slotIdx
+                                                      ? {
+                                                          ...s,
+                                                          start: e.target.value,
+                                                        }
+                                                      : s,
+                                                  );
                                                 updateItemSlots(
                                                   item.id,
                                                   updated,
@@ -2888,7 +2994,9 @@ export default function ScheduleAddPage() {
                               </div>
                             );
                           }
-
+                          const isColorField =
+                            key.toLowerCase().includes("color") ||
+                            key === "background";
                           return (
                             <div key={key}>
                               <Label>
@@ -2901,7 +3009,7 @@ export default function ScheduleAddPage() {
                               </Label>
 
                               {/* ENUM */}
-                              {schema.enum ? (
+                              {/* {schema.enum ? (
                                 <Select
                                   value={value}
                                   onValueChange={(val) =>
@@ -2923,6 +3031,58 @@ export default function ScheduleAddPage() {
                                 <Input
                                   type={getInputType(schema)} //  IMPORTANT
                                   // value={value || ""}
+                                  value={
+                                    schema.format === "date-time"
+                                      ? toLocalInput(value)
+                                      : value || ""
+                                  }
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                />
+                              )} */}
+                              {schema.enum ? (
+                                <Select
+                                  value={value}
+                                  onValueChange={(val) =>
+                                    updateWidgetConfig(key, val)
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {schema.enum.map((opt: any) => (
+                                      <SelectItem key={opt} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : isColorField ? (
+                                /* 🎨 COLOR PICKER (NEW - DOES NOT BREAK ANYTHING) */
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="color"
+                                    value={value || "#000000"}
+                                    onChange={(e) =>
+                                      updateWidgetConfig(key, e.target.value)
+                                    }
+                                    className="w-10 h-10 p-0 border rounded cursor-pointer"
+                                  />
+
+                                  <Input
+                                    value={value || ""}
+                                    onChange={(e) =>
+                                      updateWidgetConfig(key, e.target.value)
+                                    }
+                                    placeholder="#ffffff"
+                                  />
+                                </div>
+                              ) : (
+                                /* 📝 EXISTING INPUT (UNCHANGED) */
+                                <Input
+                                  type={getInputType(schema)}
                                   value={
                                     schema.format === "date-time"
                                       ? toLocalInput(value)

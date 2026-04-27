@@ -31,6 +31,7 @@ interface LiveContentForm {
   start_time: string;
   end_time: string;
   channel_id?: string;
+  website_type?: "STATIC" | "SOCKET";
   config: {
     autoplay: boolean;
     mute: boolean;
@@ -51,6 +52,7 @@ export default function CreateLiveContent() {
     duration: 0,
     start_time: "",
     end_time: "",
+    website_type: "STATIC",
     config: {
       autoplay: false,
       mute: false,
@@ -173,6 +175,10 @@ export default function CreateLiveContent() {
           ? new Date(formData.end_time).toISOString()
           : undefined,
         config: formData.config,
+        website_type:
+          formData.content_type === "website"
+            ? formData.website_type
+            : "STATIC",
       };
 
       if (isEdit) {
@@ -191,6 +197,15 @@ export default function CreateLiveContent() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (formData.content_type !== "website") {
+      setFormData((prev) => ({
+        ...prev,
+        website_type: undefined,
+      }));
+    }
+  }, [formData.content_type]);
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {
@@ -350,6 +365,28 @@ export default function CreateLiveContent() {
                   {getContentTypeDescription(formData.content_type)}
                 </p>
               </div>
+              {formData.content_type === "website" && (
+                <div>
+                  <Label>Website Type</Label>
+                  <Select
+                    value={formData.website_type}
+                    onValueChange={(value: "static" | "socket") =>
+                      handleInputChange("website_type", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select website type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STATIC">Static</SelectItem>
+                      <SelectItem value="SOCKET">Socket</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Static = normal webpage, Socket = real-time updates
+                  </p>
+                </div>
+              )}
 
               {/* <div>
                 <Label htmlFor="url">Content URL</Label>

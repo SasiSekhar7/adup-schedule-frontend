@@ -616,6 +616,38 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
     );
   }
 
+  if (widgetType === "heading") {
+    return (
+      <div
+        style={{
+          ...containerStyle,
+          justifyContent: "center",
+          alignItems: config.textAlign || "center",
+          textAlign: config.textAlign || "center",
+          background: config.background || "transparent",
+          padding: "8px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: getScaledFont(config.fontSize),
+            fontWeight: config.fontWeight || "bold",
+            color: config.color || "#fff",
+            display: "-webkit-box",
+            WebkitLineClamp: config.maxLines || 1,
+            WebkitBoxOrient: "vertical",
+            overflow: config.overflow === "ellipsis" ? "hidden" : "visible",
+            textOverflow: config.overflow === "ellipsis" ? "ellipsis" : "clip",
+            whiteSpace: config.overflow === "wrap" ? "normal" : "nowrap",
+            width: "100%",
+          }}
+        >
+          {config.text || "Heading"}
+        </div>
+      </div>
+    );
+  }
+
   return <div style={containerStyle}>{widgetType}</div>;
 };
 

@@ -22,6 +22,8 @@ import ExportDetails from "./pages/ExportDetails";
 import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
 import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
 import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
+import ManageSubscriptionsPage from "./pages/Subscriptions/page";
+import ClientSubscriptionPage from "./pages/Subscriptions/clientpage";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -60,6 +62,24 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <Plans />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/manage-subscription/all"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ManageSubscriptionsPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/my-subscription"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ClientSubscriptionPage/>
                 </Suspense>
               }
             />
