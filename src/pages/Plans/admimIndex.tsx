@@ -56,6 +56,7 @@ function AdminPlans() {
   //  FETCH FEATURES MASTER
   const fetchFeatures = async () => {
     const res = await api.get("/features/all");
+    console.log("Features:", res.data);
     setFeaturesList(res.data);
   };
 
@@ -240,7 +241,12 @@ function AdminPlans() {
 
   //  BOOLEAN FEATURE DETECTION
   const isBooleanFeature = (key: string) => {
-    return ["LIVE_STREAMING", "PROOF_OF_PLAY", "LIVE_IN_LAYOUT"].includes(key);
+    return [
+      "LIVE_STREAMING",
+      "PROOF_OF_PLAY",
+      "LIVE_IN_LAYOUT",
+      "MULTI_VIDEO_IN_LAYOUT",
+    ].includes(key);
   };
 
   return (
