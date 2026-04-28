@@ -102,7 +102,9 @@ export default function ClientSubscriptionPage() {
   >(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [currentSubscription, setCurrentSubscription] = useState<{
+    features: { label: string; value: string }[];
+  } | null>(null);
   const [history, setHistory] = useState([]);
   const fetchClients = async () => {
     try {
@@ -123,15 +125,7 @@ export default function ClientSubscriptionPage() {
         amount: sub.Tier?.price || 0,
         currency: "₹",
         billingCycle: sub.billing_cycle,
-        features: {
-          storage: `${Math.round(
-            sub.features_cache?.STORAGE_LIMIT / (1024 * 1024 * 1024),
-          )} GB`,
-          devices: `${sub.features_cache?.MAX_DEVICES} Devices`,
-          ads: `${sub.features_cache?.MAX_ADS} Ads`,
-          livestream: sub.features_cache?.LIVE_STREAMING,
-          proofLogs: sub.features_cache?.PROOF_OF_PLAY,
-        },
+        features: formatFeatures(sub.features_cache),
       };
 
       setCurrentSubscription(formatted);
@@ -140,6 +134,41 @@ export default function ClientSubscriptionPage() {
     } catch (error) {
       console.error("Error fetching clients:", error);
     }
+  };
+
+  const formatFeatures = (features = {}) => {
+    const GB = 1024 * 1024 * 1024;
+
+    return [
+      {
+        label: "Storage",
+        value: features.STORAGE_LIMIT
+          ? `${Math.round(features.STORAGE_LIMIT / GB)} GB`
+          : "0 GB",
+      },
+      {
+        label: "Devices",
+        value: features.MAX_DEVICES
+          ? `${features.MAX_DEVICES} Devices`
+          : "0 Devices",
+      },
+      {
+        label: "Ads",
+        value: features.MAX_ADS ? `${features.MAX_ADS} Ads` : "0 Ads",
+      },
+      {
+        label: "Live Streaming",
+        value: features.LIVE_STREAMING ? "Enabled" : "Disabled",
+      },
+      {
+        label: "Proof of Play",
+        value: features.PROOF_OF_PLAY ? "Enabled" : "Disabled",
+      },
+      {
+        label: "Live in Layout",
+        value: features.LIVE_IN_LAYOUT ? "Enabled" : "Disabled",
+      },
+    ];
   };
 
   useEffect(() => {
@@ -231,18 +260,15 @@ export default function ClientSubscriptionPage() {
                   Included Features
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Object.entries(currentSubscription?.features || {}).map(
-                    ([key, value]) => (
-                      <div key={key} className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                        <span className="text-slate-700">
-                          {typeof value === "string"
-                            ? value
-                            : key.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                      </div>
-                    ),
-                  )}
+                  {currentSubscription?.features?.map((feature, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                      <span className="text-slate-700">
+                        <span className="font-medium">{feature.label}:</span>{" "}
+                        {feature.value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 

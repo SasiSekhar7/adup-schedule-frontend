@@ -25,6 +25,7 @@ import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
 import ManageSubscriptionsPage from "./pages/Subscriptions/page";
 import ClientSubscriptionPage from "./pages/Subscriptions/clientpage";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
+import ProtectedRoute from "./context/components/ProtectedRoute";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -116,9 +117,11 @@ function App() {
               <Route
                 path="/all-exports"
                 element={
-                  <Suspense fallback={<Loading />}>
-                    <ExportDetails />
-                  </Suspense>
+                  <ProtectedRoute feature="PROOF_OF_PLAY">
+                    <Suspense fallback={<Loading />}>
+                      <ExportDetails />
+                    </Suspense>
+                  </ProtectedRoute>
                 }
               />
 
@@ -309,9 +312,11 @@ function App() {
               <Route
                 path="/live-content"
                 element={
-                  <Suspense fallback={<Loading />}>
-                    <LiveContent />
-                  </Suspense>
+                  <ProtectedRoute feature="LIVE_STREAMING">
+                    <Suspense fallback={<Loading />}>
+                      <LiveContent />
+                    </Suspense>
+                  </ProtectedRoute>
                 }
               />
               <Route

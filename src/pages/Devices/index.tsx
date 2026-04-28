@@ -5,6 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { Device, DevicesResponse, columns } from "./columns";
 import AddDeviceDialog from "./components/AddDeviceDialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { useFeature } from "@/context/hooks/useFeature";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function Home() {
   const navigate = useNavigate();
@@ -23,6 +30,13 @@ function Home() {
     fetchDta();
   }, []);
 
+  const { limit, isAdmin } = useFeature();
+
+  const maxDevices = limit("MAX_DEVICES");
+  const currentDevices = data.length;
+
+  const canAddDevice = currentDevices < maxDevices;
+
   return (
     <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
@@ -34,7 +48,30 @@ function Home() {
         </div>
 
         <div className="w-full sm:w-auto">
-          <AddDeviceDialog fetchDta={fetchDta} />
+          {/* <AddDeviceDialog fetchDta={fetchDta} /> */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-block w-full sm:w-auto">
+                  <div className={!canAddDevice ? "cursor-not-allowed" : ""}>
+                    <AddDeviceDialog
+                      fetchDta={fetchDta}
+                      disabled={!canAddDevice}
+                    />
+                  </div>
+                </div>
+              </TooltipTrigger>
+
+              {!canAddDevice && (
+                <TooltipContent>
+                  <p>
+                    You reached your device limit ({maxDevices}). Upgrade to add
+                    more.
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
@@ -42,10 +79,10 @@ function Home() {
         <CardContent className="p-4 md:p-6">
           <div
             className="
-  max-w-[350px]
-  md:max-w-[calc(100vw-20rem)]
-  relative
-"
+              max-w-[350px]
+              md:max-w-[calc(100vw-20rem)]
+              relative
+            "
           >
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">

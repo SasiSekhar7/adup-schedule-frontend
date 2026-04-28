@@ -44,6 +44,7 @@ import { useNavigate } from "react-router-dom";
 import ScheduleAddPage from "./add/page";
 import { useFeature } from "@/context/hooks/useFeature";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { t } from "node_modules/framer-motion/dist/types.d-BSoEx4Ea";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -279,16 +280,13 @@ function AddToSchedule() {
     );
   };
 
-  const { has, limit, expired } = useFeature();
+  const { has } = useFeature();
   const featureAccess = {
     ad: true, // usually always allowed
     carousel: true,
     live_content: has("LIVE_STREAMING"),
-    screen_layouts: has("LIVE_IN_LAYOUT"),
+    screen_layouts: true,
   };
-  const { subscription } = useSubscription();
-
-  console.log("Feature Access:", subscription);
 
   const isAllowed = featureAccess[contentType];
   return (
@@ -323,10 +321,7 @@ function AddToSchedule() {
                 Live Content{" "}
                 {!featureAccess.live_content && "(Upgrade Required)"}
               </SelectItem>
-              <SelectItem value="screen_layouts">
-                Screen Layouts{" "}
-                {!featureAccess.screen_layouts && "(Upgrade Required)"}
-              </SelectItem>
+              <SelectItem value="screen_layouts">Screen Layouts</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>

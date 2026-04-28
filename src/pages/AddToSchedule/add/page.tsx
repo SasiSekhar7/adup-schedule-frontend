@@ -74,6 +74,7 @@ import {
 import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useFeature } from "@/context/hooks/useFeature";
 
 const widgetIcons: any = {
   clock_analog: Clock,
@@ -200,31 +201,6 @@ export default function ScheduleAddPage() {
       setZoneContents(initialContents);
     }
   }, [selectedLayout]);
-
-  // const getDateRange = () => {
-  //   const today = new Date();
-  //   let startDate = today.toISOString().split("T")[0];
-  //   let endDate = startDate;
-
-  //   switch (dateType) {
-  //     case "specific_date":
-  //       startDate = specificDate || startDate;
-  //       endDate = startDate;
-  //       break;
-  //     case "one_week":
-  //       endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-  //         .toISOString()
-  //         .split("T")[0];
-  //       break;
-  //     case "one_month":
-  //       endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
-  //         .toISOString()
-  //         .split("T")[0];
-  //       break;
-  //   }
-
-  //   return { startDate, endDate };
-  // };
 
   const getDateRange = () => {
     const today = new Date();
@@ -408,25 +384,6 @@ export default function ScheduleAddPage() {
       },
     }));
   };
-
-  // const toggleWidget = (widgetId: string) => {
-  //   if (!activeZone) return;
-
-  //   setZoneContents((prev) => {
-  //     const currentWidgets = prev[activeZone.zone_id]?.selected_widgets || [];
-  //     const newWidgets = currentWidgets.includes(widgetId)
-  //       ? currentWidgets.filter((id) => id !== widgetId)
-  //       : [...currentWidgets, widgetId];
-
-  //     return {
-  //       ...prev,
-  //       [activeZone.zone_id]: {
-  //         ...prev[activeZone.zone_id],
-  //         selected_widgets: newWidgets,
-  //       },
-  //     };
-  //   });
-  // };
 
   const [assets, setAssets] = useState<any[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(false);
@@ -965,21 +922,6 @@ export default function ScheduleAddPage() {
 
   const renderLayoutSelection = () => (
     <div className="space-y-6">
-      {/* <div>
-        <Label className="text-base font-medium">Content Type</Label>
-        <Select defaultValue="screen_layouts">
-          <SelectTrigger className="w-full mt-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="screen_layouts">Screen Layouts</SelectItem>
-            <SelectItem value="advertisements">Advertisements</SelectItem>
-            <SelectItem value="carousels">Carousels</SelectItem>
-            <SelectItem value="live_content">Live Content</SelectItem>
-          </SelectContent>
-        </Select>
-      </div> */}
-
       <div>
         <Label className="text-base font-medium mb-4 block">
           Select a Layout Template ({layouts.length})
@@ -1813,6 +1755,9 @@ export default function ScheduleAddPage() {
     return { valid: true };
   };
 
+  const { has } = useFeature();
+  const canShowLiveContent = has("LIVE_IN_LAYOUT");
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6 overflow-auto">
@@ -2096,12 +2041,20 @@ export default function ScheduleAddPage() {
                             Carousel
                           </div>
                         </SelectItem>
-                        <SelectItem value="live_content">
+                        {/* <SelectItem value="live_content">
                           <div className="flex items-center gap-2">
                             <Radio className="w-4 h-4" />
                             Live Content
                           </div>
-                        </SelectItem>
+                        </SelectItem> */}
+                        {canShowLiveContent && (
+                          <SelectItem value="live_content">
+                            <div className="flex items-center gap-2">
+                              <Radio className="w-4 h-4" />
+                              Live Content
+                            </div>
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
