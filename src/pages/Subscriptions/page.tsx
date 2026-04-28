@@ -392,6 +392,8 @@ export default function ManageSubscriptionsPage() {
     }
   };
 
+  const isTrialPlan = selectedPlanData?.is_trial === true;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
@@ -872,6 +874,7 @@ export default function ManageSubscriptionsPage() {
                     setBillingType(e.target.value);
                     setDuration(1);
                   }}
+                  disabled={isTrialPlan}
                 >
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
@@ -1055,6 +1058,7 @@ export default function ManageSubscriptionsPage() {
                     setBillingType(e.target.value);
                     setDuration(1);
                   }}
+                  disabled={isTrialPlan}
                 >
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
@@ -1088,29 +1092,38 @@ export default function ManageSubscriptionsPage() {
               </div>
 
               {/* Duration */}
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  {billingType === "monthly" ? "Months" : "Years"}
-                </label>
+              {isTrialPlan ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">Trial Duration</p>
+                  <p className="text-lg font-semibold text-blue-900">
+                    7 Days Free Trial
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    {billingType === "monthly" ? "Months" : "Years"}
+                  </label>
 
-                <select
-                  className="w-full mt-2 px-3 py-2 border border-slate-300 rounded-lg"
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                >
-                  {billingType === "monthly"
-                    ? Array.from({ length: 11 }, (_, i) => i + 1).map((m) => (
-                        <option key={m} value={m}>
-                          {m} Month
-                        </option>
-                      ))
-                    : [1, 2].map((y) => (
-                        <option key={y} value={y}>
-                          {y} Year
-                        </option>
-                      ))}
-                </select>
-              </div>
+                  <select
+                    className="w-full mt-2 px-3 py-2 border border-slate-300 rounded-lg"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                  >
+                    {billingType === "monthly"
+                      ? Array.from({ length: 11 }, (_, i) => i + 1).map((m) => (
+                          <option key={m} value={m}>
+                            {m} Month
+                          </option>
+                        ))
+                      : [1, 2].map((y) => (
+                          <option key={y} value={y}>
+                            {y} Year
+                          </option>
+                        ))}
+                  </select>
+                </div>
+              )}
 
               {/* Price Summary */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">

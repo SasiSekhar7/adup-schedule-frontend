@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Zap,
 } from "lucide-react";
+import api from "@/api";
 
 // Mock data
 const currentSubscription = {
@@ -101,6 +102,18 @@ export default function ClientSubscriptionPage() {
   >(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
+  const fetchClients = async () => {
+    try {
+      const response = await api.get("/subscription/my_active");
+      console.log("response of clients:-", response);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
   const handleUpgradePlan = (plan: (typeof planOptions)[0]) => {
     setSelectedPlan(plan);
     setIsConfirmOpen(true);
