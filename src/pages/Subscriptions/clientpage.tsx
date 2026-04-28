@@ -32,26 +32,26 @@ import {
 import api from "@/api";
 
 // Mock data
-const currentSubscription = {
-  id: "SUB-12345",
-  plan: "Professional",
-  status: "active",
-  startDate: "2024-05-01",
-  renewalDate: "2025-05-01",
-  nextBillingDate: "2025-05-01",
-  amount: 4999,
-  currency: "₹",
-  billingCycle: "Yearly",
-  features: {
-    storage: "100 GB",
-    devices: "5 Devices",
-    ads: "50 Ads",
-    livestream: true,
-    proofLogs: true,
-    analytics: true,
-    support: "24/7 Email Support",
-  },
-};
+// const currentSubscription = {
+//   id: "SUB-12345",
+//   plan: "Professional",
+//   status: "active",
+//   startDate: "2024-05-01",
+//   renewalDate: "2025-05-01",
+//   nextBillingDate: "2025-05-01",
+//   amount: 4999,
+//   currency: "₹",
+//   billingCycle: "Yearly",
+//   features: {
+//     storage: "100 GB",
+//     devices: "5 Devices",
+//     ads: "50 Ads",
+//     livestream: true,
+//     proofLogs: true,
+//     analytics: true,
+//     support: "24/7 Email Support",
+//   },
+// };
 
 const planOptions = [
   {
@@ -102,10 +102,41 @@ export default function ClientSubscriptionPage() {
   >(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [history, setHistory] = useState([]);
   const fetchClients = async () => {
     try {
       const response = await api.get("/subscription/my_active");
-      console.log("response of clients:-", response);
+      const resHistory = await api.get("/subscription/history");
+      setHistory(resHistory?.data || []);
+      const sub = response?.data;
+      console.log("response of clients:-", sub);
+
+      // Transform API → UI format
+      const formatted = {
+        id: sub.subscription_id,
+        plan: sub.Tier?.name || "N/A",
+        status: sub.status,
+        startDate: sub.start_date,
+        renewalDate: sub.end_date,
+        nextBillingDate: sub.end_date,
+        amount: sub.Tier?.price || 0,
+        currency: "₹",
+        billingCycle: sub.billing_cycle,
+        features: {
+          storage: `${Math.round(
+            sub.features_cache?.STORAGE_LIMIT / (1024 * 1024 * 1024),
+          )} GB`,
+          devices: `${sub.features_cache?.MAX_DEVICES} Devices`,
+          ads: `${sub.features_cache?.MAX_ADS} Ads`,
+          livestream: sub.features_cache?.LIVE_STREAMING,
+          proofLogs: sub.features_cache?.PROOF_OF_PLAY,
+        },
+      };
+
+      setCurrentSubscription(formatted);
+
+      console.log("formatted subscription:", formatted);
     } catch (error) {
       console.error("Error fetching clients:", error);
     }
@@ -140,7 +171,7 @@ export default function ClientSubscriptionPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl text-slate-900">
-                    {currentSubscription.plan}
+                    {currentSubscription?.plan}
                   </CardTitle>
                   <CardDescription>Your current plan</CardDescription>
                 </div>
@@ -155,21 +186,21 @@ export default function ClientSubscriptionPage() {
                 <div>
                   <p className="text-sm text-slate-600 mb-1">Monthly Cost</p>
                   <p className="text-3xl font-bold text-slate-900">
-                    {currentSubscription.currency}
-                    {(currentSubscription.amount / 12).toFixed(0)}
+                    {currentSubscription?.currency}
+                    {(currentSubscription?.amount / 12).toFixed(0)}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Billed yearly as {currentSubscription.currency}
-                    {currentSubscription.amount.toLocaleString()}
+                    Billed yearly as {currentSubscription?.currency}
+                    {currentSubscription?.amount.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Renewal Date</p>
+                  <p className="text-sm text-slate-600 mb-1">Start Date</p>
                   <p className="text-2xl font-bold text-slate-900">
-                    {currentSubscription.renewalDate}
+                    {new Date(currentSubscription?.startDate).toDateString()}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {currentSubscription.billingCycle} billing cycle
+                    {currentSubscription?.billingCycle} billing cycle
                   </p>
                 </div>
                 <div>
@@ -177,11 +208,15 @@ export default function ClientSubscriptionPage() {
                     Next Billing Date
                   </p>
                   <p className="text-2xl font-bold text-slate-900">
-                    {currentSubscription.nextBillingDate}
+                    {new Date(
+                      currentSubscription?.nextBillingDate,
+                    ).toDateString()}
                   </p>
                   <p className="text-xs text-slate-500">
                     {Math.ceil(
-                      (new Date(currentSubscription.nextBillingDate).getTime() -
+                      (new Date(
+                        currentSubscription?.nextBillingDate,
+                      ).getTime() -
                         new Date().getTime()) /
                         (1000 * 60 * 60 * 24),
                     )}{" "}
@@ -196,7 +231,7 @@ export default function ClientSubscriptionPage() {
                   Included Features
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Object.entries(currentSubscription.features).map(
+                  {Object.entries(currentSubscription?.features || {}).map(
                     ([key, value]) => (
                       <div key={key} className="flex items-center gap-3">
                         <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -212,7 +247,7 @@ export default function ClientSubscriptionPage() {
               </div>
 
               {/* Actions */}
-              <div className="mt-6 flex gap-3">
+              {/* <div className="mt-6 flex gap-3">
                 <Button
                   variant="outline"
                   className="flex-1 rounded-lg border-slate-300"
@@ -228,25 +263,25 @@ export default function ClientSubscriptionPage() {
                   <RotateCw className="h-4 w-4 mr-2" />
                   Change Billing Cycle
                 </Button>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 
           {/* Billing Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Subscription ID */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
             <Card className="rounded-lg border-slate-200">
               <CardHeader>
                 <CardTitle className="text-base">Subscription ID</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-lg font-mono text-slate-900 break-all">
-                  {currentSubscription.id}
+                  {currentSubscription?.id}
                 </p>
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
+            
             <Card className="rounded-lg border-slate-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -268,10 +303,10 @@ export default function ClientSubscriptionPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </div> */}
 
           {/* Usage Information */}
-          <Card className="mb-8 rounded-lg border-slate-200">
+          {/* <Card className="mb-8 rounded-lg border-slate-200">
             <CardHeader>
               <CardTitle>Current Usage</CardTitle>
               <CardDescription>
@@ -280,7 +315,7 @@ export default function ClientSubscriptionPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* Storage */}
+                
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-700">
@@ -298,7 +333,7 @@ export default function ClientSubscriptionPage() {
                   </div>
                 </div>
 
-                {/* Devices */}
+                
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-700">
@@ -316,7 +351,7 @@ export default function ClientSubscriptionPage() {
                   </div>
                 </div>
 
-                {/* Ads */}
+                
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-700">
@@ -335,10 +370,10 @@ export default function ClientSubscriptionPage() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Billing History */}
-          <Card className="rounded-lg border-slate-200">
+          {/* <Card className="rounded-lg border-slate-200">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -398,6 +433,55 @@ export default function ClientSubscriptionPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card> */}
+          <Card className="rounded-lg border-slate-200">
+            <CardHeader>
+              <CardTitle>Subscription History</CardTitle>
+              <CardDescription>Your previous plans and trials</CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div className="space-y-3">
+                {history.length === 0 ? (
+                  <p className="text-slate-500 text-sm">No history found</p>
+                ) : (
+                  history.map((item) => (
+                    <div
+                      key={item.subscription_id}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                    >
+                      {/* LEFT */}
+                      <div>
+                        <p className="font-medium text-slate-900 capitalize">
+                          {item.status}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {new Date(item.start_date).toLocaleDateString()} →{" "}
+                          {new Date(item.end_date).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      {/* RIGHT */}
+                      <div className="text-right">
+                        <p className="text-sm text-slate-600 capitalize">
+                          {item.billing_cycle}
+                        </p>
+
+                        <Badge
+                          className={`rounded-full ${
+                            item.status === "trial"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

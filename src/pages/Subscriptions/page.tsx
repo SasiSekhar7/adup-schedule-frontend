@@ -37,104 +37,13 @@ import { Search, MoreHorizontal, Edit2, Trash2, Eye } from "lucide-react";
 import api from "@/api";
 import { toast } from "sonner";
 
-const mockClients = [
-  {
-    id: 101,
-    clientName: "New Client One",
-    email: "new1@gmail.com",
-  },
-  {
-    id: 102,
-    clientName: "Startup Fresh",
-    email: "fresh@startup.com",
-  },
-];
 // Mock data
-const mockSubscriptions = [
-  {
-    id: 1,
-    clientName: "Acme Corp",
-    email: "contact@acmecorp.com",
-    plan: "Professional",
-    status: "active",
-    startDate: "2024-01-15",
-    renewalDate: "2025-01-15",
-    amount: 4999,
-    currency: "₹",
-  },
-  {
-    id: 2,
-    clientName: "Tech Startup Inc",
-    email: "admin@techstartup.com",
-    plan: "Enterprise",
-    status: "active",
-    startDate: "2023-06-20",
-    renewalDate: "2025-06-20",
-    amount: 9999,
-    currency: "₹",
-  },
-  {
-    id: 3,
-    clientName: "Small Business Ltd",
-    email: "owner@smallbiz.com",
-    plan: "Starter",
-    status: "expired",
-    startDate: "2023-03-10",
-    renewalDate: "2024-03-10",
-    amount: 1999,
-    currency: "₹",
-  },
-  {
-    id: 4,
-    clientName: "Creative Agency",
-    email: "team@creative.com",
-    plan: "Professional",
-    status: "active",
-    startDate: "2024-05-01",
-    renewalDate: "2025-05-01",
-    amount: 4999,
-    currency: "₹",
-  },
-  {
-    id: 5,
-    clientName: "E-commerce Plus",
-    email: "support@ecomplus.com",
-    plan: "Enterprise",
-    status: "paused",
-    startDate: "2024-02-14",
-    renewalDate: "2025-02-14",
-    amount: 9999,
-    currency: "₹",
-  },
-  {
-    id: 6,
-    clientName: "Digital Marketing Pro",
-    email: "hello@digimark.com",
-    plan: "Professional",
-    status: "expired",
-    startDate: "2023-08-20",
-    renewalDate: "2024-08-20",
-    amount: 4999,
-    currency: "₹",
-  },
-];
-
-// ONLY CREATE MODAL UPDATED — REST SAME
-
-// 🔽 ADD THIS ABOVE COMPONENT (you already have it, keep it)
-const plans = [
-  { name: "Starter", monthlyPrice: 50, yearlyPrice: 500 },
-  { name: "Professional", monthlyPrice: 100, yearlyPrice: 1000 },
-  { name: "Enterprise", monthlyPrice: 200, yearlyPrice: 2000 },
-];
 
 export default function ManageSubscriptionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
-  const [selectedSubscription, setSelectedSubscription] = useState<
-    (typeof mockSubscriptions)[0] | null
-  >(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
@@ -145,6 +54,9 @@ export default function ManageSubscriptionsPage() {
   });
 
   const [clients, setClients] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10; // you can change (5, 10, 20)
 
   const fetchClients = async () => {
     try {
@@ -168,7 +80,6 @@ export default function ManageSubscriptionsPage() {
     fetchTiers();
   }, []);
 
-  const [renewalPeriod, setRenewalPeriod] = useState("1-month");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [billingType, setBillingType] = useState("monthly"); // monthly | yearly
@@ -217,75 +128,37 @@ export default function ManageSubscriptionsPage() {
     return matchesSearch && matchesStatus && matchesPlan;
   });
 
-  const calculateRenewalDate = (period: string) => {
-    const today = new Date();
-    const renewal = new Date(today);
+  const totalPages = Math.ceil(filteredSubscriptions.length / rowsPerPage);
 
-    switch (period) {
-      case "1-month":
-        renewal.setMonth(renewal.getMonth() + 1);
-        break;
-      case "3-month":
-        renewal.setMonth(renewal.getMonth() + 3);
-        break;
-      case "6-month":
-        renewal.setMonth(renewal.getMonth() + 6);
-        break;
-      case "1-year":
-        renewal.setFullYear(renewal.getFullYear() + 1);
-        break;
-    }
+  const paginatedData = filteredSubscriptions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
 
-    return renewal.toISOString().split("T")[0];
-  };
-
-  const handleCancelSubscription = () => {
-    console.log("[v0] Subscription cancelled:", selectedSubscription?.id);
-    setIsCancelConfirmOpen(false);
-    setIsDetailOpen(false);
-    setIsEditOpen(false);
-  };
-
-  const handleSaveChanges = () => {
-    const renewalDate = calculateRenewalDate(renewalPeriod);
-    console.log("[v0] Subscription saved:", {
-      id: selectedSubscription?.id,
-      plan: editFormData.plan,
-      status: editFormData.status,
-      renewalDate,
-    });
-    setIsEditOpen(false);
-  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, planFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 hover:bg-green-100 cursor-default pointer-events-none";
       case "expired":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 hover:bg-red-100 cursor-default pointer-events-none";
       case "inactive":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 hover:bg-red-100 cursor-default pointer-events-none";
       case "paused":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 cursor-default pointer-events-none";
       case "no-subscription":
-        return "bg-gray-200 text-gray-700";
+        return "bg-gray-200 text-gray-700 hover:bg-gray-200 cursor-default pointer-events-none";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100 cursor-default pointer-events-none";
     }
   };
 
-  const isSubscriptionExpired = (renewalDate: string) => {
-    return new Date(renewalDate) < new Date();
-  };
-
-  const handleViewDetails = (subscription: (typeof mockSubscriptions)[0]) => {
+  const handleViewDetails = (subscription: null) => {
     setSelectedSubscription(subscription);
     setIsDetailOpen(true);
-  };
-
-  const handleEdit = (subscription: (typeof mockSubscriptions)[0]) => {
-    setSelectedSubscription(subscription);
-    setIsEditOpen(true);
   };
 
   const handleCreateSubscription = async () => {
@@ -421,9 +294,9 @@ export default function ManageSubscriptionsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700 rounded-lg">
+              {/* <Button className="bg-blue-600 hover:bg-blue-700 rounded-lg">
                 Export Report
-              </Button>
+              </Button> */}
             </div>
 
             {/* Filter Options */}
@@ -443,6 +316,7 @@ export default function ManageSubscriptionsPage() {
                   <option value="changed">Changed</option>
                   <option value="inactive">Inactive</option>
                   <option value="no-subscription">No Subscription</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
               <div className="flex-1">
@@ -489,7 +363,7 @@ export default function ManageSubscriptionsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">
-                  {mockSubscriptions.length}
+                  {clients?.length}
                 </div>
               </CardContent>
             </Card>
@@ -502,10 +376,7 @@ export default function ManageSubscriptionsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {
-                    mockSubscriptions.filter((s) => s.status === "active")
-                      .length
-                  }
+                  {combinedData?.filter((s) => s.status === "active").length}
                 </div>
               </CardContent>
             </Card>
@@ -518,10 +389,7 @@ export default function ManageSubscriptionsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  {
-                    mockSubscriptions.filter((s) => s.status === "expired")
-                      .length
-                  }
+                  {combinedData?.filter((s) => s.status === "expired").length}
                 </div>
               </CardContent>
             </Card>
@@ -535,7 +403,7 @@ export default function ManageSubscriptionsPage() {
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">
                   ₹
-                  {mockSubscriptions
+                  {combinedData
                     .filter((s) => s.status === "active")
                     .reduce((acc, s) => acc + s.amount, 0)
                     .toLocaleString()}
@@ -574,7 +442,7 @@ export default function ManageSubscriptionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredSubscriptions.map((subscription) => (
+                    {paginatedData.map((subscription) => (
                       <TableRow
                         key={subscription.id}
                         className={`border-slate-200 ${subscription.status === "expired" ? "bg-red-50" : ""}`}
@@ -657,12 +525,18 @@ export default function ManageSubscriptionsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleViewDetails(subscription)}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
+                              {/* VIEW (only if subscription exists) */}
+                              {subscription.hasSubscription && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleViewDetails(subscription)
+                                  }
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                              )}
+
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedSubscription(subscription);
@@ -709,16 +583,19 @@ export default function ManageSubscriptionsPage() {
                                     : "Edit Subscription"
                                   : "Subscribe"}
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => {
-                                  setSelectedSubscription(subscription);
-                                  setIsCancelConfirmOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Cancel Subscription
-                              </DropdownMenuItem>
+                              {/*  CANCEL (only if subscription exists) */}
+                              {subscription.hasSubscription && (
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    setSelectedSubscription(subscription);
+                                    setIsCancelConfirmOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Cancel Subscription
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -726,6 +603,42 @@ export default function ManageSubscriptionsPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <div className="flex items-center justify-between mt-4">
+                  {/* Left info */}
+                  <p className="text-sm text-gray-500">
+                    Showing {(currentPage - 1) * rowsPerPage + 1} -{" "}
+                    {Math.min(
+                      currentPage * rowsPerPage,
+                      filteredSubscriptions.length,
+                    )}{" "}
+                    of {filteredSubscriptions.length}
+                  </p>
+
+                  {/* Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      Prev
+                    </Button>
+
+                    <span className="text-sm px-2 py-1">
+                      {currentPage} / {totalPages}
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
