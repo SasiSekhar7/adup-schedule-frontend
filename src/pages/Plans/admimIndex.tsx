@@ -24,6 +24,7 @@ function AdminPlans() {
     description: "",
     price: 0,
     billing_cycle: "monthly",
+    is_trial: false,
     features: {},
   });
 
@@ -64,6 +65,7 @@ function AdminPlans() {
       description: "",
       price: 0,
       billing_cycle: "monthly",
+      is_trial: false,
       features: {},
     });
     setOpen(true);
@@ -89,6 +91,7 @@ function AdminPlans() {
       description: tier.description,
       price: tier.price,
       billing_cycle: tier.billing_cycle,
+      is_trial: tier.is_trial,
       features: featureMap,
     });
 
@@ -119,6 +122,7 @@ function AdminPlans() {
         name: form.name,
         price: form.price,
         billing_cycle: form.billing_cycle,
+        is_trial: form.is_trial,
         features: buildFeaturesPayload(),
       };
 
@@ -216,6 +220,23 @@ function AdminPlans() {
                   {tier.is_active ? "Active" : "Inactive"}
                 </span>
               </div>
+              <div className="flex justify-between">
+                <span>Billing Cycle</span>
+                <span
+                  className={`text-xs px-2 py-1 rounded "bg-green-100 text-gray-600
+                     
+                  `}
+                >
+                  {tier.billing_cycle}
+                </span>
+              </div>
+
+              {/* Trial Badge */}
+              {tier.is_trial && (
+                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                  Trial
+                </span>
+              )}
 
               {/* FEATURES */}
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -287,6 +308,32 @@ function AdminPlans() {
                 setForm({ ...form, price: Number(e.target.value) })
               }
             />
+
+            <div>
+              <Label>Billing Cycle</Label>
+              <select
+                className="w-full border rounded p-2 mt-1"
+                value={form.billing_cycle}
+                onChange={(e) =>
+                  setForm({ ...form, billing_cycle: e.target.value })
+                }
+              >
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between border p-3 rounded">
+              <span>Is Trial Plan</span>
+              <Switch
+                checked={form.is_trial === true}
+                onCheckedChange={(val) =>
+                  setForm({
+                    ...form,
+                    is_trial: val, // ✅ true / false
+                  })
+                }
+              />
+            </div>
 
             {/* 🔥 DYNAMIC FEATURES */}
             <div>
