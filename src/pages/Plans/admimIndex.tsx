@@ -18,6 +18,8 @@ function AdminPlans() {
   const [featuresList, setFeaturesList] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
 
   const [form, setForm] = useState<any>({
     name: "",
@@ -54,19 +56,31 @@ function AdminPlans() {
   //  FETCH FEATURES MASTER
   const fetchFeatures = async () => {
     const res = await api.get("/features/all");
+    console.log("Features:", res.data);
     setFeaturesList(res.data);
   };
 
   //  OPEN CREATE
   const handleOpenCreate = () => {
+    const defaultFeatures: any = {};
+
+    featuresList.forEach((f) => {
+      if (isBooleanFeature(f.key)) {
+        defaultFeatures[f.key] = false; // default toggle OFF
+      } else {
+        defaultFeatures[f.key] = ""; // or 0 based on your need
+      }
+    });
     setEditMode(false);
+
     setForm({
       name: "",
       description: "",
       price: 0,
       billing_cycle: "monthly",
       is_trial: false,
-      features: {},
+      // features: {},
+      features: defaultFeatures,
     });
     setOpen(true);
   };
@@ -101,22 +115,62 @@ function AdminPlans() {
 
   //  BUILD FEATURES PAYLOAD
   const buildFeaturesPayload = () => {
-    return Object.keys(form.features || {}).map((key) => {
-      let value = form.features[key];
+    return featuresList.map((feature) => {
+      let value = form.features?.[feature.key];
 
-      if (key === "STORAGE_LIMIT") {
-        value = gbToBytes(value); // ✅ convert back to bytes
+      // fallback if user didn't touch it
+      if (value === undefined || value === "") {
+        value = isBooleanFeature(feature.key) ? false : "0";
+      }
+
+      if (feature.key === "STORAGE_LIMIT") {
+        value = gbToBytes(value);
       }
 
       return {
-        key,
+        key: feature.key,
         value,
       };
     });
   };
+  const validateForm = () => {
+    if (!form.name || form.name.trim() === "") {
+      toast.error("Plan name is required");
+      return false;
+    }
+
+    if (form.name.trim().length < 2) {
+      toast.error("Plan name must be at least 2 characters");
+      return false;
+    }
+
+    if (!form.price || Number(form.price) <= 0) {
+      toast.error("Price must be greater than 0");
+      return false;
+    }
+
+    return true;
+  };
+  const validateFeatures = () => {
+    for (const feature of featuresList) {
+      const key = feature.key;
+      const value = form.features?.[key];
+
+      if (isBooleanFeature(key)) continue;
+
+      if (!value || Number(value) <= 0) {
+        toast.error(`${formatFeatureKey(key)} must be greater than 0`);
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   //  CREATE / UPDATE
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+    if (!validateFeatures()) return;
     try {
       const payload = {
         name: form.name,
@@ -147,16 +201,15 @@ function AdminPlans() {
   };
 
   //  DELETE (SOFT)
-  const handleDelete = async (tier_id: string) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to deactivate this plan?",
-    );
-    if (!confirmDelete) return;
+  const handleDelete = async () => {
+    if (!selectedTierId) return;
 
     try {
-      await api.delete(`/tier_v2/${tier_id}/delete`);
+      await api.delete(`/tier_v2/${selectedTierId}/delete`);
       toast.success("Plan deactivated");
       fetchTiers();
+      setDeleteDialogOpen(false);
+      setSelectedTierId(null);
     } catch (error: any) {
       toast.error(
         error.message ||
@@ -188,7 +241,12 @@ function AdminPlans() {
 
   //  BOOLEAN FEATURE DETECTION
   const isBooleanFeature = (key: string) => {
-    return ["LIVE_STREAMING", "PROOF_OF_PLAY", "LIVE_IN_LAYOUT"].includes(key);
+    return [
+      "LIVE_STREAMING",
+      "PROOF_OF_PLAY",
+      "LIVE_IN_LAYOUT",
+      "MULTI_VIDEO_IN_LAYOUT",
+    ].includes(key);
   };
 
   return (
@@ -263,7 +321,10 @@ function AdminPlans() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => handleDelete(tier.tier_id)}
+                  onClick={() => {
+                    setSelectedTierId(tier.tier_id);
+                    setDeleteDialogOpen(true);
+                  }}
                 >
                   Deactivate
                 </Button>
@@ -409,6 +470,37 @@ function AdminPlans() {
             <Button onClick={handleSubmit} className="w-full">
               {editMode ? "Update Plan" : "Create Plan"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Deactivate Plan</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to deactivate this plan?
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleDelete}
+              >
+                Yes, Deactivate
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

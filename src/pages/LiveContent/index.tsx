@@ -3,19 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Play, 
-  Pause, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Play,
+  Pause,
   MoreHorizontal,
   Search,
   ExternalLink,
   Clock,
   Globe,
   Video,
-  Monitor
+  Monitor,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,6 +33,13 @@ import {
 import { toast } from "sonner";
 import api from "@/api";
 import { useNavigate } from "react-router-dom";
+import { useFeature } from "@/context/hooks/useFeature";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LiveContent {
   live_content_id: string;
@@ -86,7 +93,7 @@ export default function LiveContent() {
 
   const handleDeleteLiveContent = async (liveContentId: string) => {
     if (!confirm("Are you sure you want to delete this live content?")) return;
-    
+
     try {
       await api.delete(`/live-content/${liveContentId}`);
       toast.success("Live content deleted successfully");
@@ -100,8 +107,12 @@ export default function LiveContent() {
   const handleToggleStatus = async (liveContent: LiveContent) => {
     try {
       const newStatus = liveContent.status === "active" ? "inactive" : "active";
-      await api.put(`/live-content/${liveContent.live_content_id}`, { status: newStatus });
-      toast.success(`Live content ${newStatus === "active" ? "activated" : "deactivated"}`);
+      await api.put(`/live-content/${liveContent.live_content_id}`, {
+        status: newStatus,
+      });
+      toast.success(
+        `Live content ${newStatus === "active" ? "activated" : "deactivated"}`,
+      );
       fetchLiveContents();
     } catch (error) {
       console.error("Error updating live content status:", error);
@@ -110,9 +121,13 @@ export default function LiveContent() {
   };
 
   const filteredLiveContents = liveContents.filter((content) => {
-    const matchesSearch = content.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || content.status === statusFilter;
-    const matchesType = typeFilter === "all" || content.content_type === typeFilter;
+    const matchesSearch = content.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || content.status === statusFilter;
+    const matchesType =
+      typeFilter === "all" || content.content_type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -151,7 +166,7 @@ export default function LiveContent() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${remainingSeconds}s`;
     } else if (minutes > 0) {
@@ -160,6 +175,10 @@ export default function LiveContent() {
       return `${remainingSeconds}s`;
     }
   };
+
+  const { has } = useFeature();
+
+  const canCreateLive = has("LIVE_STREAMING");
 
   if (loading) {
     return (
@@ -182,10 +201,35 @@ export default function LiveContent() {
             Manage your live streaming and dynamic content
           </p>
         </div>
-        <Button onClick={() => navigate("/live-content/add")} className="w-full sm:w-auto">
+        {/* <Button onClick={() => navigate("/live-content/add")} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Live Content
-        </Button>
+        </Button> */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-block w-full sm:w-auto">
+                <Button
+                  onClick={() => {
+                    if (!canCreateLive) return;
+                    navigate("/live-content/add");
+                  }}
+                  disabled={!canCreateLive}
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Live Content
+                </Button>
+              </div>
+            </TooltipTrigger>
+
+            {!canCreateLive && (
+              <TooltipContent>
+                <p>Upgrade your plan to enable Live Content</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Filters */}
@@ -229,31 +273,44 @@ export default function LiveContent() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
-              <h3 className="text-lg font-medium mb-2">No live content found</h3>
+              <h3 className="text-lg font-medium mb-2">
+                No live content found
+              </h3>
               <p className="text-muted-foreground mb-4">
                 {searchTerm || statusFilter !== "all" || typeFilter !== "all"
                   ? "Try adjusting your filters"
                   : "Create your first live content to get started"}
               </p>
-              {!searchTerm && statusFilter === "all" && typeFilter === "all" && (
-                <Button onClick={() => navigate("/live-content/add")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Live Content
-                </Button>
-              )}
+              {!searchTerm &&
+                statusFilter === "all" &&
+                typeFilter === "all" && (
+                  <Button onClick={() => navigate("/live-content/add")}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Live Content
+                  </Button>
+                )}
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredLiveContents.map((content) => (
-            <Card key={content.live_content_id} className="hover:shadow-md transition-shadow">
+            <Card
+              key={content.live_content_id}
+              className="hover:shadow-md transition-shadow"
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1 flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{content.name}</CardTitle>
+                    <CardTitle className="text-lg truncate">
+                      {content.name}
+                    </CardTitle>
                     <div className="flex items-center gap-2">
-                      <Badge variant={content.status === "active" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          content.status === "active" ? "default" : "secondary"
+                        }
+                      >
                         {content.status}
                       </Badge>
                       <Badge
@@ -274,15 +331,23 @@ export default function LiveContent() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate(`/live-content/${content.live_content_id}`)}>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          navigate(`/live-content/${content.live_content_id}`)
+                        }
+                      >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(content.url, '_blank')}>
+                      <DropdownMenuItem
+                        onClick={() => window.open(content.url, "_blank")}
+                      >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Open URL
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleToggleStatus(content)}>
+                      <DropdownMenuItem
+                        onClick={() => handleToggleStatus(content)}
+                      >
                         {content.status === "active" ? (
                           <>
                             <Pause className="h-4 w-4 mr-2" />
@@ -296,7 +361,9 @@ export default function LiveContent() {
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteLiveContent(content.live_content_id)}
+                        onClick={() =>
+                          handleDeleteLiveContent(content.live_content_id)
+                        }
                         className="text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -325,13 +392,20 @@ export default function LiveContent() {
 
                   {(content.start_time || content.end_time) && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Schedule:</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Schedule:
+                      </p>
                       <div className="text-xs space-y-1">
                         {content.start_time && (
-                          <p>Start: {new Date(content.start_time).toLocaleString()}</p>
+                          <p>
+                            Start:{" "}
+                            {new Date(content.start_time).toLocaleString()}
+                          </p>
                         )}
                         {content.end_time && (
-                          <p>End: {new Date(content.end_time).toLocaleString()}</p>
+                          <p>
+                            End: {new Date(content.end_time).toLocaleString()}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -339,16 +413,24 @@ export default function LiveContent() {
 
                   {Object.keys(content.config || {}).length > 0 && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Config:</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Config:
+                      </p>
                       <div className="flex gap-1 flex-wrap">
                         {content.config.autoplay && (
-                          <Badge variant="outline" className="text-xs">Autoplay</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Autoplay
+                          </Badge>
                         )}
                         {content.config.mute && (
-                          <Badge variant="outline" className="text-xs">Muted</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Muted
+                          </Badge>
                         )}
                         {content.config.loop && (
-                          <Badge variant="outline" className="text-xs">Loop</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Loop
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -356,7 +438,8 @@ export default function LiveContent() {
 
                   <div className="pt-2 border-t">
                     <p className="text-xs text-muted-foreground">
-                      Created: {new Date(content.created_at).toLocaleDateString()}
+                      Created:{" "}
+                      {new Date(content.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

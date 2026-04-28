@@ -29,7 +29,13 @@ interface DeviceGroup {
   name: string;
 }
 
-const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
+const AddDeviceDialog = ({
+  fetchDta,
+  disabled,
+}: {
+  fetchDta: () => void;
+  disabled?: boolean;
+}) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -343,7 +349,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       modal={false}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={disabled}>
           Add Device
           <Plus className="h-4 w-4 ml-2" />
         </Button>

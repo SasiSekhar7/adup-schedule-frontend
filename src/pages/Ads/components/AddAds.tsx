@@ -187,7 +187,13 @@ interface AdToSubmit {
   duration: number;
 }
 
-function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
+function AddAdComponent({
+  onIsOpenChange,
+  disabled,
+}: {
+  onIsOpenChange: () => void;
+  disabled: boolean;
+}) {
   const [clients, setClients] = useState<{ client_id: string; name: string }[]>(
     [],
   );
@@ -594,7 +600,7 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={disabled}>
           Upload Ad
           <Plus className="ml-2 h-4 w-4" />
         </Button>
