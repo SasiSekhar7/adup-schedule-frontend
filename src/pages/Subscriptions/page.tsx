@@ -85,8 +85,11 @@ export default function ManageSubscriptionsPage() {
   const [billingType, setBillingType] = useState("monthly"); // monthly | yearly
   const [duration, setDuration] = useState(1); // number of months or years
 
-  const selectedPlanData = tiers.find((t) => t.tier_id === editFormData.plan);
+  // const selectedPlanData = tiers.find((t) => t.tier_id === editFormData.plan);
 
+  const selectedPlanData = tiers.find(
+    (t) => t.tier_id === editFormData.plan && t.billing_cycle === billingType,
+  );
   const pricePerUnit = selectedPlanData?.price || 0;
   const totalAmount = pricePerUnit * duration;
 
@@ -267,6 +270,28 @@ export default function ManageSubscriptionsPage() {
 
   const isTrialPlan = selectedPlanData?.is_trial === true;
 
+  useEffect(() => {
+    if (!isEditOpen && !isCreateOpen) return;
+
+    const filteredTiers = tiers.filter(
+      (tier) => tier.billing_cycle === billingType,
+    );
+
+    if (filteredTiers.length === 0) return;
+
+    setEditFormData((prev) => {
+      // if already valid plan → keep it
+      const exists = filteredTiers.find((t) => t.tier_id === prev.plan);
+
+      if (exists) return prev;
+
+      // else set first valid plan
+      return {
+        ...prev,
+        plan: filteredTiers[0].tier_id,
+      };
+    });
+  }, [billingType, tiers, isEditOpen, isCreateOpen]);
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
@@ -548,9 +573,15 @@ export default function ManageSubscriptionsPage() {
                                   const sub = client?.currentSubscription;
 
                                   if (!subscription.hasSubscription) {
-                                    // 👉 CREATE FLOW
+                                    const filteredTiers = tiers.filter(
+                                      (tier) =>
+                                        tier.billing_cycle === billingType,
+                                    );
+
+                                    const defaultTier = filteredTiers[0];
+
                                     setEditFormData({
-                                      plan: "",
+                                      plan: defaultTier?.tier_id || "",
                                       status: "active",
                                       renewalPeriod: "1-month",
                                     });
@@ -783,9 +814,26 @@ export default function ManageSubscriptionsPage() {
                 <select
                   className="w-full mt-2 px-3 py-2 border border-slate-300 rounded-lg"
                   value={billingType}
+                  // onChange={(e) => {
+                  //   setBillingType(e.target.value);
+                  //   setDuration(1);
+                  // }}
                   onChange={(e) => {
-                    setBillingType(e.target.value);
+                    const newType = e.target.value;
+
+                    setBillingType(newType);
                     setDuration(1);
+
+                    const filtered = tiers.filter(
+                      (t) => t.billing_cycle === newType,
+                    );
+
+                    if (filtered.length > 0) {
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        plan: filtered[0].tier_id,
+                      }));
+                    }
                   }}
                   disabled={isTrialPlan}
                 >
@@ -967,9 +1015,26 @@ export default function ManageSubscriptionsPage() {
                 <select
                   className="w-full mt-2 px-3 py-2 border border-slate-300 rounded-lg"
                   value={billingType}
+                  // onChange={(e) => {
+                  //   setBillingType(e.target.value);
+                  //   setDuration(1);
+                  // }}
                   onChange={(e) => {
-                    setBillingType(e.target.value);
+                    const newType = e.target.value;
+
+                    setBillingType(newType);
                     setDuration(1);
+
+                    const filtered = tiers.filter(
+                      (t) => t.billing_cycle === newType,
+                    );
+
+                    if (filtered.length > 0) {
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        plan: filtered[0].tier_id,
+                      }));
+                    }
                   }}
                   disabled={isTrialPlan}
                 >
