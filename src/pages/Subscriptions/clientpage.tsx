@@ -195,85 +195,88 @@ export default function ClientSubscriptionPage() {
           </div>
 
           {/* Current Plan Card */}
-          <Card className="mb-8 border-slate-200 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-white">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">
-                    {currentSubscription?.plan}
-                  </CardTitle>
-                  <CardDescription>Your current plan</CardDescription>
+          {currentSubscription ? (
+            <Card className="mb-8 border-slate-200 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-white">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl text-slate-900">
+                      {currentSubscription?.plan}
+                    </CardTitle>
+                    <CardDescription>Your current plan</CardDescription>
+                  </div>
+                  {/* {currentSubscription?.status === "active" && ( */}
+                  <Badge className="bg-green-100 text-green-800 rounded-full text-base px-4 py-1">
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Active
+                  </Badge>
+                  {/* )} */}
                 </div>
-                <Badge className="bg-green-100 text-green-800 rounded-full text-base px-4 py-1">
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Active
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Monthly Cost</p>
-                  <p className="text-3xl font-bold text-slate-900">
-                    {currentSubscription?.currency}
-                    {(currentSubscription?.amount / 12).toFixed(0)}
-                  </p>
-                  <p className="text-xs text-slate-500">
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1">Monthly Cost</p>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {currentSubscription?.currency}
+                      {currentSubscription?.amount}
+                    </p>
+                    {/* <p className="text-xs text-slate-500">
                     Billed yearly as {currentSubscription?.currency}
                     {currentSubscription?.amount.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">Start Date</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {new Date(currentSubscription?.startDate).toDateString()}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {currentSubscription?.billingCycle} billing cycle
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600 mb-1">
-                    Next Billing Date
-                  </p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {new Date(
-                      currentSubscription?.nextBillingDate,
-                    ).toDateString()}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {Math.ceil(
-                      (new Date(
+                  </p> */}
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1">Start Date</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {new Date(currentSubscription?.startDate).toDateString()}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {currentSubscription?.billingCycle} billing cycle
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1">
+                      Next Billing Date
+                    </p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {new Date(
                         currentSubscription?.nextBillingDate,
-                      ).getTime() -
-                        new Date().getTime()) /
-                        (1000 * 60 * 60 * 24),
-                    )}{" "}
-                    days away
+                      ).toDateString()}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {Math.ceil(
+                        (new Date(
+                          currentSubscription?.nextBillingDate,
+                        ).getTime() -
+                          new Date().getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      )}{" "}
+                      days away
+                    </p>
+                  </div>
+                </div>
+
+                {/* Plan Features */}
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <p className="text-sm font-semibold text-slate-700 mb-4">
+                    Included Features
                   </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {currentSubscription?.features?.map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                        <span className="text-slate-700">
+                          <span className="font-medium">{feature.label}:</span>{" "}
+                          {feature.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Plan Features */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <p className="text-sm font-semibold text-slate-700 mb-4">
-                  Included Features
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {currentSubscription?.features?.map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                      <span className="text-slate-700">
-                        <span className="font-medium">{feature.label}:</span>{" "}
-                        {feature.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Actions */}
-              {/* <div className="mt-6 flex gap-3">
+                {/* Actions */}
+                {/* <div className="mt-6 flex gap-3">
                 <Button
                   variant="outline"
                   className="flex-1 rounded-lg border-slate-300"
@@ -290,8 +293,24 @@ export default function ClientSubscriptionPage() {
                   Change Billing Cycle
                 </Button>
               </div> */}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="mb-8 border-slate-200 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-white">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-center">
+                  <div>
+                    <CardTitle className="text-2xl text-slate-900">
+                      No Subscription
+                    </CardTitle>
+                    <CardDescription>
+                      You don&apos;t have a subscription yet.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </div>
+          )}
 
           {/* Billing Information */}
           {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -462,6 +481,7 @@ export default function ClientSubscriptionPage() {
               </div>
             </CardContent>
           </Card> */}
+
           <Card className="rounded-lg border-slate-200">
             <CardHeader>
               <CardTitle>Subscription History</CardTitle>
