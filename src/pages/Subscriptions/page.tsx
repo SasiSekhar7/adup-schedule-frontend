@@ -84,6 +84,7 @@ export default function ManageSubscriptionsPage() {
 
   const [billingType, setBillingType] = useState("monthly"); // monthly | yearly
   const [duration, setDuration] = useState(1); // number of months or years
+  const [buttonType, setButtonType] = useState("renew"); // monthly | yearly
 
   // const selectedPlanData = tiers.find((t) => t.tier_id === editFormData.plan);
 
@@ -217,7 +218,7 @@ export default function ManageSubscriptionsPage() {
         client_id: selectedSubscription.id,
         new_tier_id: selectedTier.tier_id,
         no_of_months,
-        immediate: selectedSubscription.status !== "expired",
+        immediate: buttonType === "renew" ? false : true,
         is_trial: selectedTier.is_trial === true, //  you can toggle later //false in renew
       };
 
@@ -604,16 +605,57 @@ export default function ManageSubscriptionsPage() {
                                     setDuration(sub?.no_of_months || 1); // correct
 
                                     setIsEditOpen(true);
+                                    setButtonType("edit");
                                   }
                                 }}
                               >
                                 <Edit2 className="h-4 w-4 mr-2" />
                                 {subscription.hasSubscription
-                                  ? subscription.status === "expired"
-                                    ? "Renew Subscription"
-                                    : "Edit Subscription"
+                                  ? // subscription.status === "expired"
+                                    //   ? "Renew Subscription"
+                                    "Edit Subscription"
                                   : "Subscribe"}
                               </DropdownMenuItem>
+
+                              {/* RENEW (only if expired) */}
+                              {subscription.hasSubscription && (
+                                // subscription.status === "expired" &&
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedSubscription(subscription);
+
+                                    const client = clients.find(
+                                      (c: any) =>
+                                        c.client_id === subscription.id,
+                                    );
+                                    const sub = client?.currentSubscription;
+
+                                    setBillingType(
+                                      sub?.billing_cycle || "monthly",
+                                    );
+
+                                    setEditFormData({
+                                      plan: sub?.tier_id || "",
+                                      status: "active",
+                                      renewalPeriod: "1-month",
+                                    });
+
+                                    // convert months → proper duration
+                                    const durationValue =
+                                      sub?.billing_cycle === "yearly"
+                                        ? (sub?.no_of_months || 12) / 12
+                                        : sub?.no_of_months || 1;
+
+                                    setDuration(durationValue);
+
+                                    setIsEditOpen(true); // reuse same modal
+                                    setButtonType("renew");
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Renew Subscription
+                                </DropdownMenuItem>
+                              )}
                               {/*  CANCEL (only if subscription exists) */}
                               {subscription.hasSubscription && (
                                 <DropdownMenuItem
