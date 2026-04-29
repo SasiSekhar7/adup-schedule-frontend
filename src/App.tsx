@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Layout from "./layout";
 import PrivateRoute from "./routes/PrivateRoute";
@@ -51,14 +56,20 @@ const CreateLiveContent = lazy(() => import("./pages/LiveContent/create"));
 
 function App() {
   return (
-    <SubscriptionProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register-device" element={<RegisterDevice />} />
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register-device" element={<RegisterDevice />} />
 
-          <Route element={<Layout />}>
-            <Route element={<PrivateRoute />}>
+        <Route element={<Layout />}>
+          <Route element={<PrivateRoute />}>
+            <Route
+              element={
+                <SubscriptionProvider>
+                  <Outlet />
+                </SubscriptionProvider>
+              }
+            >
               <Route path="/" element={<Dashboard />} />
               <Route
                 path="/plans/all"
@@ -388,9 +399,9 @@ function App() {
               }
             />
           </Route>
-        </Routes>
-      </Router>
-    </SubscriptionProvider>
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 
