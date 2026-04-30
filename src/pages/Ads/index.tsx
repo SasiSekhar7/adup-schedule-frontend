@@ -293,18 +293,19 @@ function Ads() {
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Export Button */}
           <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-            <DialogTrigger asChild>
-              {/*               
-                <Button variant="outline" className="w-full sm:w-auto">
-                  <Download className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Export Proof of Play</span>
-                  <span className="sm:hidden">Export</span>
-                </Button> */}
+            {/* <DialogTrigger asChild>
+              <Button variant="outline" className="w-full sm:w-auto">
+                <Download className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Export Proof of Play</span>
+                <span className="sm:hidden">Export</span>
+              </Button>
+            </DialogTrigger> */}
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="inline-block">
+            <DialogTrigger asChild>
+              <div className="inline-block">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         className="w-full sm:w-auto"
@@ -316,16 +317,16 @@ function Ads() {
                         </span>
                         <span className="sm:hidden">Export</span>
                       </Button>
-                    </div>
-                  </TooltipTrigger>
+                    </TooltipTrigger>
 
-                  {!canExport && (
-                    <TooltipContent>
-                      <p>Upgrade your plan to enable Proof of Play export</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
+                    {!canExport && (
+                      <TooltipContent>
+                        <p>Upgrade your plan to enable Proof of Play export</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -337,26 +338,6 @@ function Ads() {
                 </div>
               </DialogHeader>
               <div className="space-y-4 md:space-y-6 py-4">
-                {/* <div className="space-y-2">
-                  <Label htmlFor="adSelection">Ad Selection</Label>
-                  <Select
-                    value={selectedAdIds}
-                    onValueChange={setSelectedAdIds}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select ads to export" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Ads</SelectItem>
-                      {data.map((ad) => (
-                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
-                          {ad.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div> */}
-
                 <div className="space-y-2">
                   <Label htmlFor="exportFilter">Export Filter</Label>
                   <Select value={exportFilter} onValueChange={setExportFilter}>

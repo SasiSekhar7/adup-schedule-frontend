@@ -77,18 +77,18 @@ function Clients() {
     name: "",
     email: "",
     phoneNumber: "",
-    tier_name: "",
+    // tier_name: "",
   });
 
-  const [tiers, setTiers] = useState<Tier[]>([]);
-  const fetchTiers = async () => {
-    try {
-      const response = await api.get("/tiers");
-      setTiers(response);
-    } catch (error) {
-      console.error("Failed to fetch tiers", error);
-    }
-  };
+  // const [tiers, setTiers] = useState<Tier[]>([]);
+  // const fetchTiers = async () => {
+  //   try {
+  //     const response = await api.get("/tiers");
+  //     setTiers(response);
+  //   } catch (error) {
+  //     console.error("Failed to fetch tiers", error);
+  //   }
+  // };
 
   const fetchDta = async () => {
     const response = await api.get<ClientsResponse>("/ads/clients");
@@ -97,7 +97,7 @@ function Clients() {
 
   useEffect(() => {
     fetchDta();
-    fetchTiers();
+    // fetchTiers();
   }, []);
 
   const handleCreate = async () => {
@@ -145,7 +145,7 @@ function Clients() {
       name: client.name,
       email: client.email,
       phoneNumber: client.phone_number.toString(),
-      tier_name: client?.Tier?.name || "",
+      // tier_name: client?.Tier?.name || "",
     });
 
     setEditOpen(true);
@@ -159,7 +159,7 @@ function Clients() {
         name: editForm.name,
         email: editForm.email,
         phoneNumber: editForm.phoneNumber,
-        tier_name: editForm.tier_name,
+        // tier_name: editForm.tier_name,
       });
 
       fetchDta();
@@ -286,7 +286,9 @@ function Clients() {
         ))} */}
         {data.map((client, index) => {
           const usedBytes = Number(client.used_storage_bytes || 0);
-          const limitBytes = Number(client?.Tier?.storage_limit_bytes || 0);
+          const limitBytes = Number(
+            client?.Subscriptions?.[0]?.features_cache?.STORAGE_LIMIT || 0,
+          );
 
           const usedGB = (usedBytes / 1073741824).toFixed(2);
           const totalGB = (limitBytes / 1073741824).toFixed(2);
@@ -345,7 +347,7 @@ function Clients() {
               <CardContent className="space-y-2">
                 {/* Plan Name */}
                 <p className="text-sm font-semibold">
-                  Plan: {client?.Tier?.name || "No Plan"}
+                  Plan: {client?.Subscriptions?.[0]?.Tier?.name || "No Plan"}
                 </p>
 
                 {/* Ads Count */}
@@ -451,7 +453,7 @@ function Clients() {
               />
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label>Tier</Label>
               <select
                 className="w-full border rounded-md p-2 text-sm"
@@ -477,7 +479,7 @@ function Clients() {
                     );
                   })}
               </select>
-            </div>
+            </div> */}
           </div>
 
           <DialogFooter>
