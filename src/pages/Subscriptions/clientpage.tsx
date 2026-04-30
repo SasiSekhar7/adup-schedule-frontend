@@ -500,12 +500,27 @@ export default function ClientSubscriptionPage() {
                     >
                       {/* LEFT */}
                       <div>
+                        {/* Status */}
                         <p className="font-medium text-slate-900 capitalize">
-                          {item.status}
+                          {item.Tier?.name.toUpperCase() || "No Plan"}
                         </p>
+
+                        {/* Dates */}
                         <p className="text-sm text-slate-600">
-                          {new Date(item.start_date).toLocaleDateString()} →{" "}
-                          {new Date(item.end_date).toLocaleDateString()}
+                          {new Date(item.start_date).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}{" "}
+                          →{" "}
+                          {new Date(item.end_date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
 
@@ -515,8 +530,13 @@ export default function ClientSubscriptionPage() {
                           {item.billing_cycle}
                         </p>
 
+                        {/* Price */}
+                        <p className="text-sm font-medium text-slate-800">
+                          ₹{item.Tier?.price ?? 0}
+                        </p>
+
                         <Badge
-                          className={`rounded-full ${
+                          className={`rounded-full cursor-default pointer-events-none ${
                             item.status === "trial"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-green-100 text-green-800"

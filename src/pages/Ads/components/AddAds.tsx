@@ -242,42 +242,95 @@ function AddAdComponent({
   const [usedStorage, setUsedStorage] = useState(0);
   const [newFileSize, setNewFileSize] = useState(0);
   const [isPlanExpired, setIsPlanExpired] = useState(false);
-
+  const [features, setFeatures] = useState(null);
+  const [maxAds, setMaxAds] = useState(null);
+  const [currentAdsCount, setCurrentAdsCount] = useState(0);
   const fetchPlans = async () => {
-    try {
-      let response;
+    // try {
+    //   let response;
 
-      if (userRole === "Admin" && ad?.client_id) {
-        response = await api.get(
-          "/subscription/client?clientid=" + ad.client_id,
+    //   if (userRole === "Admin" && ad?.client_id) {
+    //     response = await api.get(
+    //       "/subscription/client?clientid=" + ad.client_id,
+    //     );
+    //   } else {
+    //     response = await api.get("/subscription/client");
+    //   }
+
+    //   const responsenew = await api.get("/subscription/my_active");
+
+    //   console.log("new response of the client:-", responsenew);
+
+    //   const user = response;
+    //   const tier = response?.Tier;
+
+    //   if (tier !== null && tier !== undefined) {
+    //     setPlans([tier]);
+
+    //     console.log("inside tier !== null && tier !== undefined");
+
+    //     setStorageLimit(Number(tier.storage_limit_bytes));
+    //     setUsedStorage(Number(user.used_storage_bytes));
+    //     //  Expiry Check
+    //     const now = new Date();
+    //     const expiryDate = new Date(user.subscription_expiry);
+
+    //     if (user.subscription_status !== "active" || expiryDate < now) {
+    //       setIsPlanExpired(true);
+    //     } else {
+    //       setIsPlanExpired(false);
+    //     }
+    //   } else {
+    //     console.log("inside not tier !== null && tier !== undefined");
+
+    //     setPlans([]);
+    //   }
+    // } catch (err) {
+    //   console.error("Plan fetch error:", err);
+    //   setPlans([]);
+    // }
+
+    try {
+      let responsenew;
+      if (ad?.client_id) {
+        responsenew = await api.get(
+          `/subscription/my_active?clientid=${ad.client_id}`,
         );
       } else {
-        response = await api.get("/subscription/client");
+        responsenew = await api.get(`/subscription/my_active`);
+      }
+      const sub = responsenew.data;
+
+      if (!sub) {
+        setPlans([]);
+        return;
       }
 
-      const user = response;
-      const tier = response?.Tier;
+      setPlans([sub]);
+      // features
+      setFeatures(sub.features_cache);
 
-      if (tier !== null && tier !== undefined) {
-        setPlans([tier]);
+      // storage
+      setStorageLimit(Number(sub.features_cache?.STORAGE_LIMIT || 0));
+      setUsedStorage(Number(sub.Client.used_storage_bytes || 0));
 
-        console.log("inside tier !== null && tier !== undefined");
+      // expiry
+      const now = new Date();
+      const expiryDate = new Date(sub.end_date);
 
-        setStorageLimit(Number(tier.storage_limit_bytes));
-        setUsedStorage(Number(user.used_storage_bytes));
-        //  Expiry Check
-        const now = new Date();
-        const expiryDate = new Date(user.subscription_expiry);
-
-        if (user.subscription_status !== "active" || expiryDate < now) {
-          setIsPlanExpired(true);
-        } else {
-          setIsPlanExpired(false);
-        }
+      if (sub.status !== "active" && sub.status !== "trial") {
+        setIsPlanExpired(true);
+      } else if (expiryDate < now) {
+        setIsPlanExpired(true);
       } else {
-        console.log("inside not tier !== null && tier !== undefined");
+        setIsPlanExpired(false);
+      }
 
-        setPlans([]);
+      // MAX ADS
+      if (userRole === "Admin") {
+        setMaxAds(null); // unlimited
+      } else {
+        setMaxAds(sub.features_cache?.MAX_ADS ?? 0);
       }
     } catch (err) {
       console.error("Plan fetch error:", err);
@@ -288,6 +341,28 @@ function AddAdComponent({
     fetchPlans();
   }, [userRole, ad?.client_id, storageLimit, usedStorage, isPlanExpired]);
 
+  // const fetchAdsCount = async () => {
+  //   try {
+  //     let res;
+
+  //     if (userRole === "Admin" && ad?.client_id) {
+  //       res = await api.get(`/ads?client_id=${ad.client_id}`);
+  //     } else {
+  //       res = await api.get("/ads");
+  //     }
+
+  //     const ads = res?.data || res || [];
+  //     setCurrentAdsCount(ads.length);
+  //   } catch (err) {
+  //     console.error("Ads count error:", err);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchAdsCount();
+  // }, [userRole, ad?.client_id]);
+
+  const isAdLimitReached =
+    userRole !== "Admin" && maxAds !== null && currentAdsCount >= maxAds;
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -301,6 +376,10 @@ function AddAdComponent({
     (selectedFile: File | null) => {
       setError(undefined); // Clear previous errors
 
+      if (isAdLimitReached) {
+        setError("Ad limit reached. Upgrade your plan.");
+        return;
+      }
       //  Block if expired
       if (isPlanExpired) {
         setError(
@@ -787,6 +866,17 @@ function AddAdComponent({
               </div>
             )}
 
+            {isAdLimitReached && (
+              <div className="bg-red-100 text-red-600 p-3 rounded-md mb-3">
+                ⚠️ You have reached your ad limit. Upgrade your plan.
+              </div>
+            )}
+            {features && userRole !== "Admin" && (
+              <p className="text-xs text-gray-500">
+                Ads: {currentAdsCount} / {maxAds}
+              </p>
+            )}
+
             <div className="mt-4">
               <div className="flex justify-between text-sm mb-1">
                 <span>
@@ -881,7 +971,8 @@ function AddAdComponent({
               (userRole === "Admin" && !ad.client_id) ||
               !!error ||
               totalUsed >= storageLimit ||
-              plans.length == 0
+              plans.length == 0 ||
+              isAdLimitReached
             }
           >
             <Save className="mr-2 h-4 w-4" />
