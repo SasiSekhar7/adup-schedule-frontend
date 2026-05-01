@@ -21,6 +21,14 @@ import { Badge } from "@/components/ui/badge";
 import { streamProviders } from "./components/providers";
 import { useNavigate } from "react-router-dom";
 import { getRole } from "@/helpers";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 const providerColors: Record<string, string> = {
   dacast: "bg-[#0066FF]",
@@ -36,6 +44,8 @@ export default function StreamProvidersPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [providerType, setProviderType] = useState("");
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -69,6 +79,8 @@ export default function StreamProvidersPage() {
       const response = await api.post("/streaming/provider", {
         name,
         api_key: apiKey,
+        provider_type: providerType,
+        api_base_url: apiBaseUrl,
       });
 
       console.log(response.data);
@@ -76,8 +88,12 @@ export default function StreamProvidersPage() {
       setOpen(false);
       setName("");
       setApiKey("");
-    } catch (error) {
+      setProviderType("");
+      setApiBaseUrl("");
+      fetchProviders();
+    } catch (error: any) {
       console.error(error);
+      toast.error(error?.error);
     } finally {
       setLoading(false);
     }
@@ -126,6 +142,37 @@ export default function StreamProvidersPage() {
                       placeholder="Enter API key"
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
+                    />
+                  </div>
+
+                  {/* <div className="grid gap-2">
+                    <Label>Provider Type</Label>
+                    <Input
+                      placeholder="e.g. dacast"
+                      value={providerType}
+                      onChange={(e) => setProviderType(e.target.value)}
+                    />
+                  </div> */}
+                  <Select onValueChange={setProviderType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select provider type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dacast">Dacast</SelectItem>
+                      <SelectItem value="mux">Mux</SelectItem>
+                      <SelectItem value="aws_ivs">AWS ivs</SelectItem>
+                      <SelectItem value="wowza">Wowza</SelectItem>
+                      <SelectItem value="vimeo">Vimeo</SelectItem>
+                      <SelectItem value="ec2">Ec2</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div className="grid gap-2">
+                    <Label>API Base URL</Label>
+                    <Input
+                      placeholder="https://api.example.com"
+                      value={apiBaseUrl}
+                      onChange={(e) => setApiBaseUrl(e.target.value)}
                     />
                   </div>
                 </div>
@@ -222,50 +269,54 @@ export default function StreamProvidersPage() {
             );
           })}
         </div>*/}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {providers.map((provider) => (
-            <button
-              key={provider.provider_id}
-              onClick={() =>
-                navigate(`/stream-providers/${provider.provider_type}`)
-              }
-              className="group relative flex flex-col rounded-xl border bg-card shadow-sm hover:shadow-md text-left"
-            >
-              <div className="flex items-start gap-4 p-5">
-                <div
-                  className={`flex size-12 items-center justify-center rounded-lg text-lg font-bold text-white ${
-                    providerColors[provider.provider_type] || "bg-primary"
-                  }`}
-                >
-                  {provider.provider_type?.charAt(0).toUpperCase()}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{provider.name}</h3>
-                    <ChevronRight className="ml-auto size-4 opacity-0 group-hover:opacity-100" />
+        {providers.length === 0 ? (
+          <p className="text-muted-foreground">No providers available.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {providers.map((provider) => (
+              <button
+                key={provider.provider_id}
+                onClick={() =>
+                  navigate(`/stream-providers/${provider.provider_type}`)
+                }
+                className="group relative flex flex-col rounded-xl border bg-card shadow-sm hover:shadow-md text-left"
+              >
+                <div className="flex items-start gap-4 p-5">
+                  <div
+                    className={`flex size-12 items-center justify-center rounded-lg text-lg font-bold text-white ${
+                      providerColors[provider.provider_type] || "bg-primary"
+                    }`}
+                  >
+                    {provider.provider_type?.charAt(0).toUpperCase()}
                   </div>
 
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {provider.api_base_url}
-                  </p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{provider.name}</h3>
+                      <ChevronRight className="ml-auto size-4 opacity-0 group-hover:opacity-100" />
+                    </div>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {provider.api_base_url}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="border-t px-5 py-3 flex items-center gap-2">
-                <Badge variant="secondary" className="text-[11px]">
-                  {provider.provider_type}
-                </Badge>
-
-                {provider.is_active && (
-                  <Badge className="text-[11px] bg-emerald-100 text-emerald-700">
-                    Active
+                <div className="border-t px-5 py-3 flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[11px]">
+                    {provider.provider_type}
                   </Badge>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
+
+                  {provider.is_active && (
+                    <Badge className="text-[11px] bg-emerald-100 text-emerald-700">
+                      Active
+                    </Badge>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

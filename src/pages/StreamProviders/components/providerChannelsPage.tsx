@@ -58,10 +58,12 @@ export default function ProviderChannelsPage() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
 
-  const provider = getProvider(providerSlug);
+  // const [allProviders, setAllProviders] = useState<any[]>([]);
+
   //   const router = useRouter();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [provider, setProvider] = useState<any>(null);
   const [channels, setChannels] = useState<Channel[]>(provider?.channels ?? []);
   const [form, setForm] = useState({
     name: "",
@@ -76,8 +78,27 @@ export default function ProviderChannelsPage() {
   const [allchannels, setAllChannels] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchChannels();
+    const loadData = async () => {
+      const providersList = await fetchProviders();
+      const prov = getProvider(providersList, providerSlug);
+      setProvider(prov);
+      fetchChannels(prov);
+    };
+
+    loadData();
   }, []);
+
+  const fetchProviders = async () => {
+    try {
+      const res = await api.get("/streaming/provider");
+      console.log("Providers:", res.data);
+
+      // setAllProviders(res.data);
+      return res?.data;
+    } catch (err) {
+      console.error("error : ", err);
+    }
+  };
 
   const fetchEligibleClients = async () => {
     try {
@@ -94,9 +115,9 @@ export default function ProviderChannelsPage() {
     }
   }, [dialogOpen]);
 
-  const fetchChannels = async () => {
+  const fetchChannels = async (provider: any) => {
     try {
-      const res = await api.get("/streaming/channel");
+      const res = await api.get(`/streaming/channels/${provider?.provider_id}`);
       console.log("Channels:", res.data);
 
       setAllChannels(res.data);
@@ -140,11 +161,11 @@ export default function ProviderChannelsPage() {
       if (channel.status === "live") {
         // STOP STREAM
         await api.put(`/streaming/channel/${channel.channel_id}/stop`);
-        await fetchChannels();
+        await fetchChannels(provider);
       } else {
         // START STREAM
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
-        await fetchChannels();
+        await fetchChannels(provider);
       }
     } catch (error) {
       console.error("Failed to toggle stream:", error);
@@ -160,12 +181,13 @@ export default function ProviderChannelsPage() {
         name: form.name,
         description: form.description,
         client_id: selectedClient,
+        provider_id: provider.provider_id,
       });
 
       console.log("Channel Created:", res.data);
 
       // optional refresh
-      fetchChannels();
+      fetchChannels(provider);
 
       setDialogOpen(false);
 
@@ -178,7 +200,7 @@ export default function ProviderChannelsPage() {
         fps: "30",
         url: "",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast.error(
         error?.error?.details?.split("\n")[0] ||
           "An unexpected error occurred.",
@@ -196,7 +218,7 @@ export default function ProviderChannelsPage() {
       console.log("Channel Created:", res.data);
 
       // optional refresh
-      await fetchChannels();
+      await fetchChannels(provider);
     } catch (error) {
       console.error("Failed to create channel:", error);
     } finally {
@@ -495,8 +517,11 @@ export default function ProviderChannelsPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {/* {channels.map((channel) => (
+        {filteredChannels.length == 0 ? (
+          <p className="text-muted-foreground">No Channels available.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {/* {channels.map((channel) => (
             <button
               key={channel.id}
               onClick={() =>
@@ -610,118 +635,119 @@ export default function ProviderChannelsPage() {
               </div>
             </button>
           ))} */}
-          {filteredChannels.map((channel) => (
-            <button
-              key={channel.channel_id}
-              className="group relative max-w-[300px] md:max-w-md flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:border-foreground/20 text-left"
-            >
-              <div
-                className="p-5"
-                onClick={() =>
-                  navigate(
-                    `/stream-providers/${providerSlug}/${channel.channel_id}`,
-                  )
-                }
+            {filteredChannels.map((channel) => (
+              <button
+                key={channel.channel_id}
+                className="group relative max-w-[300px] md:max-w-md flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:border-foreground/20 text-left"
               >
-                <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-foreground">
-                    {channel.name}
-                  </h3>
-                  <MoreHorizontal className="size-4 text-muted-foreground" />
-                </div>
+                <div
+                  className="p-5"
+                  onClick={() =>
+                    navigate(
+                      `/stream-providers/${providerSlug}/${channel.channel_id}`,
+                    )
+                  }
+                >
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold text-foreground">
+                      {channel.name}
+                    </h3>
+                    <MoreHorizontal className="size-4 text-muted-foreground" />
+                  </div>
 
-                {/* STATUS */}
-                <div className="mt-2 flex items-center gap-2">
-                  {channel.status === "live" ? (
-                    <Badge className="bg-emerald-600 text-primary-foreground border-0 text-[11px]">
-                      <span className="mr-1 inline-block size-1.5 rounded-full bg-primary-foreground animate-pulse" />
-                      live
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="text-[11px] text-muted-foreground"
-                    >
-                      {channel.status}
-                    </Badge>
-                  )}
+                  {/* STATUS */}
+                  <div className="mt-2 flex items-center gap-2">
+                    {channel.status === "live" ? (
+                      <Badge className="bg-emerald-600 text-primary-foreground border-0 text-[11px]">
+                        <span className="mr-1 inline-block size-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                        live
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="text-[11px] text-muted-foreground"
+                      >
+                        {channel.status}
+                      </Badge>
+                    )}
 
-                  {/* <Badge className="bg-red-50 text-red-600 border-0 text-[11px]">
+                    {/* <Badge className="bg-red-50 text-red-600 border-0 text-[11px]">
                     streaming
                   </Badge> */}
-                </div>
+                  </div>
 
-                {/* URL */}
-                <div className="mt-4">
-                  <span className="text-xs text-muted-foreground">
-                    Playback URL:
-                  </span>
-                  <div className="mt-1 rounded-md bg-muted px-2.5 py-1.5">
-                    <p className="truncate text-xs text-foreground font-mono">
-                      {channel.playback_url}
-                    </p>
+                  {/* URL */}
+                  <div className="mt-4">
+                    <span className="text-xs text-muted-foreground">
+                      Playback URL:
+                    </span>
+                    <div className="mt-1 rounded-md bg-muted px-2.5 py-1.5">
+                      <p className="truncate text-xs text-foreground font-mono">
+                        {channel.playback_url}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* FOOTER */}
-              <div className="border-t px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">
-                  Created: {new Date(channel.created_at).toLocaleDateString()}
-                </span>
+                {/* FOOTER */}
+                <div className="border-t px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground">
+                    Created: {new Date(channel.created_at).toLocaleDateString()}
+                  </span>
 
-                <div className="flex items-center gap-2">
-                  {channel && (
+                  <div className="flex items-center gap-2">
+                    {channel && (
+                      <Button
+                        size="sm"
+                        disabled={actionLoading === channel.channel_id}
+                        variant={
+                          channel.status === "live" ? "destructive" : "default"
+                        }
+                        className={`h-7 gap-1.5 text-xs ${
+                          channel.status === "live"
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                        onClick={() => handleToggleLive(channel)}
+                      >
+                        {actionLoading === channel.channel_id ? (
+                          "Loading..."
+                        ) : channel.status === "live" ? (
+                          <>
+                            <Square className="size-3" />
+                            Stop Live
+                          </>
+                        ) : (
+                          <>
+                            <Play className="size-3" />
+                            Go Live
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
-                      size="sm"
-                      disabled={actionLoading === channel.channel_id}
-                      variant={
-                        channel.status === "live" ? "destructive" : "default"
-                      }
-                      className={`h-7 gap-1.5 text-xs ${
-                        channel.status === "live"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      }`}
-                      onClick={() => handleToggleLive(channel)}
+                      disabled={deleteLoading === channel.channel_id}
+                      className="gap-1.5 h-7 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => deleteChannel(channel.channel_id)}
                     >
-                      {actionLoading === channel.channel_id ? (
-                        "Loading..."
-                      ) : channel.status === "live" ? (
-                        <>
-                          <Square className="size-3" />
-                          Stop Live
-                        </>
+                      {deleteLoading === channel.channel_id ? (
+                        "Deleting..."
                       ) : (
                         <>
-                          <Play className="size-3" />
-                          Go Live
+                          <Trash className="size-3" />
+                          Delete
                         </>
                       )}
                     </Button>
-                  )}
-                  <Button
-                    disabled={deleteLoading === channel.channel_id}
-                    className="gap-1.5 h-7 bg-red-600 hover:bg-red-700 text-white"
-                    onClick={() => deleteChannel(channel.channel_id)}
-                  >
-                    {deleteLoading === channel.channel_id ? (
-                      "Deleting..."
-                    ) : (
-                      <>
-                        <Trash className="size-3" />
-                        Delete
-                      </>
-                    )}
-                  </Button>
-                  <ChevronRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
+                    <ChevronRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
 
-                {/* <ChevronRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" /> */}
-              </div>
-            </button>
-          ))}
-        </div>
+                  {/* <ChevronRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" /> */}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

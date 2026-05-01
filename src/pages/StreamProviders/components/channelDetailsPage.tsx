@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import {
   getProvider,
-  getChannel,
 } from "@/pages/StreamProviders/components/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,14 +57,32 @@ export default function ChannelDetailPage() {
   const [mediaRecorder, setMediaRecorder] = useState<any>(null);
   const [cameraFacing, setCameraFacing] = useState("user");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [allProviders, setAllProviders] = useState<any[]>([]);
   // "user" = front camera
   // "environment" = rear camera
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    fetchChannelById(channelId as string);
+    const loadData = async () => {
+      await fetchProviders();
+      fetchChannelById(channelId as string);
+    };
+
+    loadData();
   }, []);
+
+  const fetchProviders = async () => {
+    try {
+      const res = await api.get("/streaming/provider");
+      console.log("Providers:", res.data);
+
+      setAllProviders(res.data);
+    } catch (err) {
+      console.error("error : ", err);
+    }
+  };
+
   const fetchChannelById = async (channelId: string) => {
     try {
       const res = await api.get(`/streaming/channel/${channelId}`);
@@ -81,7 +98,7 @@ export default function ChannelDetailPage() {
   const [isLive, setIsLive] = useState(false);
   const [viewers, setViewers] = useState(0);
 
-  const provider = getProvider(providerSlug as string);
+  const provider = getProvider(allProviders, providerSlug as string);
   //   const channel = getChannel(providerSlug as string, channelId as string);
 
   // Initialize live state from channel data
@@ -199,69 +216,67 @@ export default function ChannelDetailPage() {
   //   setIsStreaming(true);
   // };
 
-const startWebcamLive = async () => {
-  if (!webcamStream) return;
+  const startWebcamLive = async () => {
+    if (!webcamStream) return;
 
-  try {
-
-    // 🔴 STEP 1: Start channel if not live
-    if (channel.status !== "live") {
-      await api.put(`/streaming/channel/${channel.channel_id}/start`);
-      await fetchChannelById(channelId as string); // refresh state
-    }
-
-    // 2️⃣ Detect supported mime type
-    const mimeTypes = [
-      "video/webm;codecs=vp8,opus",
-      "video/webm",
-      "video/mp4",
-    ];
-
-    let selectedMimeType = "";
-
-    for (const type of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        selectedMimeType = type;
-        break;
+    try {
+      // 🔴 STEP 1: Start channel if not live
+      if (channel.status !== "live") {
+        await api.put(`/streaming/channel/${channel.channel_id}/start`);
+        await fetchChannelById(channelId as string); // refresh state
       }
-    }
 
-    if (!selectedMimeType) {
-      console.error("No supported MIME type found");
-      return;
-    }
+      // 2️⃣ Detect supported mime type
+      const mimeTypes = [
+        "video/webm;codecs=vp8,opus",
+        "video/webm",
+        "video/mp4",
+      ];
 
-    const options = { mimeType: selectedMimeType };
+      let selectedMimeType = "";
 
-    // 🔴 STEP 2: Start backend FFmpeg stream
-    await api.post(`/start-stream`, {
-      channel_id: channelId,
-    });
-
-    const recorder = new MediaRecorder(webcamStream, options);
-
-    recorder.ondataavailable = async (event) => {
-      if (event.data.size > 0) {
-        await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": selectedMimeType,
-            "data-type": selectedMimeType,
-          },
-          body: event.data,
-        });
+      for (const type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          selectedMimeType = type;
+          break;
+        }
       }
-    };
 
-    recorder.start(5000);
+      if (!selectedMimeType) {
+        console.error("No supported MIME type found");
+        return;
+      }
 
-    setMediaRecorder(recorder);
-    setIsStreaming(true);
+      const options = { mimeType: selectedMimeType };
 
-  } catch (err) {
-    console.error("Webcam live start failed:", err);
-  }
-};
+      // 🔴 STEP 2: Start backend FFmpeg stream
+      await api.post(`/start-stream`, {
+        channel_id: channelId,
+      });
+
+      const recorder = new MediaRecorder(webcamStream, options);
+
+      recorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": selectedMimeType,
+              "data-type": selectedMimeType,
+            },
+            body: event.data,
+          });
+        }
+      };
+
+      recorder.start(5000);
+
+      setMediaRecorder(recorder);
+      setIsStreaming(true);
+    } catch (err) {
+      console.error("Webcam live start failed:", err);
+    }
+  };
 
   const closeWebcamModal = async () => {
     if (isStreaming) {
