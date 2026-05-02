@@ -20,9 +20,7 @@ import {
   Play,
   Square,
 } from "lucide-react";
-import {
-  getProvider,
-} from "@/pages/StreamProviders/components/providers";
+import { getProvider } from "@/pages/StreamProviders/components/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import api from "@/api";
@@ -258,7 +256,8 @@ export default function ChannelDetailPage() {
 
       recorder.ondataavailable = async (event) => {
         if (event.data.size > 0) {
-          await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+          // await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
+          await fetch(`${import.meta.env.VITE_BASE_URL}/stream/${channelId}`, {
             method: "POST",
             headers: {
               "Content-Type": selectedMimeType,
