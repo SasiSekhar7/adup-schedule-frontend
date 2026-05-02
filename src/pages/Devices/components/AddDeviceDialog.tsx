@@ -281,8 +281,8 @@ const AddDeviceDialog = ({
       device_name: deviceData.device_name,
       tags: deviceData.tags,
       group_id: deviceData.group_id,
-      overwrite_group_orientation: overwriteOrientation,
     };
+    console.log("Payload:", payload);
 
     await api.post(`device/update/${deviceData.deviceId}`, payload);
 
@@ -307,6 +307,7 @@ const AddDeviceDialog = ({
         device_orientation: deviceData.device_orientation,
         device_resolution: deviceData.device_resolution,
         device_type: deviceData.device_type,
+        overwrite_group_orientation: overwriteOrientation,
       };
       await api.post(`/device/update/location/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
