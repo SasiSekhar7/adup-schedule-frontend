@@ -37,7 +37,7 @@ function DeviceGroup() {
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
     reg_code: "",
-    orientation: "landscape",
+    orientation: "portrait",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
