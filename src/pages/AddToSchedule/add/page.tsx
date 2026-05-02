@@ -805,11 +805,37 @@ export default function ScheduleAddPage() {
   //     .slice(0, 10); //  limit to 10
   // }, [groups, groupFilter]);
 
+  // const getFilteredGroups = () => {
+  //   // 🔍 search filter
+  //   const filtered = groups.filter((g: any) =>
+  //     g.name?.toLowerCase().includes(groupFilter.toLowerCase()),
+  //   );
+
+  //   // 📄 pagination
+  //   const startIndex = (groupPage - 1) * groupsPerPage;
+  //   const paginated = filtered.slice(startIndex, startIndex + groupsPerPage);
+
+  //   return {
+  //     filtered,
+  //     paginated,
+  //     totalPages: Math.ceil(filtered.length / groupsPerPage),
+  //   };
+  // };
+
   const getFilteredGroups = () => {
-    // 🔍 search filter
-    const filtered = groups.filter((g: any) =>
-      g.name?.toLowerCase().includes(groupFilter.toLowerCase()),
-    );
+    // 🔍 search + orientation filter
+    const filtered = groups.filter((g: any) => {
+      const matchesSearch = g.name
+        ?.toLowerCase()
+        .includes(groupFilter.toLowerCase());
+
+      const matchesOrientation =
+        !selectedLayout ||
+        (g.orientation || "").toLowerCase() ===
+          (selectedLayout.orientation || "").toLowerCase();
+
+      return matchesSearch && matchesOrientation;
+    });
 
     // 📄 pagination
     const startIndex = (groupPage - 1) * groupsPerPage;

@@ -384,7 +384,7 @@ export default function ManageSubscriptionsPage() {
             <Card className="rounded-lg border-slate-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600">
-                  Total Subscriptions
+                  Total Clients
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -804,15 +804,12 @@ export default function ManageSubscriptionsPage() {
                 </p>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" className="flex-1 rounded-lg">
-                  Close
-                </Button>
                 <Button
-                  className={`flex-1 rounded-lg ${selectedSubscription.status === "expired" ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"}`}
+                  onClick={() => setIsDetailOpen(false)}
+                  variant="outline"
+                  className="flex-1 rounded-lg"
                 >
-                  {selectedSubscription.status === "expired"
-                    ? "Renew Now"
-                    : "Edit"}
+                  Close
                 </Button>
               </div>
             </div>
