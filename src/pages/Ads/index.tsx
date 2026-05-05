@@ -280,6 +280,10 @@ function Ads() {
   const currentAds = data.length;
   const canAddAd = currentAds < maxAds;
 
+
+  const handleRowClick = (ad: Ad) => {
+    navigate(`/ads/${ad.ad_id}`);
+  };
   return (
     <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
@@ -338,6 +342,52 @@ function Ads() {
                 </div>
               </DialogHeader>
               <div className="space-y-4 md:space-y-6 py-4">
+                {/* <div className="space-y-2">
+                  <Label htmlFor="adSelection">Ad Selection</Label>
+                  <Select
+                    value={selectedAdIds}
+                    onValueChange={setSelectedAdIds}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select ads to export" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Ads</SelectItem>
+                      {data.map((ad) => (
+                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                          {ad.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div> */}
+
+                <div className="space-y-2">
+                  <Label htmlFor="adSelection">Ad Selection</Label>
+
+                  <Select
+                    value={selectedAdId ?? "all"}
+                    onValueChange={(value) =>
+                      setSelectedAdId(value === "all" ? null : value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select ad to export" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {/* <SelectItem value="all">All Ads</SelectItem> */}
+
+                      {data.map((ad) => (
+                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                          {ad.name}
+                          {/* {ad.ad_id} */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="exportFilter">Export Filter</Label>
                   <Select value={exportFilter} onValueChange={setExportFilter}>
@@ -476,6 +526,7 @@ function Ads() {
             <DataTable
               data={data}
               columns={columns}
+              onRowClick={handleRowClick}
               filters={[
                 { label: "Ad Name", value: "name" },
                 { label: "ad_id", value: "ad_id" },
