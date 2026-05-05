@@ -32,7 +32,7 @@ import ClientSubscriptionPage from "./pages/Subscriptions/clientpage";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import ProtectedRoute from "./context/components/ProtectedRoute";
 import ClientChannelsPage from "./pages/StreamProviders/components/clientChannelsPage";
-import ClientChannelDetailPage from "./pages/StreamProviders/components/clientChannelDetailsPage";
+import ClientChannelDetailPage from "./pages/StreamProviders/components/clientchannelDetailsPage";
 import PublicRoute from "./routes/PublicRoute";
 
 // Lazy load components
