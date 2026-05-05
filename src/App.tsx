@@ -22,6 +22,7 @@ import ExportDetails from "./pages/ExportDetails";
 import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
 import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
 import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
+import PublicRoute from "./routes/PublicRoute";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -49,7 +50,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {/* <Route path="/login" element={<Login />} /> */}
+        {/* Public Routes */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+        </Route>
         <Route path="/register-device" element={<RegisterDevice />} />
 
         <Route element={<Layout />}>

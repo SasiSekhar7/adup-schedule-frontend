@@ -177,7 +177,11 @@ export const columns: ColumnDef<Ad>[] = [
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => navigate(`/ads/${row.getValue("ad_id")}/edit`)}
+              // onClick={() => navigate(`/ads/${row.getValue("ad_id")}/edit`)}
+              onClick={(e) => {
+                e.stopPropagation(); // ✅ FIX
+                navigate(`/ads/${row.getValue("ad_id")}/edit`);
+              }}
             >
               Edit / Delete
               <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>

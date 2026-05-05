@@ -42,7 +42,8 @@ export function LoginForm({ className = "" }: LoginFormProps) {
       const data = await response.json();
       const token = data.token;
 
-      sessionStorage.setItem("token", token);
+      // sessionStorage.setItem("token", token);
+      localStorage.setItem("token", token);
       // Navigate to dashboard (you'll need to implement navigation)
       navigate("/");
     } catch (error) {
