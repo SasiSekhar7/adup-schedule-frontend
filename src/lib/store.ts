@@ -473,10 +473,12 @@ export async function saveLayout(layout: Layout): Promise<void> {
       res = await api.post("/layout/template", layout);
     }
 
-    toast.success(res?.data?.message || "Layout saved successfully");
+    return res?.data;
+    // toast.success(res?.data?.message || "Layout saved successfully");
   } catch (error: any) {
     console.error("Save failed:", error);
-    toast.error(error?.error || "Something went wrong ❌");
+    throw error;
+    // toast.error(error?.error || "Something went wrong ❌");
   }
 }
 

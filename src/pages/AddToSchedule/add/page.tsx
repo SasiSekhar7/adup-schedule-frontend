@@ -1207,51 +1207,61 @@ export default function ScheduleAddPage() {
                         </div>
                       </div>
                     ))} */}
-                    {paginatedGroups.map((group: any) => (
-                      <div
-                        key={group.group_id}
-                        className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
-                      >
-                        <Checkbox
-                          checked={selectedGroups.includes(group.group_id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedGroups([
-                                ...selectedGroups,
-                                group.group_id,
-                              ]);
-                            } else {
-                              setSelectedGroups(
-                                selectedGroups.filter(
-                                  (id) => id !== group.group_id,
-                                ),
-                              );
-                            }
-                          }}
-                        />
-
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {group.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {group.device_count || 0} devices
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-amber-500 rounded-full"
-                              style={{ width: `${group.capacity || 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {group.capacity || 0}%
-                          </span>
-                        </div>
+                    {paginatedGroups.length === 0 ? (
+                      <div className="text-center text-sm text-muted-foreground py-6">
+                        No Device groups found for{" "}
+                        <span className="font-bold">
+                          {selectedLayout.orientation}
+                        </span>{" "}
+                        orientation Layout.
                       </div>
-                    ))}
+                    ) : (
+                      paginatedGroups.map((group: any) => (
+                        <div
+                          key={group.group_id}
+                          className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={selectedGroups.includes(group.group_id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedGroups([
+                                  ...selectedGroups,
+                                  group.group_id,
+                                ]);
+                              } else {
+                                setSelectedGroups(
+                                  selectedGroups.filter(
+                                    (id) => id !== group.group_id,
+                                  ),
+                                );
+                              }
+                            }}
+                          />
+
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {group.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {group.device_count || 0} devices
+                            </p>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-500 rounded-full"
+                                style={{ width: `${group.capacity || 0}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {group.capacity || 0}%
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </ScrollArea>
                 <div className="flex justify-between items-center mt-3">
