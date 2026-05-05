@@ -431,9 +431,11 @@ function AddToSchedule() {
                                   </h4>
                                   <p className="text-sm text-muted-foreground">
                                     {content.content_type} •{" "}
-                                    {content.duration === 0
-                                      ? "Indefinite"
-                                      : `${content.duration}s`}
+                                    {content.content_type == "provider"
+                                      ? `${content?.channel?.StreamingProvider?.name}`
+                                      : content.duration === 0
+                                        ? "Infinite"
+                                        : `${content.duration}s`}
                                   </p>
                                 </div>
                                 <div className="flex flex-col items-end gap-1">

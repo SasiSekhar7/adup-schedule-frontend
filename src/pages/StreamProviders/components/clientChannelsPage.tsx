@@ -46,7 +46,7 @@ export default function ClientChannelsPage() {
       const res = await api.get(`/streaming/client-channel`);
       console.log("Channels:", res.data);
 
-      setAllChannels([res.data]);
+      setAllChannels(res.data);
     } catch (err) {
       console.error(err);
     }
