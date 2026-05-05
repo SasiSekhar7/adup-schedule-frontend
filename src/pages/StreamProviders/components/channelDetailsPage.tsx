@@ -75,7 +75,7 @@ export default function ChannelDetailPage() {
       const res = await api.get("/streaming/provider");
       console.log("Providers:", res.data);
 
-      setAllProviders([]);
+      setAllProviders(res.data);
     } catch (err) {
       console.error("error : ", err);
     }

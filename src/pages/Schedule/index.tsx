@@ -119,7 +119,6 @@ import {
   ExternalLinkIcon,
   Video,
   RotateCcw,
-  Activity,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -131,7 +130,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
+
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -174,13 +173,6 @@ interface ApiCarousel {
   contentDuration: number;
   contentType: "carousel";
   groups: ApiGroup[];
-}
-
-interface ApiResponse {
-  ads: ApiAd[];
-  live_contents: ApiLiveContent[];
-  carousels: ApiCarousel[];
-  total: number;
 }
 
 interface Schedule {
@@ -408,26 +400,26 @@ export default function Schedule() {
     return options;
   };
 
-  const handleLiveToggle = async (schedule: Schedule) => {
-    try {
-      const groupIds = schedule.originalGroups.map((g) => g.groupId);
+  // const handleLiveToggle = async (schedule: Schedule) => {
+  //   try {
+  //     const groupIds = schedule.originalGroups.map((g) => g.groupId);
 
-      const isEnable = schedule.status !== "Active";
+  //     const isEnable = schedule.status !== "Active";
 
-      await api.patch("/schedule/live/toggle", {
-        groupIds,
-        content_id: schedule.id,
-        is_enabled: isEnable,
-      });
+  //     await api.patch("/schedule/live/toggle", {
+  //       groupIds,
+  //       content_id: schedule.id,
+  //       is_enabled: isEnable,
+  //     });
 
-      toast.success(isEnable ? "Live content started" : "Live content stopped");
+  //     toast.success(isEnable ? "Live content started" : "Live content stopped");
 
-      getSchedules(); // refresh list
-    } catch (error) {
-      console.error("Live toggle failed", error);
-      toast.error("Failed to update live content");
-    }
-  };
+  //     getSchedules(); // refresh list
+  //   } catch (error) {
+  //     console.error("Live toggle failed", error);
+  //     toast.error("Failed to update live content");
+  //   }
+  // };
 
   const openLiveModal = (schedule: Schedule) => {
     setLiveModal({
@@ -632,7 +624,7 @@ export default function Schedule() {
 
       console.log("[v0] Delete API response:", result);
 
-      // ✅ SUCCESS CHECK (backend-driven)
+      //SUCCESS CHECK (backend-driven)
       if (result?.deleted_count > 0) {
         toast.success(
           `${result.deleted_count} schedule${

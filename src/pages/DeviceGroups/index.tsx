@@ -1,7 +1,7 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
-import { Device, DevicesResponse, columns } from "./columns";
+import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, RefreshCcw, Save } from "lucide-react";
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getRole } from "@/helpers";
+import { Device, DevicesResponse } from "../Devices/columns";
 
 interface DeviceGroup {
   name: string;

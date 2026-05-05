@@ -95,7 +95,9 @@ const EditGroup = ({ group }: { group: Group }) => {
 
               <Select
                 value={orientationValue}
-                onValueChange={(value) => setOrientationValue(value)}
+                onValueChange={(value: "portrait" | "landscape") =>
+                  setOrientationValue(value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Orientation" />

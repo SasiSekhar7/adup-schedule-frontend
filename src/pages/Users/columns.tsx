@@ -23,6 +23,7 @@ export interface User {
 export const userColumns: ColumnDef<User>[] = [
   {
     id: "select",
+
     header: ({ table }) => (
       <Checkbox
         checked={

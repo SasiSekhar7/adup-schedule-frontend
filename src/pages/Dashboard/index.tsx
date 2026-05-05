@@ -26,7 +26,7 @@ import { DateRangePicker } from "./components/DateRangePicker";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 import api from "@/api";
-import { getRole } from "@/helpers";
+
 import { PerformanceTablesCard } from "./components/PerformanceTables";
 import { DashboardMap } from "./dashboardMap";
 
@@ -55,6 +55,13 @@ interface RecentEvent {
   location: string;
 }
 
+interface SystemHealth {
+  avgCpuUsage: number;
+  avgRamFree: number;
+  avgStorageFree: number;
+  networkHealth: number;
+}
+
 // Type for the date-range sensitive KPIs
 interface DynamicKpiData {
   totalImpressions: number;
@@ -71,80 +78,8 @@ interface DynamicKpiData {
 
   performanceOutliers: PerformanceOutlier[]; // add
   recentEvents: RecentEvent[]; // add
+  systemHealth: SystemHealth; // ✅ ADD THIS
 }
-
-// const performanceOutliers = [
-//   {
-//     id: 1,
-//     location: "Delhi",
-//     metric: "CPU Usage",
-//     value: "94%",
-//     severity: "critical",
-//     device_id: "DEV-001",
-//   },
-//   {
-//     id: 2,
-//     location: "Mumbai",
-//     metric: "RAM Free",
-//     value: "125 MB",
-//     severity: "warning",
-//     device_id: "DEV-002",
-//   },
-//   {
-//     id: 3,
-//     location: "Bangalore",
-//     metric: "Storage Free",
-//     value: "245 MB",
-//     severity: "warning",
-//     device_id: "DEV-003",
-//   },
-//   {
-//     id: 4,
-//     location: "Hyderabad",
-//     metric: "Network Latency",
-//     value: "245ms",
-//     severity: "critical",
-//     device_id: "DEV-004",
-//   },
-// ];
-
-// const recentErrors = [
-//   {
-//     id: 1,
-//     event_type: "CRASH",
-//     timestamp: "2 hours ago",
-//     device: "DEV-045",
-//     location: "Mumbai",
-//   },
-//   {
-//     id: 2,
-//     event_type: "OOM",
-//     timestamp: "3 hours ago",
-//     device: "DEV-089",
-//     location: "Bangalore",
-//   },
-//   {
-//     id: 3,
-//     event_type: "NETWORK_ERROR",
-//     timestamp: "5 hours ago",
-//     device: "DEV-112",
-//     location: "Delhi",
-//   },
-//   {
-//     id: 4,
-//     event_type: "STORAGE_FULL",
-//     timestamp: "6 hours ago",
-//     device: "DEV-067",
-//     location: "Kolkata",
-//   },
-// ];
-
-// const systemHealth = [
-//   { metric: "Avg CPU Usage", value: "42%", normal: true },
-//   { metric: "Avg RAM Available", value: "1.2 GB", normal: true },
-//   { metric: "Network Health", value: "98%", normal: true },
-//   { metric: "Storage Utilization", value: "72%", normal: false },
-// ];
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -175,7 +110,7 @@ const getEventIcon = (eventType: string) => {
 const getDateLabel = (from?: Date, to?: Date) => {
   if (!from || !to) return "";
 
-  const days = differenceInDays(to, from) + 1;
+  // const days = differenceInDays(to, from) + 1;
 
   // Same month → "Mar 1 - Mar 31"
   if (isSameMonth(from, to)) {
@@ -188,8 +123,8 @@ const getDateLabel = (from?: Date, to?: Date) => {
 
 const Dashboard = () => {
   // State for overall stats (fetched once)
-  const [overallStatsData, setOverallStatsData] =
-    useState<OverallStatsData | null>(null);
+  // const [overallStatsData, setOverallStatsData] =
+  //   useState<OverallStatsData | null>(null);
 
   // State for the date range picker
   const [date, setDate] = useState<DateRange | undefined>({
@@ -519,7 +454,7 @@ function TelemetryInsights({
     Record<string, string>
   >({});
 
-  async function getAddressFromCoordinates(lat, lon) {
+  async function getAddressFromCoordinates(lat: number, lon: number) {
     try {
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
       const response = await fetch(url);
@@ -596,7 +531,7 @@ function TelemetryInsights({
           {performanceOutliers.length === 0 ? (
             <p className="text-xs text-slate-500">No outliers detected</p>
           ) : (
-            performanceOutliers.map((outlier) => (
+            performanceOutliers.map((outlier: any) => (
               <div
                 key={outlier.id}
                 className={`p-3 rounded text-xs ${getSeverityColor(outlier.severity)}`}
@@ -633,7 +568,7 @@ function TelemetryInsights({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-2">
-          {recentErrors.map((error) => (
+          {recentErrors.map((error: any) => (
             <div
               key={error.id}
               className="flex items-start gap-3 p-2 bg-slate-50 rounded border border-slate-200"

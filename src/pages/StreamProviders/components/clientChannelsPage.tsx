@@ -79,7 +79,7 @@ export default function ClientChannelsPage() {
       }
     } catch (error) {
       console.error("Failed to toggle stream:", error);
-      toast.error(error?.error || error?.message || "Something went wrong ❌");
+      toast.error(error?.error || "Something went wrong ❌");
     } finally {
       setActionLoading(null);
     }

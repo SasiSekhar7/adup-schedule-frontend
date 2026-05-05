@@ -30,7 +30,6 @@ import {
   Monitor,
   Plus,
   Trash2,
-  ChevronRight,
   Film,
   LayoutGrid,
   Volume2,
@@ -57,14 +56,8 @@ import {
   type ContentItem,
   type ZoneContent,
   type ScheduleConfig,
-  type DeviceGroup,
   type Widget,
   getLayouts,
-  sampleAds,
-  sampleCarousels,
-  sampleLiveContent,
-  sampleGroups,
-  defaultWidgets,
   saveSchedule,
   generateId,
   formatDuration,
@@ -89,6 +82,15 @@ const widgetIcons: any = {
 
 type DateType = "today" | "specific_date" | "one_week" | "one_month";
 type Step = "select_layout" | "configure_layout";
+
+type WidgetSchemaProperty = {
+  type?: string;
+  enum?: string[];
+  format?: string;
+  default?: any;
+};
+
+
 
 // Helper function to get file extension
 const getFileExtension = (filename: string): string => {
@@ -158,13 +160,13 @@ export default function ScheduleAddPage() {
     return `${aspectWidth}:${aspectHeight}`;
   };
 
-  const filteredWidgets = useMemo(() => {
-    if (!activeZone) return [];
+  // const filteredWidgets = useMemo(() => {
+  //   if (!activeZone) return [];
 
-    const zoneRatio = getZoneAspectRatio(activeZone);
+  //   const zoneRatio = getZoneAspectRatio(activeZone);
 
-    return widgets.filter((w) => w.aspect_ratio === zoneRatio);
-  }, [widgets, activeZone]);
+  //   return widgets.filter((w) => w.aspect_ratio === zoneRatio);
+  // }, [widgets, activeZone]);
 
   const navigate = useNavigate();
 
@@ -366,31 +368,31 @@ export default function ScheduleAddPage() {
     }));
   };
 
-  const updateContentSchedule = (
-    itemId: string,
-    field: "start_time" | "end_time",
-    value: string,
-  ) => {
-    if (!activeZone) return;
+  // const updateContentSchedule = (
+  //   itemId: string,
+  //   field: "start_time" | "end_time",
+  //   value: string,
+  // ) => {
+  //   if (!activeZone) return;
 
-    setZoneContents((prev) => ({
-      ...prev,
-      [activeZone.zone_id]: {
-        ...prev[activeZone.zone_id],
-        content_items:
-          prev[activeZone.zone_id]?.content_items?.map((item) =>
-            item.id === itemId ? { ...item, [field]: value } : item,
-          ) || [],
-      },
-    }));
-  };
+  //   setZoneContents((prev) => ({
+  //     ...prev,
+  //     [activeZone.zone_id]: {
+  //       ...prev[activeZone.zone_id],
+  //       content_items:
+  //         prev[activeZone.zone_id]?.content_items?.map((item) =>
+  //           item.id === itemId ? { ...item, [field]: value } : item,
+  //         ) || [],
+  //     },
+  //   }));
+  // };
 
   const [assets, setAssets] = useState<any[]>([]);
-  const [loadingAssets, setLoadingAssets] = useState(false);
+  // const [loadingAssets, setLoadingAssets] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fetchAssets = async () => {
     try {
-      setLoadingAssets(true);
+      // setLoadingAssets(true);
       const res = await api.get("/assets");
 
       console.log("Assets:", res.data);
@@ -402,7 +404,7 @@ export default function ScheduleAddPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoadingAssets(false);
+      // setLoadingAssets(false);
     }
   };
 
@@ -524,141 +526,21 @@ export default function ScheduleAddPage() {
     }));
   };
 
-  const updateWidgetSchedule = (
-    field: "widget_schedule_start" | "widget_schedule_end",
-    value: string,
-  ) => {
-    if (!activeZone) return;
+  // const updateWidgetSchedule = (
+  //   field: "widget_schedule_start" | "widget_schedule_end",
+  //   value: string,
+  // ) => {
+  //   if (!activeZone) return;
 
-    setZoneContents((prev) => ({
-      ...prev,
-      [activeZone.zone_id]: {
-        ...prev[activeZone.zone_id],
-        [field]: value,
-      },
-    }));
-  };
-
-  // const getZoneTimeAnalysis = (zoneId: string) => {
-  //   const content = zoneContents[zoneId];
-  //   if (!content?.content_items?.length) return null;
-
-  //   const scheduledItems = content.content_items.filter(
-  //     (i) => i.start_time && i.end_time,
-  //   );
-  //   if (scheduledItems.length === 0) return null;
-
-  //   let minTime = Infinity;
-  //   let maxTime = 0;
-  //   let totalScheduled = 0;
-  //   const gaps: { start: string; end: string; duration: number }[] = [];
-
-  //   const sorted = [...scheduledItems].sort(
-  //     (a, b) => timeToMinutes(a.start_time!) - timeToMinutes(b.start_time!),
-  //   );
-
-  //   sorted.forEach((item, idx) => {
-  //     const startMins = timeToMinutes(item.start_time!);
-  //     const endMins = timeToMinutes(item.end_time!);
-
-  //     minTime = Math.min(minTime, startMins);
-  //     maxTime = Math.max(maxTime, endMins);
-  //     totalScheduled += endMins - startMins;
-
-  //     if (idx < sorted.length - 1) {
-  //       const nextStart = timeToMinutes(sorted[idx + 1].start_time!);
-  //       if (nextStart > endMins) {
-  //         gaps.push({
-  //           start: minutesToTime(endMins),
-  //           end: minutesToTime(nextStart),
-  //           duration: nextStart - endMins,
-  //         });
-  //       }
-  //     }
-  //   });
-
-  //   return {
-  //     minTime: minutesToTime(minTime),
-  //     maxTime: minutesToTime(maxTime),
-  //     totalScheduled,
-  //     totalRemaining: globalTimeInfo.totalMinutes - totalScheduled,
-  //     gaps,
-  //   };
+  //   setZoneContents((prev) => ({
+  //     ...prev,
+  //     [activeZone.zone_id]: {
+  //       ...prev[activeZone.zone_id],
+  //       [field]: value,
+  //     },
+  //   }));
   // };
 
-  // const getZoneTimeAnalysis = (zoneId: string) => {
-  //   const content = zoneContents[zoneId];
-  //   if (!content?.content_items?.length) return null;
-
-  //   let allSlots: { start: number; end: number }[] = [];
-
-  //   //  collect all slots from all items
-  //   content.content_items.forEach((item) => {
-  //     (item.time_slots || []).forEach((slot) => {
-  //       const start = timeToMinutes(slot.start);
-  //       const end = timeToMinutes(slot.end);
-
-  //       if (start < end) {
-  //         allSlots.push({ start, end });
-  //       }
-  //     });
-  //   });
-
-  //   if (allSlots.length === 0) return null;
-
-  //   //  sort slots
-  //   const sorted = allSlots.sort((a, b) => a.start - b.start);
-
-  //   let totalScheduled = 0;
-  //   let gaps: { start: string; end: string; duration: number }[] = [];
-
-  //   // global limits
-  //   const globalStart = timeToMinutes(globalTimeInfo.minTime);
-  //   const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
-
-  //   //  gap BEFORE first slot
-  //   if (sorted[0].start > globalStart) {
-  //     gaps.push({
-  //       start: minutesToTime(globalStart),
-  //       end: minutesToTime(sorted[0].start),
-  //       duration: sorted[0].start - globalStart,
-  //     });
-  //   }
-
-  //   for (let i = 0; i < sorted.length; i++) {
-  //     const current = sorted[i];
-  //     totalScheduled += current.end - current.start;
-
-  //     const next = sorted[i + 1];
-
-  //     //  gap BETWEEN slots
-  //     if (next && next.start > current.end) {
-  //       gaps.push({
-  //         start: minutesToTime(current.end),
-  //         end: minutesToTime(next.start),
-  //         duration: next.start - current.end,
-  //       });
-  //     }
-  //   }
-
-  //   //  gap AFTER last slot
-  //   const last = sorted[sorted.length - 1];
-  //   if (last.end < globalEnd) {
-  //     gaps.push({
-  //       start: minutesToTime(last.end),
-  //       end: minutesToTime(globalEnd),
-  //       duration: globalEnd - last.end,
-  //     });
-  //   }
-
-  //   return {
-  //     minTime: minutesToTime(sorted[0].start),
-  //     maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
-  //     totalScheduled,
-  //     totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
-  //     gaps,
-  //   };
-  // };
   const getZoneTimeAnalysis = (zoneId: string) => {
     const content = zoneContents[zoneId];
     if (!content?.content_items?.length) return null;
@@ -849,7 +731,8 @@ export default function ScheduleAddPage() {
   };
 
   const {
-    filtered: filteredGroups,
+    // filtered: filteredGroups,
+
     paginated: paginatedGroups,
     totalPages: groupTotalPages,
   } = getFilteredGroups();
@@ -1492,12 +1375,6 @@ export default function ScheduleAddPage() {
       };
     }
 
-    const min = timeToMinutes(globalTimeInfo.minTime);
-    const max = timeToMinutes(globalTimeInfo.maxTime);
-    const totalAllowed = globalTimeInfo.totalMinutes;
-
-    let totalScheduled = 0;
-
     for (let item of items) {
       if (!item.time_slots || item.time_slots.length === 0) {
         return {
@@ -1760,7 +1637,7 @@ export default function ScheduleAddPage() {
     };
   };
 
-  const { filtered, paginated, totalPages } = getFilteredData();
+  const { paginated, totalPages } = getFilteredData();
   const validateAllZonesAssigned = () => {
     if (!selectedLayout) return { valid: true };
 
@@ -2411,13 +2288,15 @@ export default function ScheduleAddPage() {
                                               value={slot.start}
                                               onChange={(e) => {
                                                 const updated =
-                                                  item.time_slots.map((s, i) =>
-                                                    i === slotIdx
-                                                      ? {
-                                                          ...s,
-                                                          start: e.target.value,
-                                                        }
-                                                      : s,
+                                                  item.time_slots.map(
+                                                    (s: any, i: any) =>
+                                                      i === slotIdx
+                                                        ? {
+                                                            ...s,
+                                                            start:
+                                                              e.target.value,
+                                                          }
+                                                        : s,
                                                   );
                                                 updateItemSlots(
                                                   item.id,
@@ -2431,13 +2310,15 @@ export default function ScheduleAddPage() {
                                               value={slot.end}
                                               onChange={(e) => {
                                                 const updated =
-                                                  item.time_slots.map((s, i) =>
-                                                    i === slotIdx
-                                                      ? {
-                                                          ...s,
-                                                          start: e.target.value,
-                                                        }
-                                                      : s,
+                                                  item.time_slots.map(
+                                                    (s: any, i: any) =>
+                                                      i === slotIdx
+                                                        ? {
+                                                            ...s,
+                                                            start:
+                                                              e.target.value,
+                                                          }
+                                                        : s,
                                                   );
                                                 updateItemSlots(
                                                   item.id,
@@ -2452,7 +2333,8 @@ export default function ScheduleAddPage() {
                                               onClick={() => {
                                                 const updated =
                                                   item.time_slots.filter(
-                                                    (_, i) => i !== slotIdx,
+                                                    (_: any, i: any) =>
+                                                      i !== slotIdx,
                                                   );
                                                 updateItemSlots(
                                                   item.id,
@@ -2905,7 +2787,7 @@ export default function ScheduleAddPage() {
                           );
                         },
                       )} */}
-                      {Object.entries(widgetDef.config_schema.properties).map(
+                      {/* {Object.entries(widgetDef.config_schema.properties).map(
                         ([key, schema]: any) => {
                           const value = widgetItem.widget_config[key];
 
@@ -2987,39 +2869,7 @@ export default function ScheduleAddPage() {
                                 )}
                               </Label>
 
-                              {/* ENUM */}
-                              {/* {schema.enum ? (
-                                <Select
-                                  value={value}
-                                  onValueChange={(val) =>
-                                    updateWidgetConfig(key, val)
-                                  }
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {schema.enum.map((opt: any) => (
-                                      <SelectItem key={opt} value={opt}>
-                                        {opt}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Input
-                                  type={getInputType(schema)} //  IMPORTANT
-                                  // value={value || ""}
-                                  value={
-                                    schema.format === "date-time"
-                                      ? toLocalInput(value)
-                                      : value || ""
-                                  }
-                                  onChange={(e) =>
-                                    updateWidgetConfig(key, e.target.value)
-                                  }
-                                />
-                              )} */}
+                              
                               {schema.enum ? (
                                 <Select
                                   value={value}
@@ -3039,7 +2889,7 @@ export default function ScheduleAddPage() {
                                   </SelectContent>
                                 </Select>
                               ) : isColorField ? (
-                                /* 🎨 COLOR PICKER (NEW - DOES NOT BREAK ANYTHING) */
+                                
                                 <div className="flex items-center gap-2">
                                   <input
                                     type="color"
@@ -3059,7 +2909,7 @@ export default function ScheduleAddPage() {
                                   />
                                 </div>
                               ) : (
-                                /* 📝 EXISTING INPUT (UNCHANGED) */
+                                
                                 <Input
                                   type={getInputType(schema)}
                                   value={
@@ -3075,7 +2925,134 @@ export default function ScheduleAddPage() {
                             </div>
                           );
                         },
-                      )}
+                      )} */}
+                      {(
+                        Object.entries(widgetDef.config_schema.properties) as [
+                          string,
+                          WidgetSchemaProperty,
+                        ][]
+                      ).map(([key, schema]) => {
+                        const value = widgetItem?.widget_config?.[key];
+
+                        if (widgetDef.type === "logo" && key === "url") {
+                          return (
+                            <div key={key} className="space-y-2">
+                              <Label>Select Logo</Label>
+
+                              <Select
+                                value={value}
+                                onValueChange={(val) => {
+                                  const selectedAsset = assets.find(
+                                    (a) => a.storage_key === val,
+                                  );
+                                  updateWidgetConfig(key, val, selectedAsset);
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select logo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {assets.map((asset) => (
+                                    <SelectItem
+                                      key={asset.id}
+                                      value={asset.storage_key}
+                                    >
+                                      {asset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+
+                              <div className="flex gap-2 items-center">
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={uploading}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    setSelectedFile(file || null);
+                                  }}
+                                />
+
+                                <Button
+                                  disabled={!selectedFile || uploading}
+                                  onClick={() =>
+                                    selectedFile && handleUpload(selectedFile)
+                                  }
+                                >
+                                  {uploading ? "Uploading..." : "Upload"}
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        const isColorField =
+                          key.toLowerCase().includes("color") ||
+                          key === "background";
+
+                        return (
+                          <div key={key}>
+                            <Label>
+                              {key}
+                              {widgetDef.config_schema.required?.includes(
+                                key,
+                              ) && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+
+                            {schema.enum ? (
+                              <Select
+                                value={value}
+                                onValueChange={(val) =>
+                                  updateWidgetConfig(key, val)
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {schema.enum.map((opt: string) => (
+                                    <SelectItem key={opt} value={opt}>
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : isColorField ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={value || "#000000"}
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                  className="w-10 h-10 p-0 border rounded cursor-pointer"
+                                />
+
+                                <Input
+                                  value={value || ""}
+                                  onChange={(e) =>
+                                    updateWidgetConfig(key, e.target.value)
+                                  }
+                                  placeholder="#ffffff"
+                                />
+                              </div>
+                            ) : (
+                              <Input
+                                type={getInputType(schema)}
+                                value={
+                                  schema.format === "date-time"
+                                    ? toLocalInput(value)
+                                    : value || ""
+                                }
+                                onChange={(e) =>
+                                  updateWidgetConfig(key, e.target.value)
+                                }
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   {/* <div className="border rounded-lg p-4">

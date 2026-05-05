@@ -15,7 +15,6 @@ function ApkVersionsPage() {
   const [data, setData] = useState<ApkVersion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
 
   const fetchApkVersions = async () => {
     setLoading(true);

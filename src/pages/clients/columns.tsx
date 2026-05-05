@@ -54,14 +54,14 @@ export const columns: ColumnDef<Ad>[] = [
   // },
   {
     accessorKey: "name",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Ad Name" />
     ),
     cell: ({ row }) => row.getValue("name"),
   },
   {
     accessorKey: "client_name",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Client Name" />
     ),
     cell: ({ row }) => row.getValue("client_name"),
@@ -70,46 +70,63 @@ export const columns: ColumnDef<Ad>[] = [
     accessorKey: "url",
     header: "URL",
     cell: ({ row }) => {
-      const path = row.getValue("url");
+      // const path = row.getValue("url");
+      const path = row.original.url;
       if (!path) return null;
 
       // Extract the file extension
       const fileExtension = path.split(".").pop()?.toLowerCase();
-    
+
       // Check if it's a video or image
-      const isVideo = fileExtension === "mp4" || fileExtension === "webm" || fileExtension === "ogg";
-      const isImage = fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "png" || fileExtension === "gif";
-    
-      return(
+      const isVideo =
+        fileExtension === "mp4" ||
+        fileExtension === "webm" ||
+        fileExtension === "ogg";
+      const isImage =
+        fileExtension === "jpg" ||
+        fileExtension === "jpeg" ||
+        fileExtension === "png" ||
+        fileExtension === "gif";
+
+      return (
         <Dialog>
           <DialogTrigger>
-            <span className="truncate underline underline-offset-2 text-blue-700">{
-              path.split('/').pop()
-            }</span>
+            <span className="truncate underline underline-offset-2 text-blue-700">
+              {path.split("/").pop()}
+            </span>
           </DialogTrigger>
           <DialogContent>
-          <div className="max-h-[80vh]">
-      {isVideo ? (
-        <video controls className="w-full max-h-[80vh] rounded-md">
-          <source src={path} type={`video/${fileExtension}`} />
-          Your browser does not support the video tag.
-        </video>
-      ) : isImage ? (
-        <img src={path} alt="Preview" className="w-full h-auto  max-h-[80vh]rounded-md" />
-      ) : (
-        <a href={path} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-          Download File
-        </a>
-      )}
-    </div>
+            <div className="max-h-[80vh]">
+              {isVideo ? (
+                <video controls className="w-full max-h-[80vh] rounded-md">
+                  <source src={path} type={`video/${fileExtension}`} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : isImage ? (
+                <img
+                  src={path}
+                  alt="Preview"
+                  className="w-full h-auto  max-h-[80vh]rounded-md"
+                />
+              ) : (
+                <a
+                  href={path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  Download File
+                </a>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
-      )
+      );
     },
   },
   {
     accessorKey: "duration",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Duartion" />
     ),
     cell: ({ row }) => row.getValue("duration"),
@@ -121,9 +138,9 @@ export const columns: ColumnDef<Ad>[] = [
   // },
   {
     accessorKey: "updated_at",
-    header: ({column})=>(
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Updated At" />
     ),
     cell: ({ row }) => new Date(row.getValue("updated_at")).toLocaleString(),
-  }
+  },
 ];

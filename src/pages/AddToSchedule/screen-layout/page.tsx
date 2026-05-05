@@ -1769,13 +1769,13 @@ import {
   Code,
   Film,
   LayoutGrid,
-  ChevronLeft,
+  
   Monitor,
   Smartphone,
   Move,
   Maximize,
   Save,
-  Grid3X3,
+ 
   Palette,
   Maximize2,
   SplitSquareHorizontal,
@@ -2789,7 +2789,7 @@ export default function ScreenLayoutPage() {
   const [userRole, setUserRole] = useState<string>("");
   useEffect(() => {
     const role = getRole();
-    setUserRole(role);
+    setUserRole(role || "");
   }, []);
 
   const loadData = async () => {
@@ -2895,7 +2895,7 @@ export default function ScreenLayoutPage() {
     editingLayout ||
     (isCreating ? null : layouts[0] || null);
 
-  const { limit, isAdmin } = useFeature();
+  const { limit } = useFeature();
 
   const maxLayouts = limit("MAX_LAYOUTS");
   const currentLayouts = layouts.length;

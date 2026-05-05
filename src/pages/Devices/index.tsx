@@ -30,7 +30,7 @@ function Home() {
     fetchDta();
   }, []);
 
-  const { limit, isAdmin } = useFeature();
+  const { limit } = useFeature();
 
   const maxDevices = limit("MAX_DEVICES");
   const currentDevices = data.length;
