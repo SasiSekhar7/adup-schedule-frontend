@@ -45,7 +45,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function ChannelDetailPage() {
+export default function ClientChannelDetailPage() {
   const { slug: providerSlug, channelId } = useParams();
   const [channel, setChannel] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -56,14 +56,12 @@ export default function ChannelDetailPage() {
   const [cameraFacing, setCameraFacing] = useState("user");
   const [isStreaming, setIsStreaming] = useState(false);
   const [allProviders, setAllProviders] = useState<any[]>([]);
-  // "user" = front camera
-  // "environment" = rear camera
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      await fetchProviders();
+      // await fetchProviders();
       fetchChannelById(channelId as string);
     };
 
@@ -97,26 +95,9 @@ export default function ChannelDetailPage() {
   const [viewers, setViewers] = useState(0);
 
   const provider = getProvider(allProviders, providerSlug as string);
-  //   const channel = getChannel(providerSlug as string, channelId as string);
 
-  // Initialize live state from channel data
-  //   const currentStatus = isLive
-  //     ? "live"
-  //     : channel?.status === "live"
-  //       ? "live"
-  //       : (channel?.status ?? "active");
   const currentViewers = isLive ? viewers : (channel?.viewers ?? 0);
   const currentStatus = channel?.status;
-
-  //   const handleToggleLive = () => {
-  //     if (isLive) {
-  //       setIsLive(false);
-  //       setViewers(0);
-  //     } else {
-  //       setIsLive(true);
-  //       setViewers(Math.floor(Math.random() * 500) + 10);
-  //     }
-  //   };
 
   const handleToggleLive = async (channel: any) => {
     try {
@@ -169,56 +150,11 @@ export default function ChannelDetailPage() {
     await startWebcamPreview(newFacing);
   };
 
-  // const startWebcamLive = async () => {
-  //   if (!webcamStream) return;
-  //    let options: MediaRecorderOptions = {};
-  //   // Start backend FFmpeg process
-  //   await api.post(`/start-stream`, {
-  //     channel_id: channelId,
-  //   });
-
-  //    if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
-  //   options.mimeType = "video/webm;codecs=vp8,opus";
-  // } else if (MediaRecorder.isTypeSupported("video/mp4")) {
-  //   options.mimeType = "video/mp4";
-  // }
-
-  //   // const recorder = new MediaRecorder(webcamStream, {
-  //   //   mimeType: "video/webm;codecs=vp8,opus",
-  //   // });
-  //    const recorder = new MediaRecorder(webcamStream, options);
-
-  //    console.log("recorder",recorder);
-  //    console.log("options",options);
-  //    console.log("mimeType",options.mimeType);
-  //    console.log("mimeType",MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus"));
-  //    console.log("mimeType",MediaRecorder.isTypeSupported("video/mp4"));
-
-  //   recorder.ondataavailable = async (event) => {
-  //     if (event.data.size > 0) {
-  //       await fetch(`https://stg-cms.ad96.in/api/stream/${channelId}`, {
-  //         method: "POST",
-  //         headers: {
-  //         "Content-Type": event.data.type,
-  //         "data-type":options.mimeType || "video/webm",
-  //       },
-  //         body: event.data,
-  //       });
-  //     }
-  //   };
-
-  //   // Send chunk every 2 seconds
-  //   recorder.start(2000);
-
-  //   setMediaRecorder(recorder);
-  //   setIsStreaming(true);
-  // };
-
   const startWebcamLive = async () => {
     if (!webcamStream) return;
 
     try {
-      // 🔴 STEP 1: Start channel if not live
+      //  STEP 1: Start channel if not live
       if (channel.status !== "live") {
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
         await fetchChannelById(channelId as string); // refresh state
@@ -247,7 +183,7 @@ export default function ChannelDetailPage() {
 
       const options = { mimeType: selectedMimeType };
 
-      // 🔴 STEP 2: Start backend FFmpeg stream
+      //  STEP 2: Start backend FFmpeg stream
       await api.post(`/start-stream`, {
         channel_id: channelId,
       });
@@ -336,16 +272,15 @@ export default function ChannelDetailPage() {
   }, []);
 
   // THEN CONDITIONAL RENDER
-  if (!provider || !channel) {
+  if (!channel) {
     return <div className="p-6">Loading...</div>;
   }
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex-1 overflow-auto p-6">
-        {/* Channel Header */}
-        {/* <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-end">
+          {/* <div className="flex items-center gap-4">
             <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
               {provider.logo}
             </div>
@@ -357,83 +292,7 @@ export default function ChannelDetailPage() {
                 {provider.name} Channel
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {channel.status === "live" ? (
-              <Badge className="bg-emerald-600 text-primary-foreground border-0 text-[11px]">
-                <span className="mr-1 inline-block size-1.5 rounded-full bg-primary-foreground animate-pulse" />
-                live
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                className="text-[11px] text-muted-foreground"
-              >
-                {channel.status}
-              </Badge>
-            )}
-            
-            {channel && (
-              <>
-                <Button
-                  size="sm"
-                  disabled={actionLoading === channel.channel_id}
-                  variant={
-                    channel.status === "live" ? "destructive" : "default"
-                  }
-                  className={`h-7 gap-1.5 text-xs ${
-                    channel.status === "live"
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  }`}
-                  onClick={() => handleToggleLive(channel)}
-                >
-                  {actionLoading === channel.channel_id ? (
-                    "Loading..."
-                  ) : channel.status === "live" ? (
-                    <>
-                      <Square className="size-3" />
-                      Stop Live
-                    </>
-                  ) : (
-                    <>
-                      <Play className="size-3" />
-                      Go Live
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={() => {
-                    setShowWebcamModal(true);
-                    startWebcamPreview();
-                  }}
-                >
-                  <Radio className="size-3.5" />
-                  Go Live with Webcam
-                </Button>
-              </>
-            )}
-          </div>
-        </div> */}
-
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-foreground text-primary-foreground font-bold">
-              {provider.logo}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {channel.name}
-              </h1>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {provider.name} Channel
-              </p>
-            </div>
-          </div>
+          </div> */}
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2">
             {channel.status === "live" ? (
               <Badge className="bg-emerald-600 text-primary-foreground border-0 text-[11px]">
@@ -549,7 +408,9 @@ export default function ChannelDetailPage() {
                   OBS Studio Setup Guide
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Configure OBS to stream to {provider.name}
+                  Configure OBS to stream
+                  {/* to */}
+                  {/* {provider.name} */}
                 </p>
               </div>
             </div>
@@ -735,8 +596,9 @@ export default function ChannelDetailPage() {
                     <strong className="text-foreground">
                       {'"'}Output{'"'}
                     </strong>{" "}
-                    tab and configure these recommended settings for{" "}
-                    {provider.name}:
+                    tab and configure these recommended settings
+                    {/* for{" "} */}
+                    {/* {provider.name}: */}
                   </p>
                   <div className="mt-3 rounded-lg bg-muted p-3 grid gap-1.5 text-sm">
                     <div className="flex items-center justify-between">
@@ -886,10 +748,11 @@ export default function ChannelDetailPage() {
                     <strong className="text-foreground">
                       {'"'}Start Streaming{'"'}
                     </strong>{" "}
-                    in the bottom-right of OBS. Your stream will go live on{" "}
-                    {provider.name} within a few seconds. You can monitor the
-                    stream status, bitrate, and dropped frames in the OBS status
-                    bar.
+                    in the bottom-right of OBS. Your stream will go live
+                    {/* on{" "} */}
+                    {/* {provider.name}  */}
+                    within a few seconds. You can monitor the stream status,
+                    bitrate, and dropped frames in the OBS status bar.
                   </p>
                   <div className="mt-3 rounded-lg border border-dashed bg-emerald-50 p-3">
                     <p className="text-sm text-emerald-800">
@@ -917,7 +780,9 @@ export default function ChannelDetailPage() {
                   OBS Studio Setup Guide
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Configure OBS to stream to {provider.name}
+                  Configure OBS to stream
+                  {/* to */}
+                  {/* {provider.name} */}
                 </p>
               </div>
             </div>

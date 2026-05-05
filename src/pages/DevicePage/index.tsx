@@ -6,8 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Pencil,
-  X,
+  Bell,
 } from "lucide-react";
 import api from "@/api";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,12 @@ interface Device {
     reg_code: string;
     group_id: string;
   };
+  waiting_for_device_response: {
+    action: string;
+    status: string;
+    timestamp: string;
+    confirmation_timestamp: string | null;
+  }[];
 }
 
 interface ProofOfPlayLog {
@@ -181,6 +186,8 @@ function DevicePage() {
   const [fullDeviceExportEndDate, setFullDeviceExportEndDate] = useState("");
   const [isFullDeviceExporting, setIsFullDeviceExporting] = useState(false);
 
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const handleChange = (field, value) => {
     setEditedDevice({ ...editedDevice, [field]: value });
   };
@@ -231,7 +238,7 @@ function DevicePage() {
       // setEditedDevice(response.data);
       setIsEditing(false);
 
-      console.log("✅ Device updated successfully:", response.data);
+      console.log(" Device updated successfully:", response.data);
     } catch (error) {
       console.error("❌ Failed to update device data:", error);
     } finally {
@@ -569,7 +576,7 @@ function DevicePage() {
   //     setFullDeviceExportStartDate("");
   //     setFullDeviceExportEndDate("");
 
-  //     console.log("✅ Full device details exported successfully");
+  //     console.log(" Full device details exported successfully");
   //   } catch (error) {
   //     console.error("Full device details export failed:", error);
   //     alert("Full device details export failed. Please try again.");
@@ -752,110 +759,193 @@ function DevicePage() {
           <span className="hidden sm:inline">Back to Devices</span>
           <span className="sm:hidden">Back</span>
         </Button>
-
-        {/* Global Export Button */}
-        <Dialog
-          open={fullDeviceExportDialogOpen}
-          onOpenChange={setFullDeviceExportDialogOpen}
-        >
-          <DialogTrigger asChild>
-            <Button
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+        <div className="flex items-center gap-3">
+          {/*  Notification Icon */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-full hover:bg-gray-100"
             >
-              <Download className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">
-                Export Full Device Details
-              </span>
-              <span className="sm:hidden">Export Details</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Export Full Device Details</DialogTitle>
-              <div className="text-sm text-muted-foreground mt-2">
-                Exporting comprehensive data for:{" "}
-                <span className="font-medium text-foreground">
-                  {device?.device_name || "Unknown Device"}
-                </span>
-              </div>
-            </DialogHeader>
-            <div className="space-y-6 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullDeviceFilter">Export Filter</Label>
-                <Select
-                  value={fullDeviceExportFilter}
-                  onValueChange={setFullDeviceExportFilter}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select filter type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="today">Today's Data</SelectItem>
-                    <SelectItem value="yesterday">Yesterday's Data</SelectItem>
-                    <SelectItem value="week">This Week</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
-                    <SelectItem value="year">This Year</SelectItem>
-                    <SelectItem value="all">All Historical Data</SelectItem>
-                    <SelectItem value="date_range">
-                      Custom Date Range
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Bell className="w-5 h-5" />
 
-              {fullDeviceExportFilter === "date_range" && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-medium">Date Range Selection</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullDeviceStartDate">Start Date</Label>
-                      <Input
-                        id="fullDeviceStartDate"
-                        type="date"
-                        value={fullDeviceExportStartDate}
-                        onChange={(e) =>
-                          setFullDeviceExportStartDate(e.target.value)
-                        }
-                      />
+              {/* Badge Count */}
+              {device?.waiting_for_device_response?.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                  {device.waiting_for_device_response.length}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
+                <div className="p-3 border-b font-semibold text-sm">
+                  Notifications
+                </div>
+
+                <div className="max-h-60 overflow-y-auto">
+                  {device?.waiting_for_device_response?.length > 0 ? (
+                    device.waiting_for_device_response.map((item, index) => (
+                      <div
+                        key={index}
+                        className="p-3 space-y-2 border-b text-sm hover:bg-gray-50"
+                      >
+                        <p>
+                          <span className="font-medium">Action:</span>{" "}
+                          {item.action}
+                        </p>
+
+                        <p>
+                          <span className="font-medium">Status:</span>{" "}
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              item.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+                          Requested: {new Date(item.timestamp).toLocaleString()}
+                        </p>
+
+                        {/*  Confirmation Mapping */}
+                        <p className="text-xs mt-1">
+                          <span className="font-medium">Confirmation:</span>{" "}
+                          {item.confirmation_timestamp ? (
+                            <span className="text-green-600">
+                              {new Date(
+                                item.confirmation_timestamp,
+                              ).toLocaleString()}
+                            </span>
+                          ) : (
+                            <span className="text-red-500">
+                              Not confirmed yet
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-sm text-gray-500 text-center">
+                      No notifications
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="fullDeviceEndDate">End Date</Label>
-                      <Input
-                        id="fullDeviceEndDate"
-                        type="date"
-                        value={fullDeviceExportEndDate}
-                        onChange={(e) =>
-                          setFullDeviceExportEndDate(e.target.value)
-                        }
-                      />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Global Export Button */}
+          <Dialog
+            open={fullDeviceExportDialogOpen}
+            onOpenChange={setFullDeviceExportDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">
+                  Export Full Device Details
+                </span>
+                <span className="sm:hidden">Export Details</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Export Full Device Details</DialogTitle>
+                <div className="text-sm text-muted-foreground mt-2">
+                  Exporting comprehensive data for:{" "}
+                  <span className="font-medium text-foreground">
+                    {device?.device_name || "Unknown Device"}
+                  </span>
+                </div>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullDeviceFilter">Export Filter</Label>
+                  <Select
+                    value={fullDeviceExportFilter}
+                    onValueChange={setFullDeviceExportFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select filter type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today's Data</SelectItem>
+                      <SelectItem value="yesterday">
+                        Yesterday's Data
+                      </SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                      <SelectItem value="all">All Historical Data</SelectItem>
+                      <SelectItem value="date_range">
+                        Custom Date Range
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {fullDeviceExportFilter === "date_range" && (
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="text-sm font-medium">
+                      Date Range Selection
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullDeviceStartDate">Start Date</Label>
+                        <Input
+                          id="fullDeviceStartDate"
+                          type="date"
+                          value={fullDeviceExportStartDate}
+                          onChange={(e) =>
+                            setFullDeviceExportStartDate(e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="fullDeviceEndDate">End Date</Label>
+                        <Input
+                          id="fullDeviceEndDate"
+                          type="date"
+                          value={fullDeviceExportEndDate}
+                          onChange={(e) =>
+                            setFullDeviceExportEndDate(e.target.value)
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setFullDeviceExportDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleFullDeviceExport}
-                disabled={
-                  isFullDeviceExporting ||
-                  (fullDeviceExportFilter === "date_range" &&
-                    (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
-                }
-              >
-                {isFullDeviceExporting ? "Exporting..." : "Export"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setFullDeviceExportDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleFullDeviceExport}
+                  disabled={
+                    isFullDeviceExporting ||
+                    (fullDeviceExportFilter === "date_range" &&
+                      (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
+                  }
+                >
+                  {isFullDeviceExporting ? "Exporting..." : "Export"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Device Information Card - Fixed at top */}

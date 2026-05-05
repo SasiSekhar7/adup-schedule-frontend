@@ -1788,6 +1788,23 @@ import {
   deleteLayout,
   type Layout as LayoutType,
 } from "@/lib/store";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DialogFooter, DialogHeader } from "../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getRole } from "@/helpers";
+import { useFeature } from "@/context/hooks/useFeature";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // ============================================================================
 // INTERNAL COMPONENTS (PREVIEW PLAYERS)
@@ -2748,8 +2765,31 @@ export default function ScreenLayoutPage() {
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const schedule = selectedGroup?.schedules?.[0];
 
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  const fetchClients = async () => {
+    try {
+      setLoadingClients(true);
+      const res = await api.get("/ads/clients");
+      setClients(res.clients || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
+  }, []);
+
+  const [userRole, setUserRole] = useState<string>("");
+  useEffect(() => {
+    const role = getRole();
+    setUserRole(role);
   }, []);
 
   const loadData = async () => {
@@ -2799,24 +2839,54 @@ export default function ScreenLayoutPage() {
     }
 
     try {
-      await saveLayout(currentBuilderState);
+      let payload;
+      if (selectedClient) {
+        payload = {
+          ...currentBuilderState,
+          client_id: selectedClient,
+        };
+      } else {
+        payload = {
+          ...currentBuilderState,
+        };
+      }
+
+      // console.log("payload", payload);
+      await saveLayout(payload);
       await loadData();
       setEditingLayout(null);
       setIsCreating(false);
       toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
     } catch (error) {
-      toast.error("Error saving layout");
+      toast.error(error?.error || "Error saving layout");
     }
   };
 
-  const handleDeleteLayout = async (layoutId: string) => {
-    if (!confirm("Are you sure you want to delete this layout?")) return;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [layoutToDelete, setLayoutToDelete] = useState<string | null>(null);
+
+  // const handleDeleteLayout = async (layoutId: string) => {
+  //   if (!confirm("Are you sure you want to delete this layout?")) return;
+  //   try {
+  //     await deleteLayout(layoutId);
+  //     await loadData();
+  //     toast.success("Layout deleted");
+  //   } catch (error) {
+  //     toast.error("Error deleting layout");
+  //   }
+  // };
+  const handleDeleteLayout = async () => {
+    if (!layoutToDelete) return;
+
     try {
-      await deleteLayout(layoutId);
+      await deleteLayout(layoutToDelete);
       await loadData();
       toast.success("Layout deleted");
     } catch (error) {
-      toast.error("Error deleting layout");
+      toast.error(error?.error || "Error deleting layout");
+    } finally {
+      setDeleteDialogOpen(false);
+      setLayoutToDelete(null);
     }
   };
 
@@ -2824,6 +2894,13 @@ export default function ScreenLayoutPage() {
     currentBuilderState ||
     editingLayout ||
     (isCreating ? null : layouts[0] || null);
+
+  const { limit, isAdmin } = useFeature();
+
+  const maxLayouts = limit("MAX_LAYOUTS");
+  const currentLayouts = layouts.length;
+
+  const canAddLayout = currentLayouts < maxLayouts;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -2835,10 +2912,105 @@ export default function ScreenLayoutPage() {
             <h1 className="text-2xl font-semibold">Screen Layout</h1>
           </div>
           {!isCreating && !editingLayout && (
-            <Button onClick={handleCreateNew}>
-              <Plus className="w-4 h-4 mr-2" /> New Layout
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block w-full sm:w-auto">
+                    <div>
+                      {userRole === "Admin" ? (
+                        <Button
+                          // disabled={!canAddLayout}
+                          onClick={() => {
+                            setClientDialogOpen(true);
+                            fetchClients();
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          New Layout
+                        </Button>
+                      ) : (
+                        <Button
+                          disabled={!canAddLayout}
+                          onClick={handleCreateNew}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          New Layout
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </TooltipTrigger>
+
+                {!canAddLayout && (
+                  <TooltipContent>
+                    <p>
+                      You reached your layout limit ({maxLayouts}). Upgrade to
+                      add more.
+                    </p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           )}
+          <>
+            <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Select Client</DialogTitle>
+                </DialogHeader>
+
+                <div className="py-4 space-y-4">
+                  {loadingClients ? (
+                    <p className="text-sm text-gray-500">Loading clients...</p>
+                  ) : (
+                    <Select onValueChange={(value) => setSelectedClient(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a client" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {clients.map((client: any) => {
+                          const tierName =
+                            client?.Subscriptions?.[0]?.Tier?.name || "No Tier";
+
+                          return (
+                            <SelectItem
+                              key={client.client_id}
+                              value={client.client_id}
+                            >
+                              {client.client_name || client.name} ({tierName})
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setClientDialogOpen(false);
+                      setSelectedClient(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    disabled={!selectedClient}
+                    onClick={() => {
+                      handleCreateNew();
+                      setClientDialogOpen(false);
+                    }}
+                  >
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
         </div>
 
         {isCreating || editingLayout ? (
@@ -3003,9 +3175,13 @@ export default function ScreenLayoutPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
-                                  onClick={() =>
-                                    handleDeleteLayout(layout.layout_id)
-                                  }
+                                  // onClick={() =>
+                                  //   handleDeleteLayout(layout.layout_id)
+                                  // }
+                                  onClick={() => {
+                                    setLayoutToDelete(layout.layout_id);
+                                    setDeleteDialogOpen(true);
+                                  }}
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                                 </DropdownMenuItem>
@@ -3033,6 +3209,36 @@ export default function ScreenLayoutPage() {
           </div>
         )}
       </main>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Layout</DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this layout? This action cannot be
+              undone.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setLayoutToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button variant="destructive" onClick={handleDeleteLayout}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

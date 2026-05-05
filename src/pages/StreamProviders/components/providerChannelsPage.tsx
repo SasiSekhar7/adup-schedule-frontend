@@ -334,7 +334,8 @@ export default function ProviderChannelsPage() {
                             key={client.client_id}
                             value={client.client_id}
                           >
-                            {client.name} ({client.Tier?.name})
+                            {client.name} (
+                            {client?.currentSubscription?.Tier?.name})
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -476,7 +476,7 @@ export async function saveLayout(layout: Layout): Promise<void> {
     toast.success(res?.data?.message || "Layout saved successfully");
   } catch (error: any) {
     console.error("Save failed:", error);
-    toast.error(error?.message || "Something went wrong ❌");
+    toast.error(error?.error || "Something went wrong ❌");
   }
 }
 
