@@ -854,7 +854,9 @@ function DevicePage() {
 
                         {/*  Confirmation Mapping */}
                         <p className="text-xs mt-1">
-                          <span className="font-medium">Confirmation:</span>{" "}
+                          <span className="font-medium">
+                            Device Confirmation:
+                          </span>{" "}
                           {item.confirmation_timestamp ? (
                             <span className="text-green-600">
                               {new Date(
