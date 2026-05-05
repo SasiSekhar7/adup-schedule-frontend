@@ -7,7 +7,8 @@ export function formatDateWithOrdinal(dateString: string): string {
 }
 
 export function getRole(): string | null {
-  const token = sessionStorage.getItem("token");
+  // const token = sessionStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   if (!token) {
     return null; // Or handle the case where there's no token differently
@@ -34,7 +35,8 @@ export function getRole(): string | null {
 }
 
 export function getUser(): string | null {
-  const token = sessionStorage.getItem("token");
+  // const token = sessionStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   if (!token) {
     return null; // Or handle the case where there's no token differently

@@ -6,7 +6,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Bell,
+  Pencil,
+  X,
 } from "lucide-react";
 import api from "@/api";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import DeviceDetailPage from "./Page";
-import axios from "axios";
 
 interface Device {
   device_id: string;
@@ -59,12 +59,6 @@ interface Device {
     reg_code: string;
     group_id: string;
   };
-  waiting_for_device_response: {
-    action: string;
-    status: string;
-    timestamp: string;
-    confirmation_timestamp: string | null;
-  }[];
 }
 
 interface ProofOfPlayLog {
@@ -188,8 +182,6 @@ function DevicePage() {
   const [fullDeviceExportEndDate, setFullDeviceExportEndDate] = useState("");
   const [isFullDeviceExporting, setIsFullDeviceExporting] = useState(false);
 
-  const [showNotifications, setShowNotifications] = useState(false);
-
   const handleChange = (field, value) => {
     setEditedDevice({ ...editedDevice, [field]: value });
   };
@@ -240,7 +232,7 @@ function DevicePage() {
       // setEditedDevice(response.data);
       setIsEditing(false);
 
-      console.log(" Device updated successfully:", response.data);
+      console.log("✅ Device updated successfully:", response.data);
     } catch (error) {
       console.error("❌ Failed to update device data:", error);
     } finally {
@@ -578,7 +570,7 @@ function DevicePage() {
   //     setFullDeviceExportStartDate("");
   //     setFullDeviceExportEndDate("");
 
-  //     console.log(" Full device details exported successfully");
+  //     console.log("✅ Full device details exported successfully");
   //   } catch (error) {
   //     console.error("Full device details export failed:", error);
   //     alert("Full device details export failed. Please try again.");
@@ -587,7 +579,6 @@ function DevicePage() {
   //   }
   // };
 
-  const [fullDeviceJobType, setFullDeviceJobType] = useState("PROOF_OF_PLAY");
   const handleFullDeviceExport = async () => {
     try {
       setIsFullDeviceExporting(true);
@@ -644,14 +635,11 @@ function DevicePage() {
       }
 
       const payload = {
-        // job_type: "PROOF_OF_PLAY",
-        job_type: fullDeviceJobType,
+        job_type: "PROOF_OF_PLAY",
         device_id: device_id,
         start_date: startDate,
         end_date: endDate,
       };
-
-      // console.log(payload);
 
       await api.post("/exports", payload);
 
@@ -680,10 +668,8 @@ function DevicePage() {
         const deviceDetailsResponse: DeviceDetailsResponse = await api.get(
           `/device/${device_id}?page=${schedulesPage}&limit=${schedulesLimit}`,
         );
-
-        // console.log(deviceDetailsResponse.data);
         setEditedDevice(deviceDetailsResponse.device);
-        setDevice(deviceDetailsResponse?.device);
+        setDevice(deviceDetailsResponse.device);
         setSchedules(deviceDetailsResponse.schedules.data || []);
         setSchedulesTotal(deviceDetailsResponse.schedules.total);
         setSchedulesTotalPages(deviceDetailsResponse.schedules.totalPages);
@@ -693,7 +679,6 @@ function DevicePage() {
           await api.get(
             `/device/${device_id}/proof-of-play-logs?page=${proofOfPlayPage}&limit=${proofOfPlayLimit}`,
           );
-
         setProofOfPlayLogs(proofOfPlayResponse.data || []);
         setProofOfPlayTotal(proofOfPlayResponse.total);
         setProofOfPlayTotalPages(proofOfPlayResponse.totalPages);
@@ -703,7 +688,6 @@ function DevicePage() {
           await api.get(
             `/device/${device_id}/event-logs?page=${eventLogsPage}&limit=${eventLogsLimit}`,
           );
-
         setDeviceEventLogs(eventLogsResponse.data || []);
         setEventLogsTotal(eventLogsResponse.total);
         setEventLogsTotalPages(eventLogsResponse.totalPages);
@@ -713,7 +697,6 @@ function DevicePage() {
           await api.get(
             `/device/${device_id}/telemetry-logs?page=${terminologyPage}&limit=${terminologyLimit}`,
           );
-
         setDeviceTelemetry(telemetryResponse.data || []);
         setTerminologyTotal(telemetryResponse.total);
         setTerminologyTotalPages(telemetryResponse.totalPages);
@@ -736,35 +719,6 @@ function DevicePage() {
     terminologyPage,
     terminologyLimit,
   ]);
-
-  const [resolvedAddress, setResolvedAddress] = useState("Loading...");
-
-  useEffect(() => {
-    if (device?.location) {
-      const [lat, lon] = device.location.split(",");
-
-      if (lat && lon) {
-        getAddressFromCoordinates(lat.trim(), lon.trim()).then((address) =>
-          setResolvedAddress(address),
-        );
-      } else {
-        setResolvedAddress("Invalid Location");
-      }
-    } else {
-      setResolvedAddress("—");
-    }
-  }, [device]);
-
-  async function getAddressFromCoordinates(lat: string, lon: string) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.display_name || "Unknown Location";
-    } catch {
-      return "Unknown Location";
-    }
-  }
 
   if (loading) {
     return (
@@ -799,249 +753,148 @@ function DevicePage() {
           <span className="hidden sm:inline">Back to Devices</span>
           <span className="sm:hidden">Back</span>
         </Button>
-        <div className="flex items-center gap-3">
-          {/*  Notification Icon */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-full hover:bg-gray-100"
+
+        {/* Global Export Button */}
+        <Dialog
+          open={fullDeviceExportDialogOpen}
+          onOpenChange={setFullDeviceExportDialogOpen}
+        >
+          <DialogTrigger asChild>
+            <Button
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
             >
-              <Bell className="w-5 h-5" />
-
-              {/* Badge Count */}
-              {device?.waiting_for_device_response?.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                  {device.waiting_for_device_response.length}
+              <Download className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">
+                Export Full Device Details
+              </span>
+              <span className="sm:hidden">Export Details</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Export Full Device Details</DialogTitle>
+              <div className="text-sm text-muted-foreground mt-2">
+                Exporting comprehensive data for:{" "}
+                <span className="font-medium text-foreground">
+                  {device?.device_name || "Unknown Device"}
                 </span>
-              )}
-            </button>
-
-            {/* Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b font-semibold text-sm">
-                  Notifications
-                </div>
-
-                <div className="max-h-60 overflow-y-auto">
-                  {device?.waiting_for_device_response?.length > 0 ? (
-                    device.waiting_for_device_response.map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-3 space-y-2 border-b text-sm hover:bg-gray-50"
-                      >
-                        <p>
-                          <span className="font-medium">Action:</span>{" "}
-                          {item.action}
-                        </p>
-
-                        <p>
-                          <span className="font-medium">Status:</span>{" "}
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs ${
-                              item.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </p>
-
-                        <p className="text-xs text-gray-500">
-                          Requested: {new Date(item.timestamp).toLocaleString()}
-                        </p>
-
-                        {/*  Confirmation Mapping */}
-                        <p className="text-xs mt-1">
-                          <span className="font-medium">
-                            Device Confirmation:
-                          </span>{" "}
-                          {item.confirmation_timestamp ? (
-                            <span className="text-green-600">
-                              {new Date(
-                                item.confirmation_timestamp,
-                              ).toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="text-red-500">
-                              Not confirmed yet
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-3 text-sm text-gray-500 text-center">
-                      No notifications
-                    </div>
-                  )}
-                </div>
               </div>
-            )}
-          </div>
-          {/* Global Export Button */}
-          <Dialog
-            open={fullDeviceExportDialogOpen}
-            onOpenChange={setFullDeviceExportDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button
-                variant="default"
-                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">
-                  Export Full Device Details
-                </span>
-                <span className="sm:hidden">Export Details</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Export Full Device Details</DialogTitle>
-                <div className="text-sm text-muted-foreground mt-2">
-                  Exporting comprehensive data for:{" "}
-                  <span className="font-medium text-foreground">
-                    {device?.device_name || "Unknown Device"}
-                  </span>
-                </div>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="space-y-2">
-                <Label htmlFor="jobType">Export Type</Label>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullDeviceFilter">Export Filter</Label>
                 <Select
-                  value={fullDeviceJobType}
-                  onValueChange={setFullDeviceJobType}
+                  value={fullDeviceExportFilter}
+                  onValueChange={setFullDeviceExportFilter}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select export type" />
+                    <SelectValue placeholder="Select filter type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PROOF_OF_PLAY">Proof of Play</SelectItem>
-                    <SelectItem value="DEVICE_EVENTS">Device Events</SelectItem>
-                    <SelectItem value="DEVICE_TELEMETRY">
-                      Device Telemetry
+                    <SelectItem value="today">Today's Data</SelectItem>
+                    <SelectItem value="yesterday">Yesterday's Data</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
+                    <SelectItem value="all">All Historical Data</SelectItem>
+                    <SelectItem value="date_range">
+                      Custom Date Range
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                  <Label htmlFor="fullDeviceFilter">Export Filter</Label>
-                  <Select
-                    value={fullDeviceExportFilter}
-                    onValueChange={setFullDeviceExportFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select filter type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="today">Today's Data</SelectItem>
-                      <SelectItem value="yesterday">
-                        Yesterday's Data
-                      </SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
-                      <SelectItem value="all">All Historical Data</SelectItem>
-                      <SelectItem value="date_range">
-                        Custom Date Range
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                {fullDeviceExportFilter === "date_range" && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-medium">
-                      Date Range Selection
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fullDeviceStartDate">Start Date</Label>
-                        <Input
-                          id="fullDeviceStartDate"
-                          type="date"
-                          value={fullDeviceExportStartDate}
-                          onChange={(e) =>
-                            setFullDeviceExportStartDate(e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="fullDeviceEndDate">End Date</Label>
-                        <Input
-                          id="fullDeviceEndDate"
-                          type="date"
-                          value={fullDeviceExportEndDate}
-                          onChange={(e) =>
-                            setFullDeviceExportEndDate(e.target.value)
-                          }
-                        />
-                      </div>
+              {fullDeviceExportFilter === "date_range" && (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-medium">Date Range Selection</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullDeviceStartDate">Start Date</Label>
+                      <Input
+                        id="fullDeviceStartDate"
+                        type="date"
+                        value={fullDeviceExportStartDate}
+                        onChange={(e) =>
+                          setFullDeviceExportStartDate(e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullDeviceEndDate">End Date</Label>
+                      <Input
+                        id="fullDeviceEndDate"
+                        type="date"
+                        value={fullDeviceExportEndDate}
+                        onChange={(e) =>
+                          setFullDeviceExportEndDate(e.target.value)
+                        }
+                      />
                     </div>
                   </div>
-                )}
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFullDeviceExportDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleFullDeviceExport}
-                  disabled={
-                    isFullDeviceExporting ||
-                    (fullDeviceExportFilter === "date_range" &&
-                      (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
-                  }
-                >
-                  {isFullDeviceExporting ? "Exporting..." : "Export"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setFullDeviceExportDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleFullDeviceExport}
+                disabled={
+                  isFullDeviceExporting ||
+                  (fullDeviceExportFilter === "date_range" &&
+                    (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
+                }
+              >
+                {isFullDeviceExporting ? "Exporting..." : "Export"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Device Information Card - Fixed at top */}
-      {/* {device && (
-        <Card className="mb-6 border border-gray-200 shadow-md rounded-2xl overflow-hidden">
-          
-          <CardHeader className="pb-2 px-5 md:px-6 border-b bg-gradient-to-r from-gray-50 to-white">
-            <CardTitle className="text-lg md:text-xl font-semibold text-gray-800">
+      {device && (
+        <Card className="mb-6 shadow-sm border border-gray-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg md:text-xl font-semibold">
               Device Overview
             </CardTitle>
           </CardHeader>
 
           <CardContent className="p-4 md:p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             
-              <div className="space-y-5 bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition">
-               
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+              {/* Left Section — Basic Info */}
+              <div className="space-y-4 md:space-y-5 bg-gray-50 p-4 md:p-6 rounded-xl">
                 <div>
-                  <p className="text-xs text-gray-500">Device Name</p>
-                  <p className="text-lg font-semibold text-gray-900 break-words">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Device Name
+                  </h4>
+                  <p className="text-base md:text-lg font-semibold text-gray-900 break-words">
                     {device.device_name}
                   </p>
                 </div>
 
-                
                 <div>
-                  <p className="text-xs text-gray-500">Device ID</p>
-                  <p className="text-xs font-mono text-gray-700 break-all bg-gray-50 px-2 py-1 rounded">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Device ID
+                  </h4>
+                  <p className="text-xs md:text-sm font-mono text-gray-800 break-all">
                     {device.device_id}
                   </p>
                 </div>
 
-                
                 <div>
-                  <p className="text-xs text-gray-500">Group</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Group
+                  </h4>
+                  <p className="text-base font-semibold text-gray-900 break-words">
                     {device.DeviceGroup?.name || "—"}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -1049,42 +902,41 @@ function DevicePage() {
                   </p>
                 </div>
 
-                
                 <div className="flex flex-wrap gap-2">
                   <span
-                    className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
                       device.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {device.status}
                   </span>
-
                   <span
-                    className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      device.registration_status === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : device.registration_status === "pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-600"
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      device.registration_status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : device.registration_status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {device.registration_status}
                   </span>
                 </div>
 
-               
                 {device.tags &&
                 typeof device.tags === "string" &&
                 device.tags.length > 0 ? (
                   <div>
-                    <p className="text-xs text-gray-500 mb-2">Tags</p>
-                    <div className="flex flex-wrap gap-2">
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">
+                      Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
                       {device.tags.split(",").map((tag: string, i: number) => (
                         <span
                           key={i}
-                          className="text-xs bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-2.5 py-1 rounded-full border border-blue-200"
+                          className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md"
                         >
                           {tag.trim()}
                         </span>
@@ -1094,53 +946,92 @@ function DevicePage() {
                 ) : null}
               </div>
 
-              
-              <div className="space-y-5 bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition">
-               
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { label: "Type", value: (device as any).device_type },
-                    { label: "Model", value: (device as any).device_model },
-                    { label: "OS", value: (device as any).device_os },
-                    {
-                      label: "OS Version",
-                      value: (device as any).device_os_version,
-                    },
-                  ].map((item, i) => (
-                    <div key={i}>
-                      <p className="text-xs text-gray-500">{item.label}</p>
-                      <p className="text-sm font-medium text-gray-900 capitalize break-words">
-                        {item.value || "—"}
-                      </p>
-                    </div>
-                  ))}
+              {/* Right Section — Technical Specs */}
+              <div className="relative space-y-4 md:space-y-5 bg-gray-50 p-4 md:p-6 rounded-xl">
+                {/* Edit Icon */}
+                {/* <div className="absolute top-3 right-3">
+                  {!isEditing ? (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-gray-500 hover:text-gray-800"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCancel}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div> */}
 
-                  
+                {/* Grid 1 — Basic Info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Orientation</p>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Type
+                    </h4>
+                    <p className="text-sm text-gray-900 capitalize break-words">
+                      {(device as any).device_type || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Model
+                    </h4>
+                    <p className="text-sm text-gray-900 break-words">
+                      {(device as any).device_model || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      OS
+                    </h4>
+                    <p className="text-sm text-gray-900 capitalize break-words">
+                      {(device as any).device_os || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      OS Version
+                    </h4>
+                    <p className="text-sm text-gray-900 break-words">
+                      {(device as any).device_os_version || "—"}
+                    </p>
+                  </div>
+
+                  {/* Orientation — Editable Dropdown */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Orientation
+                    </h4>
                     {isEditing ? (
                       <select
                         value={(editedDevice as any)?.device_orientation || ""}
                         onChange={(e) =>
                           handleChange("device_orientation", e.target.value)
                         }
-                        className="w-full mt-1 border rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full border rounded-lg p-2 text-sm text-gray-900 capitalize"
                       >
-                        <option value="">Select</option>
+                        <option value="">Select orientation</option>
                         <option value="landscape">Landscape</option>
                         <option value="portrait">Portrait</option>
                         <option value="auto">Auto</option>
                       </select>
                     ) : (
-                      <p className="text-sm font-medium text-gray-900 capitalize">
+                      <p className="text-sm text-gray-900 capitalize break-words">
                         {(device as any).device_orientation || "—"}
                       </p>
                     )}
                   </div>
 
-                 
+                  {/* Resolution — Editable Input */}
                   <div>
-                    <p className="text-xs text-gray-500">Resolution</p>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Resolution
+                    </h4>
                     {isEditing ? (
                       <input
                         type="text"
@@ -1148,82 +1039,103 @@ function DevicePage() {
                         onChange={(e) =>
                           handleChange("device_resolution", e.target.value)
                         }
-                        className="w-full mt-1 border rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="1920x1080"
+                        className="w-full border rounded-lg p-2 text-sm text-gray-900"
+                        placeholder="e.g. 1920x1080"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm text-gray-900 break-words">
                         {(device as any).device_resolution || "—"}
                       </p>
                     )}
                   </div>
                 </div>
 
-                
+                {/* Grid 2 — On/Off Times */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {["device_on_time", "device_off_time"].map((key, i) => (
-                    <div key={i}>
-                      <p className="text-xs text-gray-500">
-                        {key === "device_on_time" ? "On Time" : "Off Time"}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      On Time
+                    </h4>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={(editedDevice as any)?.device_on_time || ""}
+                        onChange={(e) =>
+                          handleChange("device_on_time", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-2 text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {(device as any).device_on_time || "—"}
                       </p>
-                      {isEditing ? (
-                        <input
-                          type="time"
-                          value={(editedDevice as any)?.[key] || ""}
-                          onChange={(e) => handleChange(key, e.target.value)}
-                          className="w-full mt-1 border rounded-lg px-2 py-2 text-sm"
-                        />
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900">
-                          {(device as any)[key] || "—"}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Off Time
+                    </h4>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={(editedDevice as any)?.device_off_time || ""}
+                        onChange={(e) =>
+                          handleChange("device_off_time", e.target.value)
+                        }
+                        className="w-full border rounded-lg p-2 text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {(device as any).device_off_time || "—"}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                
+                {/* Location */}
                 <div>
-                  <p className="text-xs text-gray-500">Location</p>
-                  <p className="text-sm font-medium text-gray-900 break-words">
-                    
-                    {resolvedAddress === "Loading..." ? (
-                      <span className="text-gray-400 animate-pulse">
-                        Fetching location...
-                      </span>
-                    ) : (
-                      resolvedAddress
-                    )}
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">
+                    Location
+                  </h4>
+                  <p className="text-sm text-gray-900 break-words">
+                    {device.location}
                   </p>
                 </div>
 
-               
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-600">
+                {/* Timestamps */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-gray-500">Last Synced</p>
-                    <p>{new Date(device.last_synced).toLocaleString()}</p>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Last Synced
+                    </h4>
+                    <p className="text-xs text-gray-700 break-words">
+                      {new Date(device.last_synced).toLocaleString()}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Created At</p>
-                    <p>{new Date(device.created_at).toLocaleString()}</p>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">
+                      Created At
+                    </h4>
+                    <p className="text-xs text-gray-700 break-words">
+                      {new Date(device.created_at).toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
-               
+                {/* Save / Cancel Buttons */}
                 {isEditing && (
-                  <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t">
+                  <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
                     <button
                       onClick={handleCancel}
-                      className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                      className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg order-2 sm:order-1"
                     >
                       Cancel
                     </button>
-
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 shadow-sm"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 order-1 sm:order-2"
                     >
-                      <Check size={16} /> Save Changes
+                      <Check size={16} /> Save
                     </button>
                   </div>
                 )}
@@ -1231,22 +1143,12 @@ function DevicePage() {
             </div>
           </CardContent>
         </Card>
-      )} */}
+      )}
 
-      <DeviceDetailPage
-        device_id={device_id}
-        device={device}
-        schedules={schedules}
-        schedulesPage={schedulesPage}
-        schedulesLimit={schedulesLimit}
-        schedulesTotal={schedulesTotal}
-        schedulesTotalPages={schedulesTotalPages}
-        setSchedulesPage={setSchedulesPage}
-        setSchedulesLimit={setSchedulesLimit}
-      />
+      <DeviceDetailPage />
 
       {/* Tabs */}
-      {/* <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="schedules" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">Schedules</span>
@@ -1354,7 +1256,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  
+                  {/* Pagination Controls */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(schedulesPage - 1) * schedulesLimit + 1} to{" "}
@@ -1592,7 +1494,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  
+                  {/* Pagination Controls */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       Showing {(proofOfPlayPage - 1) * proofOfPlayLimit + 1} to{" "}
@@ -1841,7 +1743,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  
+                  {/* Pagination Controls */}
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
                       Showing {(eventLogsPage - 1) * eventLogsLimit + 1} to{" "}
@@ -1957,7 +1859,7 @@ function DevicePage() {
                     </Table>
                   </div>
 
-                  
+                  {/* Pagination Controls */}
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
                       Showing {(terminologyPage - 1) * terminologyLimit + 1} to{" "}
@@ -2000,7 +1902,7 @@ function DevicePage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs> */}
+      </Tabs>
     </div>
   );
 }

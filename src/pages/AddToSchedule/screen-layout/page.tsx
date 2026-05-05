@@ -2644,11 +2644,11 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
 
       {/* CANVAS AREA */}
       <div
-        className="flex-1 bg-slate-200/50 rounded-3xl border-2 border-slate-200 relative flex items-center justify-center overflow-auto p-6 lg:p-12"
+        className="flex-1 bg-slate-200/50  rounded-3xl border-2 border-slate-200 relative flex items-start justify-center overflow-auto p-6 lg:p-12"
         onMouseDown={handleBackgroundClick}
       >
         <div
-          className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative transition-all duration-300 border-[6px] border-slate-900 rounded-[8px] mx-auto"
+          className="shadow-[0_20px_50px_rgba(0,0,0,0.15)]  relative transition-all duration-300 border-[6px] border-slate-900 rounded-[8px] mx-auto"
           onMouseDown={handleBackgroundClick}
           style={{
             width: CANVAS_WIDTH,
