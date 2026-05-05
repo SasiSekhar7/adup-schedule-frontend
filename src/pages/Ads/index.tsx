@@ -26,6 +26,13 @@ import { toast } from "sonner";
 
 import AddAdComponent from "./components/AddAds";
 import { useNavigate } from "react-router-dom";
+import { useFeature } from "@/context/hooks/useFeature";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function Ads() {
   const [data, setData] = useState<Ad[]>([]);
@@ -266,6 +273,14 @@ function Ads() {
     }
   };
 
+  const { has, limit } = useFeature();
+  const canExport = has("PROOF_OF_PLAY");
+
+  const maxAds = limit("MAX_ADS");
+  const currentAds = data.length;
+  const canAddAd = currentAds < maxAds;
+
+
   const handleRowClick = (ad: Ad) => {
     navigate(`/ads/${ad.ad_id}`);
   };
@@ -282,12 +297,40 @@ function Ads() {
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Export Button */}
           <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-            <DialogTrigger asChild>
+            {/* <DialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Export Proof of Play</span>
                 <span className="sm:hidden">Export</span>
               </Button>
+            </DialogTrigger> */}
+
+            <DialogTrigger asChild>
+              <div className="inline-block">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        disabled={!canExport}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">
+                          Export Proof of Play
+                        </span>
+                        <span className="sm:hidden">Export</span>
+                      </Button>
+                    </TooltipTrigger>
+
+                    {!canExport && (
+                      <TooltipContent>
+                        <p>Upgrade your plan to enable Proof of Play export</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -420,7 +463,30 @@ function Ads() {
             </DialogContent>
           </Dialog>
 
-          <AddAdComponent onIsOpenChange={onIsOpenChange} />
+          {/* <AddAdComponent onIsOpenChange={onIsOpenChange} /> */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-block w-full sm:w-auto">
+                  <div className={!canAddAd ? "cursor-not-allowed" : ""}>
+                    <AddAdComponent
+                      onIsOpenChange={onIsOpenChange}
+                      disabled={!canAddAd}
+                    />
+                  </div>
+                </div>
+              </TooltipTrigger>
+
+              {!canAddAd && (
+                <TooltipContent>
+                  <p>
+                    You have reached your plan limit ({maxAds} ads). Upgrade to
+                    add more.
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 

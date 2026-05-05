@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Layout from "./layout";
 import PrivateRoute from "./routes/PrivateRoute";
@@ -22,6 +27,12 @@ import ExportDetails from "./pages/ExportDetails";
 import ScreenLayoutPage from "./pages/AddToSchedule/screen-layout/page";
 import ScheduleAddPageDetails from "./pages/AddToSchedule/layoutdetails/page";
 import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
+import ManageSubscriptionsPage from "./pages/Subscriptions/page";
+import ClientSubscriptionPage from "./pages/Subscriptions/clientpage";
+import { SubscriptionProvider } from "./context/SubscriptionContext";
+import ProtectedRoute from "./context/components/ProtectedRoute";
+import ClientChannelsPage from "./pages/StreamProviders/components/clientChannelsPage";
+import ClientChannelDetailPage from "./pages/StreamProviders/components/clientChannelDetailsPage";
 import PublicRoute from "./routes/PublicRoute";
 
 // Lazy load components
@@ -58,13 +69,38 @@ function App() {
         <Route path="/register-device" element={<RegisterDevice />} />
 
         <Route element={<Layout />}>
-          <Route element={<PrivateRoute />}>
+          {/* <Route element={<PrivateRoute />}> */}
+          <Route
+            element={
+              <SubscriptionProvider>
+                <Outlet />
+              </SubscriptionProvider>
+            }
+          >
             <Route path="/" element={<Dashboard />} />
             <Route
               path="/plans/all"
               element={
                 <Suspense fallback={<Loading />}>
                   <Plans />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/manage-subscription/all"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ManageSubscriptionsPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/my-subscription"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ClientSubscriptionPage />
                 </Suspense>
               }
             />
@@ -99,9 +135,11 @@ function App() {
             <Route
               path="/all-exports"
               element={
-                <Suspense fallback={<Loading />}>
-                  <ExportDetails />
-                </Suspense>
+                <ProtectedRoute feature="PROOF_OF_PLAY">
+                  <Suspense fallback={<Loading />}>
+                    <ExportDetails />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
 
@@ -292,9 +330,11 @@ function App() {
             <Route
               path="/live-content"
               element={
-                <Suspense fallback={<Loading />}>
-                  <LiveContent />
-                </Suspense>
+                <ProtectedRoute feature="LIVE_STREAMING">
+                  <Suspense fallback={<Loading />}>
+                    <LiveContent />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -322,14 +362,6 @@ function App() {
               }
             />
           </Route>
-          <Route
-            path="/forbidden"
-            element={
-              <Suspense fallback={<Loading />}>
-                <NotFoundPage />
-              </Suspense>
-            }
-          />
 
           <Route
             path="/stream-providers"
@@ -349,10 +381,37 @@ function App() {
           />
 
           <Route
+            path="/stream-channels"
+            element={
+              <Suspense fallback={<Loading />}>
+                <ClientChannelsPage />
+              </Suspense>
+            }
+          />
+
+          <Route
             path="/stream-providers/:slug/:channelId"
             element={
               <Suspense fallback={<Loading />}>
                 <ChannelDetailPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/channel-details/:channelId"
+            element={
+              <Suspense fallback={<Loading />}>
+                <ClientChannelDetailPage />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/forbidden"
+            element={
+              <Suspense fallback={<Loading />}>
+                <NotFoundPage />
               </Suspense>
             }
           />
@@ -366,6 +425,7 @@ function App() {
             }
           />
         </Route>
+        {/* </Route> */}
       </Routes>
     </Router>
   );

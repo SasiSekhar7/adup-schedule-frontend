@@ -24,10 +24,12 @@ import {
 import { Edit, X } from "lucide-react";
 import Map from "./Map";
 import { Device } from "../columns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DeviceGroup {
   group_id: string;
   name: string;
+  orientation: "portrait" | "landscape";
 }
 
 const EditDeviceDialog = ({
@@ -42,6 +44,9 @@ const EditDeviceDialog = ({
   const [step, setStep] = useState(1);
   const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>([]);
   const [currentTagInput, setCurrentTagInput] = useState("");
+  const [allGroups, setAllGroups] = useState<DeviceGroup[]>([]);
+  const [overwriteOrientation, setOverwriteOrientation] = useState(false);
+
   const [deviceData, setDeviceData] = useState<{
     device_name: string;
     tags: string[];
@@ -67,9 +72,13 @@ const EditDeviceDialog = ({
     const fetchDeviceGroups = async () => {
       try {
         const response = await api.get<{ groups: DeviceGroup[] }>(
-          "/device/group-list"
+          "/device/group-list",
         );
-        setDeviceGroups(response.groups || []);
+        // setDeviceGroups(response.groups || []);
+        const groups = (response as any).groups || [];
+
+        setAllGroups(groups);
+        setDeviceGroups(groups); // default
       } catch (error) {
         console.error("Failed to fetch device groups", error);
       }
@@ -79,6 +88,32 @@ const EditDeviceDialog = ({
       fetchDeviceGroups();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!allGroups.length) return;
+
+    // ✅ if overwrite → show all
+    if (overwriteOrientation) {
+      setDeviceGroups(allGroups);
+      return;
+    }
+
+    // ✅ filter by device orientation
+    const filtered = allGroups.filter(
+      (group) => group.orientation === device.device_orientation,
+    );
+
+    setDeviceGroups(filtered);
+  }, [overwriteOrientation, allGroups, device.device_orientation]);
+
+  useEffect(() => {
+    if (open && device?.DeviceGroup) {
+      const isDifferent =
+        device.device_orientation !== device.DeviceGroup.orientation;
+
+      setOverwriteOrientation(isDifferent); // ✅ auto set checkbox
+    }
+  }, [open, device]);
 
   const handleAddTag = (tagName: string) => {
     const trimmedTag = tagName.trim();
@@ -139,6 +174,7 @@ const EditDeviceDialog = ({
     try {
       let payload = {
         ...deviceData,
+        overwrite_group_orientation: overwriteOrientation,
       };
       await api.post(`/device/update/metadata/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
@@ -295,6 +331,13 @@ const EditDeviceDialog = ({
                   onKeyDown={handleTagInputKeyDown}
                 />
               </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Overwrite Group Orientation</Label>
+              <Checkbox
+                checked={overwriteOrientation}
+                onCheckedChange={(value) => setOverwriteOrientation(!!value)}
+              />
             </div>
           </div>
         ) : (

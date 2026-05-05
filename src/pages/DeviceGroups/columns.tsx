@@ -19,6 +19,7 @@ import EditGroup from "./componets/EditGroup";
 export interface Group {
   group_id: string;
   name: string;
+  orientation: "portrait" | "landscape";
   reg_code: string;
   device_count: number;
   message: string | null;
@@ -88,6 +89,7 @@ export const columns: ColumnDef<Group>[] = [
       isAdminOnly: true, // Custom meta to identify admin-only columns
     },
   },
+
   {
     accessorKey: "reg_code",
     header: "License Key",
@@ -124,6 +126,21 @@ export const columns: ColumnDef<Group>[] = [
     accessorKey: "device_count",
     header: "Device Count",
     cell: ({ row }) => row.getValue("device_count"),
+    enableSorting: true,
+  },
+
+  {
+    accessorKey: "orientation",
+    header: "Orientation",
+    cell: ({ row }) => {
+      const value = row.getValue("orientation");
+
+      return (
+        <span className="capitalize">
+          {value === "portrait" ? "Portrait" : "Landscape"}
+        </span>
+      );
+    },
     enableSorting: true,
   },
   {

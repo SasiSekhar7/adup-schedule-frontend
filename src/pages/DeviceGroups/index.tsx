@@ -29,6 +29,7 @@ interface DeviceGroup {
   name: string;
   reg_code: string;
   client_id?: string; // Add client_id to the DeviceGroup interface
+  orientation: "portrait" | "landscape";
 }
 
 function DeviceGroup() {
@@ -36,6 +37,7 @@ function DeviceGroup() {
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
     reg_code: "",
+    orientation: "portrait",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +189,26 @@ function DeviceGroup() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label>Orientation</Label>
+
+                  <Select
+                    value={deviceGroup.orientation || "landscape"}
+                    onValueChange={(value) =>
+                      setDeviceGroup({ ...deviceGroup, orientation: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Orientation" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="landscape">Landscape</SelectItem>
+                      <SelectItem value="portrait">Portrait</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label>License Key</Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -227,10 +249,10 @@ function DeviceGroup() {
         <CardContent className="p-4 md:p-6">
           <div
             className="
-  max-w-[350px]
-  md:max-w-[calc(100vw-20rem)]
-  relative
-"
+              max-w-[350px]
+              md:max-w-[calc(100vw-20rem)]
+              relative
+            "
           >
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">

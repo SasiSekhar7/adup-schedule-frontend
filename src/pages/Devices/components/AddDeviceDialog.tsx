@@ -23,14 +23,26 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle, Plus, XCircle, X } from "lucide-react";
 import Map from "./Map";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DeviceGroup {
   group_id: string;
   name: string;
+  orientation: "portrait" | "landscape";
 }
 
-const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
+const AddDeviceDialog = ({
+  fetchDta,
+  disabled,
+}: {
+  fetchDta: () => void;
+  disabled?: boolean;
+}) => {
   const navigate = useNavigate();
+
+  const [allGroups, setAllGroups] = useState<DeviceGroup[]>([]);
+  const [overwriteOrientation, setOverwriteOrientation] = useState(false);
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>([]);
@@ -65,7 +77,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
     device_model: null,
     device_off_time: "23:00:00",
     device_on_time: "06:00:00",
-    device_orientation: "auto",
+    device_orientation: "portrait",
     device_os: null,
     device_os_version: null,
     device_resolution: null,
@@ -85,8 +97,12 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
         const response = await api.get<{ groups: DeviceGroup[] }>(
           "/device/group-list",
         );
-        console.log("Device groups:", response);
-        setDeviceGroups((response as any).groups || []);
+        // console.log("Device groups:", response);
+        // setDeviceGroups((response as any).groups || []);
+        const groups = (response as any).groups || [];
+
+        setAllGroups(groups); // ✅ store original
+        setDeviceGroups(groups);
       } catch (error) {
         console.error("Failed to fetch device groups", error);
       }
@@ -96,6 +112,27 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       fetchDeviceGroups();
     }
   }, [open]);
+
+  useEffect(() => {
+    // if overwrite is ON → show all
+    if (overwriteOrientation) {
+      setDeviceGroups(allGroups);
+      return;
+    }
+
+    // if no orientation → show all (manual "all" case)
+    if (!deviceData.device_orientation) {
+      setDeviceGroups(allGroups);
+      return;
+    }
+
+    // filter groups based on orientation
+    const filtered = allGroups.filter(
+      (group: any) => group.orientation === deviceData.device_orientation,
+    );
+
+    setDeviceGroups(filtered);
+  }, [deviceData.device_orientation, overwriteOrientation, allGroups]);
 
   useEffect(() => {
     setIsVerified(false);
@@ -245,6 +282,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       tags: deviceData.tags,
       group_id: deviceData.group_id,
     };
+    console.log("Payload:", payload);
 
     await api.post(`device/update/${deviceData.deviceId}`, payload);
 
@@ -269,6 +307,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
         device_orientation: deviceData.device_orientation,
         device_resolution: deviceData.device_resolution,
         device_type: deviceData.device_type,
+        overwrite_group_orientation: overwriteOrientation,
       };
       await api.post(`/device/update/location/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
@@ -343,7 +382,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       modal={false}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={disabled}>
           Add Device
           <Plus className="h-4 w-4 ml-2" />
         </Button>
@@ -511,6 +550,14 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <Label>Overwrite Group Orientation</Label>
+              <Checkbox
+                checked={overwriteOrientation}
+                onCheckedChange={(value) => setOverwriteOrientation(!!value)}
+              />
+            </div>
+
             {/* Device Type and Orientation */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -536,6 +583,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label htmlFor="device_orientation">Device Orientation</Label>
                 <Select
@@ -549,7 +597,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="auto">Auto</SelectItem>
+                      {/* <SelectItem value="auto">Auto</SelectItem> */}
                       <SelectItem value="portrait">Portrait</SelectItem>
                       <SelectItem value="landscape">Landscape</SelectItem>
                     </SelectGroup>
@@ -664,7 +712,7 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="auto">Auto</SelectItem>
+                      {/* <SelectItem value="auto">Auto</SelectItem> */}
                       <SelectItem value="portrait">Portrait</SelectItem>
                       <SelectItem value="landscape">Landscape</SelectItem>
                     </SelectGroup>

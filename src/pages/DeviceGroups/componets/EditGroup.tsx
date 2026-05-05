@@ -14,18 +14,34 @@ import { useState } from "react";
 import { Group } from "../columns";
 import api from "@/api";
 import { Edit } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const EditGroup = ({ group }: { group: Group }) => {
-  const { group_id, name, rcs_enabled, placeholder_enabled, logo_enabled } =
-    group;
+  const {
+    group_id,
+    name,
+    orientation,
+    rcs_enabled,
+    placeholder_enabled,
+    logo_enabled,
+  } = group;
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [groupName, setGroupName] = useState(name || "");
   const [rcsEnable, setRcsEnable] = useState(rcs_enabled || false);
   const [logoEnabled, setLogoEnabled] = useState(logo_enabled || false);
+  const [orientationValue, setOrientationValue] = useState(
+    orientation || "landscape",
+  );
   const [placeholderEnabled, setplaceholderEnabled] = useState(
-    placeholder_enabled || false
+    placeholder_enabled || false,
   );
 
   const handleSave = async () => {
@@ -33,7 +49,9 @@ const EditGroup = ({ group }: { group: Group }) => {
     try {
       await api.put(`/device/update-group/${group_id}`, {
         name: groupName,
+        orientation: orientationValue,
         rcs_enabled: rcsEnable,
+
         placeholder_enabled: placeholderEnabled,
         logo_enabled: logoEnabled,
       });
@@ -71,6 +89,23 @@ const EditGroup = ({ group }: { group: Group }) => {
                 // onChange={(e) => setGroupName(e.target.value)}
                 placeholder="Enter group name"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Orientation</Label>
+
+              <Select
+                value={orientationValue}
+                onValueChange={(value) => setOrientationValue(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Orientation" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="landscape">Landscape</SelectItem>
+                  <SelectItem value="portrait">Portrait</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="logo">Logo Enable</Label>

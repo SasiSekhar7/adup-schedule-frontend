@@ -74,6 +74,7 @@ import {
 import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useFeature } from "@/context/hooks/useFeature";
 
 const widgetIcons: any = {
   clock_analog: Clock,
@@ -200,31 +201,6 @@ export default function ScheduleAddPage() {
       setZoneContents(initialContents);
     }
   }, [selectedLayout]);
-
-  // const getDateRange = () => {
-  //   const today = new Date();
-  //   let startDate = today.toISOString().split("T")[0];
-  //   let endDate = startDate;
-
-  //   switch (dateType) {
-  //     case "specific_date":
-  //       startDate = specificDate || startDate;
-  //       endDate = startDate;
-  //       break;
-  //     case "one_week":
-  //       endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-  //         .toISOString()
-  //         .split("T")[0];
-  //       break;
-  //     case "one_month":
-  //       endDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
-  //         .toISOString()
-  //         .split("T")[0];
-  //       break;
-  //   }
-
-  //   return { startDate, endDate };
-  // };
 
   const getDateRange = () => {
     const today = new Date();
@@ -359,7 +335,8 @@ export default function ScheduleAddPage() {
       //  default from global
       // start_time_date: startDate,
       // end_time_date: endDate,
-      time_slots: [...timeSlots], // copy global slots
+      // time_slots: [...timeSlots], // copy global slots
+      time_slots: timeSlots.map((slot) => ({ ...slot })),
     };
 
     setZoneContents((prev) => ({
@@ -407,25 +384,6 @@ export default function ScheduleAddPage() {
       },
     }));
   };
-
-  // const toggleWidget = (widgetId: string) => {
-  //   if (!activeZone) return;
-
-  //   setZoneContents((prev) => {
-  //     const currentWidgets = prev[activeZone.zone_id]?.selected_widgets || [];
-  //     const newWidgets = currentWidgets.includes(widgetId)
-  //       ? currentWidgets.filter((id) => id !== widgetId)
-  //       : [...currentWidgets, widgetId];
-
-  //     return {
-  //       ...prev,
-  //       [activeZone.zone_id]: {
-  //         ...prev[activeZone.zone_id],
-  //         selected_widgets: newWidgets,
-  //       },
-  //     };
-  //   });
-  // };
 
   const [assets, setAssets] = useState<any[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(false);
@@ -536,7 +494,8 @@ export default function ScheduleAddPage() {
 
       //  SAME AS MEDIA
 
-      time_slots: [...timeSlots],
+      // time_slots: [...timeSlots],
+      time_slots: timeSlots.map((slot) => ({ ...slot })),
     };
 
     setZoneContents((prev: any) => ({
@@ -627,13 +586,86 @@ export default function ScheduleAddPage() {
   //   };
   // };
 
+  // const getZoneTimeAnalysis = (zoneId: string) => {
+  //   const content = zoneContents[zoneId];
+  //   if (!content?.content_items?.length) return null;
+
+  //   let allSlots: { start: number; end: number }[] = [];
+
+  //   //  collect all slots from all items
+  //   content.content_items.forEach((item) => {
+  //     (item.time_slots || []).forEach((slot) => {
+  //       const start = timeToMinutes(slot.start);
+  //       const end = timeToMinutes(slot.end);
+
+  //       if (start < end) {
+  //         allSlots.push({ start, end });
+  //       }
+  //     });
+  //   });
+
+  //   if (allSlots.length === 0) return null;
+
+  //   //  sort slots
+  //   const sorted = allSlots.sort((a, b) => a.start - b.start);
+
+  //   let totalScheduled = 0;
+  //   let gaps: { start: string; end: string; duration: number }[] = [];
+
+  //   // global limits
+  //   const globalStart = timeToMinutes(globalTimeInfo.minTime);
+  //   const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
+
+  //   //  gap BEFORE first slot
+  //   if (sorted[0].start > globalStart) {
+  //     gaps.push({
+  //       start: minutesToTime(globalStart),
+  //       end: minutesToTime(sorted[0].start),
+  //       duration: sorted[0].start - globalStart,
+  //     });
+  //   }
+
+  //   for (let i = 0; i < sorted.length; i++) {
+  //     const current = sorted[i];
+  //     totalScheduled += current.end - current.start;
+
+  //     const next = sorted[i + 1];
+
+  //     //  gap BETWEEN slots
+  //     if (next && next.start > current.end) {
+  //       gaps.push({
+  //         start: minutesToTime(current.end),
+  //         end: minutesToTime(next.start),
+  //         duration: next.start - current.end,
+  //       });
+  //     }
+  //   }
+
+  //   //  gap AFTER last slot
+  //   const last = sorted[sorted.length - 1];
+  //   if (last.end < globalEnd) {
+  //     gaps.push({
+  //       start: minutesToTime(last.end),
+  //       end: minutesToTime(globalEnd),
+  //       duration: globalEnd - last.end,
+  //     });
+  //   }
+
+  //   return {
+  //     minTime: minutesToTime(sorted[0].start),
+  //     maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
+  //     totalScheduled,
+  //     totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
+  //     gaps,
+  //   };
+  // };
   const getZoneTimeAnalysis = (zoneId: string) => {
     const content = zoneContents[zoneId];
     if (!content?.content_items?.length) return null;
 
     let allSlots: { start: number; end: number }[] = [];
 
-    //  collect all slots from all items
+    // 🔹 Collect all slots from all items
     content.content_items.forEach((item) => {
       (item.time_slots || []).forEach((slot) => {
         const start = timeToMinutes(slot.start);
@@ -647,33 +679,56 @@ export default function ScheduleAddPage() {
 
     if (allSlots.length === 0) return null;
 
-    //  sort slots
+    // 🔹 Sort slots by start time
     const sorted = allSlots.sort((a, b) => a.start - b.start);
 
-    let totalScheduled = 0;
-    let gaps: { start: string; end: string; duration: number }[] = [];
+    // 🔥 STEP 1: MERGE OVERLAPPING SLOTS (IMPORTANT FIX)
+    let merged: { start: number; end: number }[] = [];
 
-    // global limits
+    sorted.forEach((slot) => {
+      if (merged.length === 0) {
+        merged.push({ ...slot });
+        return;
+      }
+
+      const last = merged[merged.length - 1];
+
+      // overlap or same time
+      if (slot.start <= last.end) {
+        last.end = Math.max(last.end, slot.end);
+      } else {
+        merged.push({ ...slot });
+      }
+    });
+
+    // 🔹 STEP 2: Calculate totalScheduled from merged slots
+    let totalScheduled = 0;
+    merged.forEach((m) => {
+      totalScheduled += m.end - m.start;
+    });
+
+    // 🔹 Global limits
     const globalStart = timeToMinutes(globalTimeInfo.minTime);
     const globalEnd = timeToMinutes(globalTimeInfo.maxTime);
 
-    //  gap BEFORE first slot
-    if (sorted[0].start > globalStart) {
+    // 🔹 STEP 3: Calculate gaps
+    let gaps: { start: string; end: string; duration: number }[] = [];
+
+    // gap BEFORE first
+    if (merged[0].start > globalStart) {
       gaps.push({
         start: minutesToTime(globalStart),
-        end: minutesToTime(sorted[0].start),
-        duration: sorted[0].start - globalStart,
+        end: minutesToTime(merged[0].start),
+        duration: merged[0].start - globalStart,
       });
     }
 
-    for (let i = 0; i < sorted.length; i++) {
-      const current = sorted[i];
-      totalScheduled += current.end - current.start;
+    // gaps BETWEEN
+    for (let i = 0; i < merged.length - 1; i++) {
+      const current = merged[i];
+      const next = merged[i + 1];
 
-      const next = sorted[i + 1];
-
-      //  gap BETWEEN slots
-      if (next && next.start > current.end) {
+      if (next.start > current.end) {
         gaps.push({
           start: minutesToTime(current.end),
           end: minutesToTime(next.start),
@@ -682,8 +737,8 @@ export default function ScheduleAddPage() {
       }
     }
 
-    //  gap AFTER last slot
-    const last = sorted[sorted.length - 1];
+    // gap AFTER last
+    const last = merged[merged.length - 1];
     if (last.end < globalEnd) {
       gaps.push({
         start: minutesToTime(last.end),
@@ -693,8 +748,8 @@ export default function ScheduleAddPage() {
     }
 
     return {
-      minTime: minutesToTime(sorted[0].start),
-      maxTime: minutesToTime(Math.max(...sorted.map((s) => s.end))),
+      minTime: minutesToTime(merged[0].start),
+      maxTime: minutesToTime(merged[merged.length - 1].end),
       totalScheduled,
       totalRemaining: Math.max(0, globalTimeInfo.totalMinutes - totalScheduled),
       gaps,
@@ -750,11 +805,37 @@ export default function ScheduleAddPage() {
   //     .slice(0, 10); //  limit to 10
   // }, [groups, groupFilter]);
 
+  // const getFilteredGroups = () => {
+  //   // 🔍 search filter
+  //   const filtered = groups.filter((g: any) =>
+  //     g.name?.toLowerCase().includes(groupFilter.toLowerCase()),
+  //   );
+
+  //   // 📄 pagination
+  //   const startIndex = (groupPage - 1) * groupsPerPage;
+  //   const paginated = filtered.slice(startIndex, startIndex + groupsPerPage);
+
+  //   return {
+  //     filtered,
+  //     paginated,
+  //     totalPages: Math.ceil(filtered.length / groupsPerPage),
+  //   };
+  // };
+
   const getFilteredGroups = () => {
-    // 🔍 search filter
-    const filtered = groups.filter((g: any) =>
-      g.name?.toLowerCase().includes(groupFilter.toLowerCase()),
-    );
+    // 🔍 search + orientation filter
+    const filtered = groups.filter((g: any) => {
+      const matchesSearch = g.name
+        ?.toLowerCase()
+        .includes(groupFilter.toLowerCase());
+
+      const matchesOrientation =
+        !selectedLayout ||
+        (g.orientation || "").toLowerCase() ===
+          (selectedLayout.orientation || "").toLowerCase();
+
+      return matchesSearch && matchesOrientation;
+    });
 
     // 📄 pagination
     const startIndex = (groupPage - 1) * groupsPerPage;
@@ -867,21 +948,6 @@ export default function ScheduleAddPage() {
 
   const renderLayoutSelection = () => (
     <div className="space-y-6">
-      {/* <div>
-        <Label className="text-base font-medium">Content Type</Label>
-        <Select defaultValue="screen_layouts">
-          <SelectTrigger className="w-full mt-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="screen_layouts">Screen Layouts</SelectItem>
-            <SelectItem value="advertisements">Advertisements</SelectItem>
-            <SelectItem value="carousels">Carousels</SelectItem>
-            <SelectItem value="live_content">Live Content</SelectItem>
-          </SelectContent>
-        </Select>
-      </div> */}
-
       <div>
         <Label className="text-base font-medium mb-4 block">
           Select a Layout Template ({layouts.length})
@@ -1258,51 +1324,61 @@ export default function ScheduleAddPage() {
                         </div>
                       </div>
                     ))} */}
-                    {paginatedGroups.map((group: any) => (
-                      <div
-                        key={group.group_id}
-                        className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
-                      >
-                        <Checkbox
-                          checked={selectedGroups.includes(group.group_id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedGroups([
-                                ...selectedGroups,
-                                group.group_id,
-                              ]);
-                            } else {
-                              setSelectedGroups(
-                                selectedGroups.filter(
-                                  (id) => id !== group.group_id,
-                                ),
-                              );
-                            }
-                          }}
-                        />
-
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {group.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {group.device_count || 0} devices
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-amber-500 rounded-full"
-                              style={{ width: `${group.capacity || 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {group.capacity || 0}%
-                          </span>
-                        </div>
+                    {paginatedGroups.length === 0 ? (
+                      <div className="text-center text-sm text-muted-foreground py-6">
+                        No Device groups found for{" "}
+                        <span className="font-bold">
+                          {selectedLayout.orientation}
+                        </span>{" "}
+                        orientation Layout.
                       </div>
-                    ))}
+                    ) : (
+                      paginatedGroups.map((group: any) => (
+                        <div
+                          key={group.group_id}
+                          className="flex items-center gap-3 p-2 border rounded hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={selectedGroups.includes(group.group_id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedGroups([
+                                  ...selectedGroups,
+                                  group.group_id,
+                                ]);
+                              } else {
+                                setSelectedGroups(
+                                  selectedGroups.filter(
+                                    (id) => id !== group.group_id,
+                                  ),
+                                );
+                              }
+                            }}
+                          />
+
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
+                              {group.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {group.device_count || 0} devices
+                            </p>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-500 rounded-full"
+                                style={{ width: `${group.capacity || 0}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {group.capacity || 0}%
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </ScrollArea>
                 <div className="flex justify-between items-center mt-3">
@@ -1715,6 +1791,9 @@ export default function ScheduleAddPage() {
     return { valid: true };
   };
 
+  const { has } = useFeature();
+  const canShowLiveContent = has("LIVE_IN_LAYOUT");
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6 overflow-auto">
@@ -1998,12 +2077,20 @@ export default function ScheduleAddPage() {
                             Carousel
                           </div>
                         </SelectItem>
-                        <SelectItem value="live_content">
+                        {/* <SelectItem value="live_content">
                           <div className="flex items-center gap-2">
                             <Radio className="w-4 h-4" />
                             Live Content
                           </div>
-                        </SelectItem>
+                        </SelectItem> */}
+                        {canShowLiveContent && (
+                          <SelectItem value="live_content">
+                            <div className="flex items-center gap-2">
+                              <Radio className="w-4 h-4" />
+                              Live Content
+                            </div>
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -2333,11 +2420,15 @@ export default function ScheduleAddPage() {
                                               type="time"
                                               value={slot.start}
                                               onChange={(e) => {
-                                                const updated = [
-                                                  ...item.time_slots,
-                                                ] as any;
-                                                updated[slotIdx].start =
-                                                  e.target.value;
+                                                const updated =
+                                                  item.time_slots.map((s, i) =>
+                                                    i === slotIdx
+                                                      ? {
+                                                          ...s,
+                                                          start: e.target.value,
+                                                        }
+                                                      : s,
+                                                  );
                                                 updateItemSlots(
                                                   item.id,
                                                   updated,
@@ -2349,11 +2440,15 @@ export default function ScheduleAddPage() {
                                               type="time"
                                               value={slot.end}
                                               onChange={(e) => {
-                                                const updated = [
-                                                  ...item.time_slots,
-                                                ] as any;
-                                                updated[slotIdx].end =
-                                                  e.target.value;
+                                                const updated =
+                                                  item.time_slots.map((s, i) =>
+                                                    i === slotIdx
+                                                      ? {
+                                                          ...s,
+                                                          start: e.target.value,
+                                                        }
+                                                      : s,
+                                                  );
                                                 updateItemSlots(
                                                   item.id,
                                                   updated,

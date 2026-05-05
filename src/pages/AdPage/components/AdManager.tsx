@@ -361,6 +361,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
         setUploadStatus("Updating ad record...");
 
         await api.post(`/ads/file/edit/${formData.ad_id}`, {
+          fileSize: file.size,
           file_url: uploadResult.url,
           isMultipartUpload: true,
         });
@@ -380,6 +381,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
         setUploadStatus("Updating ad record...");
 
         await api.post(`/ads/file/edit/${formData.ad_id}`, {
+          fileSize: file.size,
           file_url: uploadResult.url,
           isMultipartUpload: false,
         });

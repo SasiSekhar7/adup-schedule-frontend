@@ -76,7 +76,7 @@ export default function PreviewLiveContent() {
   const fetchDacastChannels = async () => {
     try {
       setLoadingChannels(true);
-      const response = await api.get("/streaming/channel");
+      const response = await api.get("/streaming/channels");
       setChannels(response.data || []);
     } catch (error) {
       toast.error("Failed to fetch Dacast channels");

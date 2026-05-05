@@ -364,14 +364,15 @@ export const streamProviders: StreamProvider[] = [
   },
 ];
 
-export function getProvider(slug: string): StreamProvider | undefined {
-  return streamProviders.find((p) => p.slug === slug);
+export function getProvider(providers: any[], slug: string) {
+  return providers.find((p) => p.provider_type === slug);
+  // return providers.find((p) => p.slug === slug);
 }
 
-export function getChannel(
-  providerSlug: string,
-  channelId: string,
-): Channel | undefined {
-  const provider = getProvider(providerSlug);
-  return provider?.channels.find((c) => c.id === channelId);
-}
+// export function getChannel(
+//   providerSlug: string,
+//   channelId: string,
+// ): Channel | undefined {
+//   const provider = getProvider(providerSlug);
+//   return provider?.channels.find((c) => c.id === channelId);
+// }
