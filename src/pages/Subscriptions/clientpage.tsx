@@ -92,41 +92,79 @@ export default function ClientSubscriptionPage() {
     }
   };
 
-  const formatFeatures = (features: FeaturesCache = {}) => {
+  // const formatFeatures = (features: FeaturesCache = {}) => {
+  //   const GB = 1024 * 1024 * 1024;
+
+  //   return [
+  //     {
+  //       label: "Storage",
+  //       value: features.STORAGE_LIMIT
+  //         ? `${Math.round(features.STORAGE_LIMIT / GB)} GB`
+  //         : "0 GB",
+  //     },
+  //     {
+  //       label: "Devices",
+  //       value: features.MAX_DEVICES
+  //         ? `${features.MAX_DEVICES} Devices`
+  //         : "0 Devices",
+  //     },
+  //     {
+  //       label: "Ads",
+  //       value: features.MAX_ADS ? `${features.MAX_ADS} Ads` : "0 Ads",
+  //     },
+  //     {
+  //       label: "Live Streaming",
+  //       value: features.LIVE_STREAMING ? "Enabled" : "Disabled",
+  //     },
+  //     {
+  //       label: "Proof of Play",
+  //       value: features.PROOF_OF_PLAY ? "Enabled" : "Disabled",
+  //     },
+  //     {
+  //       label: "Live in Layout",
+  //       value: features.LIVE_IN_LAYOUT ? "Enabled" : "Disabled",
+  //     },
+  //   ];
+  // };
+
+  const formatFeatures = (features: any = {}) => {
     const GB = 1024 * 1024 * 1024;
 
-    return [
-      {
-        label: "Storage",
-        value: features.STORAGE_LIMIT
-          ? `${Math.round(features.STORAGE_LIMIT / GB)} GB`
-          : "0 GB",
-      },
-      {
-        label: "Devices",
-        value: features.MAX_DEVICES
-          ? `${features.MAX_DEVICES} Devices`
-          : "0 Devices",
-      },
-      {
-        label: "Ads",
-        value: features.MAX_ADS ? `${features.MAX_ADS} Ads` : "0 Ads",
-      },
-      {
-        label: "Live Streaming",
-        value: features.LIVE_STREAMING ? "Enabled" : "Disabled",
-      },
-      {
-        label: "Proof of Play",
-        value: features.PROOF_OF_PLAY ? "Enabled" : "Disabled",
-      },
-      {
-        label: "Live in Layout",
-        value: features.LIVE_IN_LAYOUT ? "Enabled" : "Disabled",
-      },
-    ];
-  };
+    const toNumber = (val: any) => Number(val || 0);
+    const toBool = (val: any) => val === true || val === "true";
 
+    const formatKey = (key: string) =>
+      key
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return Object.keys(features).map((key) => {
+      const value = features[key];
+
+      // STORAGE (convert bytes → GB)
+      if (key === "STORAGE_LIMIT") {
+        return {
+          label: "Storage",
+          value: `${Math.round(toNumber(value) / GB)} GB`,
+        };
+      }
+
+      // BOOLEAN FEATURES
+      if (value === "true" || value === "false" || typeof value === "boolean") {
+        return {
+          label: formatKey(key),
+          value: toBool(value) ? "Enabled" : "Disabled",
+        };
+      }
+
+      // NUMBER FEATURES
+      return {
+        label: formatKey(key),
+        value: `${toNumber(value)}`,
+      };
+    });
+  };
   useEffect(() => {
     fetchClients();
   }, []);
