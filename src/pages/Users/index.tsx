@@ -37,7 +37,7 @@ function Users() {
       </div>
 
       <Card className="w-full overflow-hidden">
-        <CardContent className="p-0 md:p-4">
+        <CardContent className="p-0 ">
           <div className="w-full overflow-x-auto">
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
