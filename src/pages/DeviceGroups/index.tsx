@@ -246,7 +246,7 @@ function DeviceGroup() {
       </div>
 
       <Card>
-        <CardContent className="p-4 md:p-6">
+        <CardContent className="p-0">
           <div
             className="
               max-w-[350px]

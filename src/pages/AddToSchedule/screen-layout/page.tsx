@@ -1769,13 +1769,11 @@ import {
   Code,
   Film,
   LayoutGrid,
-  ChevronLeft,
   Monitor,
   Smartphone,
   Move,
   Maximize,
   Save,
-  Grid3X3,
   Palette,
   Maximize2,
   SplitSquareHorizontal,
@@ -2382,9 +2380,9 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
   };
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-250px)] select-none">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full select-none">
       {/* SIDEBAR: CONTROLS */}
-      <div className="w-[30%] flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
+      <div className="w-full lg:w-[30%] flex flex-col gap-4 overflow-y-auto lg:pr-2 pb-4 max-h-full">
         <Card className="p-4 space-y-4 border-slate-200 shadow-sm flex-shrink-0">
           <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">
@@ -2397,7 +2395,7 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
               className="font-bold border-slate-200 h-8 text-sm"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               variant={orientation === "landscape" ? "default" : "outline"}
               className="flex-1 h-12 flex-col gap-1 text-[10px]"
@@ -2439,7 +2437,7 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                 type="color"
                 value={canvasBg}
                 onChange={(e) => setCanvasBg(e.target.value)}
-                className="w-6 h-6 rounded cursor-pointer border-none p-0"
+                className="w-8 h-8 rounded cursor-pointer border-none p-0"
               />
             </div>
             <div className="space-y-2">
@@ -2486,19 +2484,19 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
         {/* 3. Selected Zone Adjustments */}
         {activeZone && (
           <Card className="p-4 border-indigo-200 bg-indigo-50/50 shadow-sm flex-shrink-0 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
               <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">
                 Zone Adjustments
               </span>
-              <span className="text-[9px] font-bold text-indigo-400 bg-white px-2 py-0.5 rounded border border-indigo-100">
+              <span className="text-[9px] font-bold text-indigo-400 bg-white px-2 py-0.5 rounded border border-indigo-100 w-fit">
                 {activeZone.name}
               </span>
             </div>
-            <div className="flex gap-2 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
+                className=" h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
                 onClick={() => autoSnap("fullscreen")}
               >
                 <Maximize2 size={12} className="mr-1" /> Fill All
@@ -2506,7 +2504,7 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
+                className="h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
                 onClick={() => autoSnap("fill-width")}
               >
                 <SplitSquareVertical size={12} className="mr-1" /> Fill W
@@ -2514,13 +2512,13 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
+                className="h-8 text-[10px] bg-white border-indigo-200 hover:bg-indigo-100 text-indigo-700"
                 onClick={() => autoSnap("fill-height")}
               >
                 <SplitSquareHorizontal size={12} className="mr-1" /> Fill H
               </Button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
                 <label className="text-[9px] font-bold text-slate-500 mb-1 block">
                   X (%)
@@ -2587,7 +2585,7 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                   onClick={() => setSelectedZoneId(zone.zone_id)}
                   className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer ${selectedZoneId === zone.zone_id ? "border-blue-500 bg-blue-50 shadow-sm" : "border-slate-100 bg-white hover:border-slate-200"}`}
                 >
-                  <div className="flex justify-between items-center mb-1">
+                  <div className="flex justify-between items-start gap-2 mb-1">
                     <Input
                       value={zone.name}
                       onChange={(e) =>
@@ -2608,15 +2606,15 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                           zones.filter((z) => z.zone_id !== zone.zone_id),
                         );
                       }}
-                      className="text-slate-300 hover:text-red-500"
+                      className="text-slate-300 hover:text-red-500 flex-shrink-0"
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
 
-                  <div className="flex justify-between items-center mt-2 px-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 px-1">
                     <select
-                      className="text-[9px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-1.5 py-1 outline-none text-slate-600"
+                      className="text-[9px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-1.5 py-1 outline-none text-slate-600 w-full sm:w-auto"
                       value={zone.content_type_allowed}
                       onChange={(e) =>
                         setZones(
@@ -2644,15 +2642,24 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
 
       {/* CANVAS AREA */}
       <div
-        className="flex-1 bg-slate-200/50  rounded-3xl border-2 border-slate-200 relative flex items-start justify-center overflow-auto p-6 lg:p-12"
+        className="flex-1 bg-slate-200/50  rounded-3xl border-2 border-slate-200 relative flex items-start justify-center overflow-auto p-3 sm:p-6 lg:p-12 min-h-[500px]"
         onMouseDown={handleBackgroundClick}
       >
         <div
-          className="shadow-[0_20px_50px_rgba(0,0,0,0.15)]  relative transition-all duration-300 border-[6px] border-slate-900 rounded-[8px] mx-auto"
+          className="shadow-[0_20px_50px_rgba(0,0,0,0.15)]  relative transition-all duration-300 border-[6px] border-slate-900 rounded-[8px] mx-auto  overflow-hidden"
           onMouseDown={handleBackgroundClick}
+          // style={{
+          //   width: CANVAS_WIDTH,
+          //   height: CANVAS_HEIGHT,
+          //   backgroundColor: canvasBg,
+          //   backgroundImage: `radial-gradient(circle, rgba(203, 213, 225, 0.4) 1.5px, transparent 1.5px)`,
+          //   backgroundSize: `${GRID_STEP}px ${GRID_STEP}px`,
+          // }}
           style={{
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
+            width: "100%",
+            maxWidth: `${CANVAS_WIDTH}px`,
+            aspectRatio: orientation === "landscape" ? "16 / 9" : "9 / 16",
+            height: "auto",
             backgroundColor: canvasBg,
             backgroundImage: `radial-gradient(circle, rgba(203, 213, 225, 0.4) 1.5px, transparent 1.5px)`,
             backgroundSize: `${GRID_STEP}px ${GRID_STEP}px`,
@@ -2789,7 +2796,7 @@ export default function ScreenLayoutPage() {
   const [userRole, setUserRole] = useState<string>("");
   useEffect(() => {
     const role = getRole();
-    setUserRole(role);
+    setUserRole(role || "");
   }, []);
 
   const loadData = async () => {
@@ -2895,7 +2902,7 @@ export default function ScreenLayoutPage() {
     editingLayout ||
     (isCreating ? null : layouts[0] || null);
 
-  const { limit, isAdmin } = useFeature();
+  const { limit } = useFeature();
 
   const maxLayouts = limit("MAX_LAYOUTS");
   const currentLayouts = layouts.length;
