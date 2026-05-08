@@ -2065,6 +2065,12 @@ interface BuilderProps {
   onChange: (layout: any) => void;
 }
 
+const generateZoneColor = (index) => {
+  // Golden angle for evenly distributed colors
+  const hue = (index * 137.508) % 360;
+
+  return `hsl(${hue}, 70%, 55%)`;
+};
 function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
   const [name, setName] = useState(initialLayout?.name || "New Layout");
   const [zones, setZones] = useState<any[]>(initialLayout?.zones || []);
@@ -2159,12 +2165,13 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
       height: 30,
       z_index: zones.length + 1,
       content_type_allowed: "media",
-      color:
-        zones.length % 3 === 0
-          ? "#3b82f6"
-          : zones.length % 3 === 1
-            ? "#22c55e"
-            : "#f59e0b",
+      // color:
+      //   zones.length % 3 === 0
+      //     ? "#3b82f6"
+      //     : zones.length % 3 === 1
+      //       ? "#22c55e"
+      //       : "#f59e0b",
+      color: generateZoneColor(zones.length),
       is_muted: true,
     };
     setZones([...zones, newZone]);

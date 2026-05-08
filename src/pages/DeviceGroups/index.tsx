@@ -3,7 +3,7 @@ import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
 import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Plus, RefreshCcw, Save } from "lucide-react";
 import {
   Dialog,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { getRole } from "@/helpers";
 import { Device, DevicesResponse } from "../Devices/columns";
+import { useNavigate } from "react-router-dom";
 
 interface DeviceGroup {
   name: string;
@@ -34,6 +35,7 @@ interface DeviceGroup {
 }
 
 function DeviceGroup() {
+  const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
@@ -122,6 +124,26 @@ function DeviceGroup() {
       }));
     }
   }, [deviceGroup.name]);
+
+  const [search, setSearch] = useState("");
+  const [orientationFilter, setOrientationFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState("all");
+  const filteredData = data.filter((item: any) => {
+    const matchesSearch =
+      item.name?.toLowerCase().includes(search.toLowerCase()) ||
+      item.reg_code?.toLowerCase().includes(search.toLowerCase()) ||
+      item.Client?.name?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesOrientation =
+      orientationFilter === "all"
+        ? true
+        : item.orientation === orientationFilter;
+
+    const matchesClient =
+      clientFilter === "all" ? true : item.Client?.name === clientFilter;
+
+    return matchesSearch && matchesOrientation && matchesClient;
+  });
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -247,6 +269,62 @@ function DeviceGroup() {
       </div>
 
       <Card>
+        <CardHeader>
+          <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              {/* Search */}
+              <Input
+                placeholder="Search group, client or key..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full sm:w-[260px]"
+              />
+
+              {/* Orientation Filter */}
+              <Select
+                value={orientationFilter}
+                onValueChange={setOrientationFilter}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Orientation" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="all">All Orientation</SelectItem>
+                  <SelectItem value="portrait">Portrait</SelectItem>
+                  <SelectItem value="landscape">Landscape</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Client Filter */}
+              <Select value={clientFilter} onValueChange={setClientFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Client" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="all">All Clients</SelectItem>
+
+                  {[
+                    ...new Set(
+                      data
+                        ?.map((item: any) => item.Client?.name)
+                        .filter(Boolean),
+                    ),
+                  ].map((clientName) => (
+                    <SelectItem key={clientName} value={clientName}>
+                      {clientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-sm text-muted-foreground whitespace-nowrap">
+              Total Groups: {filteredData.length}
+            </div>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           <div
             className="
@@ -259,7 +337,14 @@ function DeviceGroup() {
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
               Scroll →
             </div>
-            <DataTable data={data} columns={columns} maxHeight="none" />
+
+            <DataTable
+              // data={data}
+              data={filteredData}
+              columns={columns}
+              maxHeight="none"
+              onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
+            />
           </div>
         </CardContent>
       </Card>
