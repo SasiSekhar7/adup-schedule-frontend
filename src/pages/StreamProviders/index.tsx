@@ -67,7 +67,7 @@ export default function StreamProvidersPage() {
       console.log("Providers:", res.data);
 
       setProviders(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     }
   };

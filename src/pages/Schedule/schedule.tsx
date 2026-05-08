@@ -39,7 +39,7 @@ function Schedule() {
         }));
         console.log(transformedEvents);
         setEvents(transformedEvents);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching schedules:", error);
       }
     }

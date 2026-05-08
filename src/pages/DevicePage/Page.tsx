@@ -70,7 +70,7 @@ export default function DeviceDetailPage({
       });
 
       setData(res);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       if (isCustom) setApplyLoading(false);
@@ -90,7 +90,7 @@ export default function DeviceDetailPage({
   //       const res = await api.get(`/device/${device_id}/details`);
   //       console.log(res);
   //       setData(res); // ✅ IMPORTANT
-  //     } catch (err) {
+  //     } catch (err:any) {
   //       console.error(err);
   //     } finally {
   //       setLoading(false);

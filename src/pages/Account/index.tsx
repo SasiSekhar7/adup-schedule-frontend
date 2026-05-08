@@ -12,7 +12,7 @@ export default function AccountPage() {
     try {
       const response = await api.get("/user/account");
       setAccount(response.account);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch account:", error);
     }
   };

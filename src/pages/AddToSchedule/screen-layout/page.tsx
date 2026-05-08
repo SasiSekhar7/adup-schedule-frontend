@@ -820,7 +820,7 @@
 //     try {
 //       const data = await getLayouts();
 //       setLayouts(data);
-//     } catch (error) { toast.error("Failed to load layouts"); }
+//     } catch (error:any) { toast.error("Failed to load layouts"); }
 //   };
 
 //   const handleStartEdit = async (layout: LayoutType) => {
@@ -850,7 +850,7 @@
 //       setEditingLayout(null);
 //       setIsCreating(false);
 //       toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-//     } catch (error) { toast.error("Error saving layout"); }
+//     } catch (error:any) { toast.error("Error saving layout"); }
 //   };
 
 //   const handleDeleteLayout = async (layoutId: string) => {
@@ -859,7 +859,7 @@
 //       deleteLayout(layoutId);
 //       await loadData();
 //       toast.success("Layout deleted");
-//     } catch (error) { toast.error("Error deleting layout"); }
+//     } catch (error:any) { toast.error("Error deleting layout"); }
 //   };
 
 //   const displayState = currentBuilderState || editingLayout || (isCreating ? null : layouts[0] || null);
@@ -1554,7 +1554,7 @@
 //     try {
 //       const data = await getLayouts();
 //       setLayouts(data);
-//     } catch (error) { toast.error("Failed to load layouts"); }
+//     } catch (error:any) { toast.error("Failed to load layouts"); }
 //   };
 
 //   const handleStartEdit = async (layout: LayoutType) => {
@@ -1584,7 +1584,7 @@
 //       // setEditingLayout(null);
 //       // setIsCreating(false);
 //       // toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-//     } catch (error) { toast.error("Error saving layout"); }
+//     } catch (error:any) { toast.error("Error saving layout"); }
 //   };
 
 //   const handleDeleteLayout = async (layoutId: string) => {
@@ -1593,7 +1593,7 @@
 //       deleteLayout(layoutId);
 //       await loadData();
 //       toast.success("Layout deleted");
-//     } catch (error) { toast.error("Error deleting layout"); }
+//     } catch (error:any) { toast.error("Error deleting layout"); }
 //   };
 
 //   const displayState = currentBuilderState || editingLayout || (isCreating ? null : layouts[0] || null);
@@ -2815,7 +2815,7 @@ export default function ScreenLayoutPage() {
       setLoadingClients(true);
       const res = await api.get("/ads/clients");
       setClients(res.clients || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       setLoadingClients(false);
@@ -2836,7 +2836,7 @@ export default function ScreenLayoutPage() {
     try {
       const data = await getLayouts();
       setLayouts(data);
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Failed to load layouts");
     }
   };
@@ -2897,7 +2897,7 @@ export default function ScreenLayoutPage() {
       setEditingLayout(null);
       setIsCreating(false);
       toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.error || "Error saving layout");
     }
   };
@@ -2911,7 +2911,7 @@ export default function ScreenLayoutPage() {
   //     await deleteLayout(layoutId);
   //     await loadData();
   //     toast.success("Layout deleted");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     toast.error("Error deleting layout");
   //   }
   // };
@@ -2919,10 +2919,15 @@ export default function ScreenLayoutPage() {
     if (!layoutToDelete) return;
 
     try {
-      await deleteLayout(layoutToDelete);
+      // await deleteLayout(layoutToDelete);
+      const response = await deleteLayout(layoutToDelete);
+      if (!response.success) {
+        toast.error(response.error);
+        return;
+      }
       await loadData();
       toast.success("Layout deleted");
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.error || "Error deleting layout");
     } finally {
       setDeleteDialogOpen(false);

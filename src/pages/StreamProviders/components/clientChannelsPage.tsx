@@ -47,7 +47,7 @@ export default function ClientChannelsPage() {
       console.log("Channels:", res.data);
 
       setAllChannels(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     }
   };
@@ -77,7 +77,7 @@ export default function ClientChannelsPage() {
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
         await fetchChannels();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle stream:", error);
       toast.error(error?.error || "Something went wrong ❌");
     } finally {

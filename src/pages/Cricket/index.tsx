@@ -48,7 +48,7 @@ function CricketPage() {
             .slice(0, 10),
           live: data.live_match || null,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching selected series:", error);
       }
     };
@@ -62,7 +62,7 @@ function CricketPage() {
       try {
         const response = await api.get("/device/cricket/fetch-series-list");
         setSeriesList(response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching series:", error);
       }
     };
@@ -74,7 +74,7 @@ function CricketPage() {
     try {
       await api.post("/device/cricket/update-series", { series_id });
       window.location.reload(); // Refresh page to fetch new matches
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating series:", error);
     }
   };

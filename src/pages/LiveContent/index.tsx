@@ -83,7 +83,7 @@ export default function LiveContent() {
       setLoading(true);
       const response = await api.get<LiveContentResponse>("/live-content/all");
       setLiveContents(response.data?.data || response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching live contents:", error);
       toast.error("Failed to fetch live contents");
     } finally {
@@ -98,7 +98,7 @@ export default function LiveContent() {
       await api.delete(`/live-content/${liveContentId}`);
       toast.success("Live content deleted successfully");
       fetchLiveContents();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting live content:", error);
       toast.error("Failed to delete live content");
     }
@@ -114,7 +114,7 @@ export default function LiveContent() {
         `Live content ${newStatus === "active" ? "activated" : "deactivated"}`,
       );
       fetchLiveContents();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating live content status:", error);
       toast.error("Failed to update live content status");
     }

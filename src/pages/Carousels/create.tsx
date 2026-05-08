@@ -257,7 +257,7 @@ function SortableCarouselItem({
       }
 
       toast.success("File uploaded successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
       toast.error("Failed to upload file");
       setUploadStatus("Upload failed");
@@ -448,7 +448,7 @@ export default function CreateCarousel() {
           ) ||
           [],
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching ads:", error);
       toast.error("Failed to fetch available ads");
     } finally {
@@ -475,7 +475,7 @@ export default function CreateCarousel() {
           isNew: false,
         })) || [],
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching carousel:", error);
       toast.error("Failed to fetch carousel data");
       navigate("/carousels");
@@ -607,7 +607,7 @@ export default function CreateCarousel() {
       }
 
       navigate("/carousels");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving carousel:", error);
       toast.error(`Failed to ${isEdit ? "update" : "create"} carousel`);
     } finally {

@@ -227,7 +227,7 @@ function AddAdComponent({
         const response = await api.get("/ads/clients");
 
         setClients((response as any).clients);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };
@@ -285,7 +285,7 @@ function AddAdComponent({
 
     //     setPlans([]);
     //   }
-    // } catch (err) {
+    // } catch (err:any) {
     //   console.error("Plan fetch error:", err);
     //   setPlans([]);
     // }
@@ -332,7 +332,7 @@ function AddAdComponent({
       // } else {
       //   setMaxAds(sub.features_cache?.MAX_ADS ?? 0);
       // }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Plan fetch error:", err);
       setPlans([]);
     }
@@ -353,7 +353,7 @@ function AddAdComponent({
 
   //     const ads = res?.data || res || [];
   //     setCurrentAdsCount(ads.length);
-  //   } catch (err) {
+  //   } catch (err:any) {
   //     console.error("Ads count error:", err);
   //   }
   // };

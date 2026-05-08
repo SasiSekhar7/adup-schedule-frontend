@@ -92,7 +92,7 @@ export default function AdDetailPage({
       });
 
       setData(res);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       if (isCustom) setApplyLoading(false);
@@ -114,7 +114,7 @@ export default function AdDetailPage({
   //       const res = await api.get(`/ads/details/${id}`);
   //       console.log(res);
   //       setData(res);
-  //     } catch (err) {
+  //     } catch (err:any) {
   //       console.error(err);
   //     } finally {
   //       setLoading(false);

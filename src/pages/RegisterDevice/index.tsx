@@ -20,7 +20,7 @@ export default function InstallPage() {
 
         setApkUrl(apkRes.url);
         setWgtUrl(wgtRes.url);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching download URLs:", error);
       } finally {
         setLoading(false);

@@ -101,7 +101,7 @@ export default function ManageSubscriptionsPage() {
       const response = await api.get("/subscribe/get-by-client");
       console.log("response of clients:-", response);
       setClients((response as any).data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching clients:", error);
     }
   };
@@ -234,7 +234,7 @@ export default function ManageSubscriptionsPage() {
 
       // optional refresh
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("CREATE ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }
@@ -271,7 +271,7 @@ export default function ManageSubscriptionsPage() {
 
       // refresh
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("UPDATE ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }
@@ -301,7 +301,7 @@ export default function ManageSubscriptionsPage() {
 
       // refresh data
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("CANCEL ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }

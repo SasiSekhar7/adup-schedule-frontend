@@ -58,7 +58,7 @@ const EditGroup = ({ group }: { group: Group }) => {
 
       setOpen(false);
       // location.reload(); // Refresh to show updated data
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating group:", error);
     } finally {
       setLoading(false);

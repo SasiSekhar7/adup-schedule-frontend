@@ -460,7 +460,7 @@ function TelemetryInsights({
       const response = await fetch(url);
       const data = await response.json();
       return data.display_name || "Unknown Location";
-    } catch (error) {
+    } catch (error: any) {
       return "Unknown Location";
     }
   }

@@ -135,7 +135,7 @@ export default function ScheduleAddPage() {
         const res = await api.get("/widgets");
         console.log("Widgets:", res.data);
         setWidgets(res.data); // your response.data.data
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };
@@ -380,7 +380,7 @@ export default function ScheduleAddPage() {
       const logos = res.data.filter((item: any) => item.asset_type === "logo");
 
       setAssets(logos);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       // setLoadingAssets(false);
@@ -627,7 +627,7 @@ export default function ScheduleAddPage() {
         console.log("groups:", res);
 
         setGroups(res.groups || []); // handle both cases
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };
@@ -1229,7 +1229,7 @@ export default function ScheduleAddPage() {
         }));
 
         setAds(formatted); //  IMPORTANT
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching ads:", error);
       }
     };
@@ -1244,7 +1244,7 @@ export default function ScheduleAddPage() {
         const response = await api.get("/carousel/all");
 
         setCarousels(response.data); //  correct path
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };
@@ -1259,7 +1259,7 @@ export default function ScheduleAddPage() {
       try {
         const res = await api.get("/live-content/all");
         setLiveContent(res.data); // correct
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };

@@ -225,7 +225,7 @@ function DevicePage() {
   //     setIsEditing(false);
 
   //     console.log(" Device updated successfully:", response.data);
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("❌ Failed to update device data:", error);
   //   } finally {
   //     setLoading(false);
@@ -299,7 +299,7 @@ function DevicePage() {
   //     setExportFilter("today");
   //     setExportStartDate("");
   //     setExportEndDate("");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Export failed:", error);
   //     alert("Export failed. Please try again.");
   //   } finally {
@@ -355,7 +355,7 @@ function DevicePage() {
 
       toast.success("Export job created successfully!");
       navigate("/all-exports");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Export job failed:", error);
       toast.error(error?.message || "Export job failed. Please try again.");
     } finally {
@@ -429,7 +429,7 @@ function DevicePage() {
   //     setEventLogsExportFilter("today");
   //     setEventLogsExportStartDate("");
   //     setEventLogsExportEndDate("");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Event Logs export failed:", error);
   //     alert("Event Logs export failed. Please try again.");
   //   } finally {
@@ -485,7 +485,7 @@ function DevicePage() {
 
   //     toast.success("Event logs export job created!");
   //     navigate("/all-exports");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Event logs export failed:", error);
   //     toast.error(error.message || "Export job failed.");
   //   } finally {
@@ -563,7 +563,7 @@ function DevicePage() {
   //     setFullDeviceExportEndDate("");
 
   //     console.log(" Full device details exported successfully");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Full device details export failed:", error);
   //     alert("Full device details export failed. Please try again.");
   //   } finally {
@@ -647,7 +647,7 @@ function DevicePage() {
 
       toast.success("Full device export job created!");
       navigate("/all-exports");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Full device export failed:", error);
       toast.error(error.message || "Export job failed.");
     } finally {
@@ -701,7 +701,7 @@ function DevicePage() {
         setDeviceTelemetry(telemetryResponse.data || []);
         setTerminologyTotal(telemetryResponse.total);
         setTerminologyTotalPages(telemetryResponse.totalPages);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch device data:", error);
       } finally {
         setLoading(false);

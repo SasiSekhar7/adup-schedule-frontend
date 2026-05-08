@@ -66,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       try {
         const response = await api.get("/user/data");
         setRawData(response);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch sidebar data:", error);
       } finally {
         setLoading(false);

@@ -56,7 +56,7 @@ function DeviceGroup() {
     try {
       const data = await api.get("/ads/clients"); // Assuming the same endpoint for clients
       setClients(data.clients);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching clients:", error);
     }
   };
@@ -81,7 +81,7 @@ function DeviceGroup() {
       fetchDta();
       setLoading(false);
       setOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || "Something went wrong!");
     } finally {
       setLoading(false);

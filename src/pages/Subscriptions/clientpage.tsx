@@ -87,7 +87,7 @@ export default function ClientSubscriptionPage() {
       setCurrentSubscription(formatted);
 
       console.log("formatted subscription:", formatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching clients:", error);
     }
   };

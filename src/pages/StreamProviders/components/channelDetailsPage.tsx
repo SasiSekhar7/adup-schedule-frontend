@@ -76,7 +76,7 @@ export default function ChannelDetailPage() {
       console.log("Providers:", res.data);
 
       setAllProviders(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("error : ", err);
     }
   };
@@ -88,7 +88,7 @@ export default function ChannelDetailPage() {
       console.log("Channel Details:", res.data);
 
       setChannel(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch channel:", error);
     }
   };
@@ -132,7 +132,7 @@ export default function ChannelDetailPage() {
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
         await fetchChannelById(channelId as string);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle stream:", error);
     } finally {
       setActionLoading(null);
@@ -158,7 +158,7 @@ export default function ChannelDetailPage() {
         videoRef.current.playsInline = true;
         await videoRef.current.play();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Webcam error", err);
     }
   };
@@ -272,7 +272,7 @@ export default function ChannelDetailPage() {
 
       setMediaRecorder(recorder);
       setIsStreaming(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Webcam live start failed:", err);
     }
   };

@@ -431,7 +431,7 @@ export async function getLayouts(): Promise<Layout[]> {
     // { status: true, data: [...] }
 
     return res.data || [];
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching layouts:", error);
     return [];
   }
@@ -455,7 +455,7 @@ export async function getLayouts(): Promise<Layout[]> {
 //     const res = await api.post("/layout/template", layout);
 
 //     toast.success(res?.data?.message || "Layout Saved successfully");
-//   } catch (error) {
+//   } catch (error: any) {
 //     console.error("Save failed:", error);
 //     toast.error(error?.message || "Saved locally but API failed ❌");
 //   }
@@ -487,13 +487,31 @@ export async function saveLayout(layout: Layout): Promise<void> {
 //   localStorage.setItem(LAYOUTS_KEY, JSON.stringify(layouts));
 // }
 
-export async function deleteLayout(layoutId: string): Promise<void> {
+// export async function deleteLayout(layoutId: string): Promise<void> {
+//   try {
+//     const res = await api.delete(`/layout/template/${layoutId}`);
+//     toast.success(res?.data?.message || "Layout Deleted successfully");
+//   } catch (error: any) {
+//     console.error("Delete failed:", error);
+//     toast.error(error?.message || "Deleted locally but API failed ❌");
+//   }
+// }
+
+export async function deleteLayout(layoutId: string) {
   try {
     const res = await api.delete(`/layout/template/${layoutId}`);
-    toast.success(res?.data?.message || "Layout Deleted successfully");
+
+    return {
+      success: true,
+      data: res.data,
+    };
   } catch (error: any) {
     console.error("Delete failed:", error);
-    toast.error(error?.message || "Deleted locally but API failed ❌");
+
+    return {
+      success: false,
+      error: error?.error || error?.message || "Failed to delete layout",
+    };
   }
 }
 

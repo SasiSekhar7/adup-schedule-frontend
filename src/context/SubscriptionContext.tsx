@@ -29,7 +29,7 @@ export const SubscriptionProvider = ({
         const res = await api.get<Subscription>("/subscription/my_active");
         console.log("Subscription:", res.data);
         setSubscription(res.data);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       } finally {
         setLoading(false);
