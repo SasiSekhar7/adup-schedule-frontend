@@ -1769,13 +1769,11 @@ import {
   Code,
   Film,
   LayoutGrid,
-  
   Monitor,
   Smartphone,
   Move,
   Maximize,
   Save,
- 
   Palette,
   Maximize2,
   SplitSquareHorizontal,
@@ -2381,6 +2379,17 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
     if (e.target === e.currentTarget) setSelectedZoneId(null);
   };
 
+  const { subscription, limit } = useFeature();
+
+  const maxMultiVideosInLayout = Number(
+    limit("MAX_MULTI_VIDEOS_IN_LAYOUT") || 0,
+  );
+
+  // count selected video_input_media zones
+  const selectedVideoInputZones = zones.filter(
+    (z) => z.content_type_allowed === "video_input_media",
+  ).length;
+
   return (
     <div className="flex gap-6 h-[calc(100vh-250px)] select-none">
       {/* SIDEBAR: CONTROLS */}
@@ -2618,17 +2627,39 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                     <select
                       className="text-[9px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-1.5 py-1 outline-none text-slate-600"
                       value={zone.content_type_allowed}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // prevent selecting more than allowed
+                        if (
+                          value === "video_input_media" &&
+                          zone.content_type_allowed !== "video_input_media" &&
+                          selectedVideoInputZones >= maxMultiVideosInLayout
+                        ) {
+                          toast.error(
+                            `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                          );
+                          return;
+                        }
                         setZones(
                           zones.map((z) =>
                             z.zone_id === zone.zone_id
                               ? { ...z, content_type_allowed: e.target.value }
                               : z,
                           ),
-                        )
-                      }
+                        );
+                      }}
                     >
                       <option value="media">🎥 Media Zone</option>
+                      <option
+                        value="video_input_media"
+                        // disabled={
+                        //   selectedVideoInputZones >= maxMultiVideosInLayout &&
+                        //   zone.content_type_allowed !== "video_input_media"
+                        // }
+                      >
+                        📹 Video Input Media
+                      </option>
                       <option value="widget">🧩 Widget Zone</option>
                     </select>
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
@@ -2851,7 +2882,7 @@ export default function ScreenLayoutPage() {
         };
       }
 
-      // console.log("payload", payload);
+      console.log("payload", payload);
       await saveLayout(payload);
       await loadData();
       setEditingLayout(null);
@@ -3125,6 +3156,9 @@ export default function ScreenLayoutPage() {
                         (z) => z.content_type_allowed === "widget",
                       ).length;
 
+                      const videoInputZones = layout.zones.filter(
+                        (z) => z.content_type_allowed === "video_input_media",
+                      ).length;
                       return (
                         <TableRow key={layout.layout_id}>
                           <TableCell className="font-medium">
@@ -3147,6 +3181,11 @@ export default function ScreenLayoutPage() {
                                 <Badge variant="secondary" className="text-xs">
                                   <LayoutGrid className="w-3 h-3 mr-1" />
                                   {widgetZones} Widget
+                                </Badge>
+                              )}
+                              {videoInputZones > 0 && (
+                                <Badge variant="outline" className="text-xs">
+                                  📹 {videoInputZones} Video Input
                                 </Badge>
                               )}
                             </div>

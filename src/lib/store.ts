@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Types
-export type ZoneType = "media" | "widget";
+export type ZoneType = "media" | "widget" | "video_input_media";
 
 export interface Zone {
   zone_id: string;

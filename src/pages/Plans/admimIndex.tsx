@@ -158,7 +158,7 @@ function AdminPlans() {
 
       if (isBooleanFeature(key)) continue;
 
-      if (!value || Number(value) <= 0) {
+      if (!value || Number(value) < 0) {
         toast.error(`${formatFeatureKey(key)} must be greater than 0`);
         return false;
       }
@@ -396,7 +396,7 @@ function AdminPlans() {
               />
             </div>
 
-            {/* 🔥 DYNAMIC FEATURES */}
+            {/*  DYNAMIC FEATURES */}
             <div>
               <Label>Features</Label>
 

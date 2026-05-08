@@ -30,34 +30,3 @@ export const useFeature = () => {
     subscription,
   };
 };
-
-// export const useFeature = () => {
-//   const { subscription } = useSubscription();
-//   const role = getRole();
-
-//   const isAdmin = role === "admin";
-//   const isClient = role === "client";
-
-//   return {
-//     role,
-//     isAdmin,
-//     isClient,
-
-//     // Feature check (admin bypass optional)
-//     has: (feature: keyof Features) => {
-//       if (isAdmin) return true; // 🔥 admin override
-//       return hasFeature(subscription, feature);
-//     },
-
-//     // Limits
-//     limit: (key: keyof Features) => {
-//       if (isAdmin) return Infinity; // admin unlimited
-//       return getLimit(subscription, key);
-//     },
-
-//     // Expiry
-//     expired: isAdmin ? false : isExpired(subscription),
-
-//     subscription,
-//   };
-// };
