@@ -1,23 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  TrendingUp,
-  Activity,
-  HardDrive,
-  Wifi,
-  Clock,
-  MapPin,
-  RefreshCw,
-  Settings,
-} from "lucide-react";
+import { TrendingUp, Activity, HardDrive, Clock, MapPin } from "lucide-react";
 
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -141,25 +129,25 @@ export default function DeviceDetailPage({
     },
   ];
 
-  const [logPage, setLogPage] = useState(1);
-  const logsPerPage = 5;
+  // const [logPage, setLogPage] = useState(1);
+  // const logsPerPage = 5;
 
-  const totalLogPages = Math.ceil(data?.logs?.length / logsPerPage);
+  // const totalLogPages = Math.ceil(data?.logs?.length / logsPerPage);
 
-  const paginatedLogs = data?.logs?.slice(
-    (logPage - 1) * logsPerPage,
-    logPage * logsPerPage,
-  );
+  // const paginatedLogs = data?.logs?.slice(
+  //   (logPage - 1) * logsPerPage,
+  //   logPage * logsPerPage,
+  // );
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const rowsPerPage = 10;
 
-  const totalPages = Math.ceil(data?.events?.length / rowsPerPage);
+  // const totalPages = Math.ceil(data?.events?.length / rowsPerPage);
 
-  const paginatedEvents = data?.events?.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage,
-  );
+  // const paginatedEvents = data?.events?.slice(
+  //   (currentPage - 1) * rowsPerPage,
+  //   currentPage * rowsPerPage,
+  // );
 
   const [resolvedAddress, setResolvedAddress] = useState("Loading...");
 
@@ -201,14 +189,14 @@ export default function DeviceDetailPage({
 
     if (range === "weekly") {
       return {
-        start: new Date(now - 7 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
 
     if (range === "monthly") {
       return {
-        start: new Date(now - 30 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
@@ -512,7 +500,7 @@ export default function DeviceDetailPage({
                         outerRadius={80}
                         dataKey="value"
                       >
-                        {data.networkDistribution.map((entry, index) => (
+                        {data.networkDistribution.map((index: any) => (
                           <Cell key={index} fill={COLORS[index]} />
                         ))}
                       </Pie>

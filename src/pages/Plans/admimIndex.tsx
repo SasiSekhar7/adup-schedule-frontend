@@ -144,7 +144,7 @@ function AdminPlans() {
       return false;
     }
 
-    if (!form.price || Number(form.price) <= 0) {
+    if (!form.is_trial && (!form.price || Number(form.price) <= 0)) {
       toast.error("Price must be greater than 0");
       return false;
     }

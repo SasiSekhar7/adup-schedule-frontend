@@ -22,6 +22,11 @@ export interface Group {
   orientation: "portrait" | "landscape";
   reg_code: string;
   device_count: number;
+
+  rcs_enabled?: boolean;
+  placeholder_enabled?: boolean;
+  logo_enabled?: boolean;
+
   message: string | null;
   Client?: {
     client_id: string;

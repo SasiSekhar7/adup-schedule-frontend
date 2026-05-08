@@ -1,14 +1,7 @@
 import api from "@/api";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertTriangle,
-  BadgeDollarSign,
-  Layers,
-  Pencil,
-  Plus,
-  Save,
-} from "lucide-react";
+import { AlertTriangle, Layers, Pencil, Plus, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -33,12 +26,21 @@ interface Client {
   client_id: string;
   name: string;
   email: string;
-  phoneNumber: number;
+  phone_number: number;
   adsCount: number;
   used_storage_bytes: number;
   Tier?: Tier;
+  Subscriptions?: Subscription[];
 }
 
+interface Subscription {
+  features_cache?: {
+    STORAGE_LIMIT?: number;
+  };
+  Tier?: {
+    name?: string;
+  };
+}
 interface Tier {
   tier_id: string;
   name: string;
@@ -290,11 +292,7 @@ function Clients() {
             client?.Subscriptions?.[0]?.features_cache?.STORAGE_LIMIT || 0,
           );
 
-          const usedGB = (usedBytes / 1073741824).toFixed(2);
           const totalGB = (limitBytes / 1073741824).toFixed(2);
-          const remainingGB = ((limitBytes - usedBytes) / 1073741824).toFixed(
-            2,
-          );
 
           // const usagePercent =
           //   limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;

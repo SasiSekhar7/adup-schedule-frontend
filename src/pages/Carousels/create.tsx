@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,7 +102,6 @@ async function uploadLargeFile(
     const end = Math.min(start + partSize, file.size);
     const part = file.slice(start, end);
 
-    const partStartTime = Date.now();
     const uploadResponse = await fetch(urls[i], {
       method: "PUT",
       body: part,
@@ -385,7 +384,7 @@ export default function CreateCarousel() {
   const [loading, setLoading] = useState(false);
   const [loadingAds, setLoadingAds] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectOpen, setSelectOpen] = useState(false);
+  // const [selectOpen, setSelectOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
 
   const sensors = useSensors(
@@ -463,9 +462,9 @@ export default function CreateCarousel() {
     };
 
     setItems([...items, newItem]);
-    
+
     setSearch("");
-    setSelectOpen(false);
+    // setSelectOpen(false);
   };
 
   const addNewAd = () => {
@@ -642,13 +641,13 @@ export default function CreateCarousel() {
                 <CardTitle>Carousel Items</CardTitle>
                 <div className="flex gap-2">
                   <Select
-  value={selectedValue}
-  onValueChange={(value) => {
-    addExistingAd(value);
-    setSelectedValue(""); // ✅ reset selection
-    setSearch("");        // ✅ clear search
-  }}
->
+                    value={selectedValue}
+                    onValueChange={(value) => {
+                      addExistingAd(value);
+                      setSelectedValue(""); // ✅ reset selection
+                      setSearch(""); // ✅ clear search
+                    }}
+                  >
                     <SelectTrigger className="w-[220px]">
                       <SelectValue placeholder="Add existing ad" />
                     </SelectTrigger>

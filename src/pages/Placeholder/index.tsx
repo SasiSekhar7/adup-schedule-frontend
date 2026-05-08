@@ -8,7 +8,7 @@ const PlaceholderEditor = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const fetchImage = async () => {
     try {
@@ -62,7 +62,7 @@ const PlaceholderEditor = () => {
         <Input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0])}
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
         />
 
         <Button

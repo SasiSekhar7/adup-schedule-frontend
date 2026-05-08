@@ -307,16 +307,7 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import api from "@/api";
-import {
-  Volume2,
-  VolumeX,
-  Monitor,
-  PlayCircle,
-  Layers,
-  Type,
-  Radio,
-  AlertCircle,
-} from "lucide-react";
+import { Monitor } from "lucide-react";
 import { useParams } from "react-router-dom";
 import Hls from "hls.js";
 
@@ -352,7 +343,7 @@ const HlsPlayer = ({ url, muted }: { url: string; muted: boolean }) => {
 };
 
 // ================== TIZEN-STYLE WIDGET RENDERER ==================
-const WidgetRenderer = ({ item, zoneWidth }: any) => {
+const WidgetRenderer = ({ item }: any) => {
   const [time, setTime] = useState(new Date());
   const config = item.widget_config || {};
   const widgetType = item.content_data?.type;
@@ -652,7 +643,7 @@ const WidgetRenderer = ({ item, zoneWidth }: any) => {
 };
 
 // ================== ZONE PLAYER (Handles Rotation & Carousels) ==================
-const ZonePlayer = ({ zone, scheduleData, zoneWidth, zoneHeight }: any) => {
+const ZonePlayer = ({ zone, scheduleData, zoneWidth }: any) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [subIndex, setSubIndex] = useState(0);
 

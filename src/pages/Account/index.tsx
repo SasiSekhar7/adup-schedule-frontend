@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 export default function AccountPage() {
   const [account, setAccount] = useState<any>(null);
-  const [editOpen, setEditOpen] = useState(false);
+  // const [editOpen, setEditOpen] = useState(false);
 
   const fetchAccount = async () => {
     try {
@@ -70,7 +70,7 @@ export default function AccountPage() {
 
         <EditAccount
           onIsOpenChange={(open) => {
-            setEditOpen(open);
+            // setEditOpen(open);
             if (!open) fetchAccount(); // Refresh data on close
           }}
         />

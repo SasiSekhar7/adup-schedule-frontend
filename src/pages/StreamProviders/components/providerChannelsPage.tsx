@@ -2,23 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
-  Clock,
   ExternalLink,
   MoreHorizontal,
   Search,
-  Eye,
   Plus,
   Play,
   Square,
   Trash,
 } from "lucide-react";
-import {
-  getProvider,
-  type Channel,
-} from "@/pages/StreamProviders/components/providers";
+import { getProvider } from "@/pages/StreamProviders/components/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +59,7 @@ export default function ProviderChannelsPage() {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [provider, setProvider] = useState<any>(null);
-  const [channels, setChannels] = useState<Channel[]>(provider?.channels ?? []);
+  // const [channels, setChannels] = useState<Channel[]>(provider?.channels ?? []);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -137,21 +132,21 @@ export default function ProviderChannelsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const toggleLive = (channelId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setChannels((prev) =>
-      prev.map((ch) =>
-        ch.id === channelId
-          ? {
-              ...ch,
-              status: ch.status === "live" ? "active" : "live",
-              viewers:
-                ch.status === "live" ? 0 : Math.floor(Math.random() * 500) + 10,
-            }
-          : ch,
-      ),
-    );
-  };
+  // const toggleLive = (channelId: string, e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setChannels((prev) =>
+  //     prev.map((ch) =>
+  //       ch.id === channelId
+  //         ? {
+  //             ...ch,
+  //             status: ch.status === "live" ? "active" : "live",
+  //             viewers:
+  //               ch.status === "live" ? 0 : Math.floor(Math.random() * 500) + 10,
+  //           }
+  //         : ch,
+  //     ),
+  //   );
+  // };
 
   const handleToggleLive = async (channel: any) => {
     try {

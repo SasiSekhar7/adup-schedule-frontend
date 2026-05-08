@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -18,17 +16,8 @@ import {
   Area,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  TrendingUp,
-  PlayCircle,
-  Users,
-  Target,
-  Clock,
-  ArrowLeft,
-  Activity,
-  Zap,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { PlayCircle, Target, Clock, Activity, Zap } from "lucide-react";
+
 import api from "@/api";
 import { useEffect, useState } from "react";
 
@@ -63,14 +52,14 @@ export default function AdDetailPage({
 
     if (range === "weekly") {
       return {
-        start: new Date(now - 7 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
 
     if (range === "monthly") {
       return {
-        start: new Date(now - 30 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
@@ -87,7 +76,6 @@ export default function AdDetailPage({
     return null;
   };
 
-  const [applyTrigger, setApplyTrigger] = useState(0);
   const fetchData = async (isCustom = false) => {
     try {
       if (isCustom) setApplyLoading(true);
@@ -448,7 +436,7 @@ export default function AdDetailPage({
                 </ResponsiveContainer>
               </div>
               <div className="mt-4 space-y-2">
-                {data.deviceDistribution.map((device) => (
+                {data.deviceDistribution.map((device: any) => (
                   <div
                     key={device.name}
                     className="flex items-center justify-between text-sm"

@@ -36,7 +36,7 @@ const SearchControl = ({
   useEffect(() => {
     const provider = new OpenStreetMapProvider();
 
-    const searchControl = new GeoSearchControl({
+    const searchControl = new (GeoSearchControl as any)({
       provider,
       showMarker: false,
       showPopup: false,
@@ -67,6 +67,7 @@ const Map = ({
   initialPosition,
 }: {
   onLocationSelect: (pos: LatLngLiteral) => void;
+  initialPosition?: { lat: number; lng: number; address?: string } | null;
 }) => {
   const [position, setPosition] = useState<LatLngLiteral>({
     lat: initialPosition?.lat || 20.5937,

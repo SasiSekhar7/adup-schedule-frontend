@@ -72,7 +72,7 @@ const MessageCell = ({ group }: { group: Group }) => {
             <DialogTitle>Add Scrolling Message</DialogTitle>
           </DialogHeader>
           <Textarea
-            value={inputMessage}
+            value={inputMessage || ""}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Enter message here..."
           />

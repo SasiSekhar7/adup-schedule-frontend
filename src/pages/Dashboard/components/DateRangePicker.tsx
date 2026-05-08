@@ -2,7 +2,7 @@
 "use client"; // If using Next.js App Router
 import { useEffect, useState } from "react"; // Needed for Popover open state if controlled
 import { CalendarIcon } from "lucide-react";
-import { format, addDays, subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils"; // Your utility function

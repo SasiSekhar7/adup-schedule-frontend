@@ -1,17 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Bell,
-} from "lucide-react";
+import { ArrowLeft, Download, Bell } from "lucide-react";
 import api from "@/api";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import {
   Dialog,
   DialogContent,
@@ -22,14 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
 import {
   Select,
   SelectContent,
@@ -39,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import DeviceDetailPage from "./Page";
-import axios from "axios";
 
 interface Device {
   device_id: string;
@@ -131,7 +115,7 @@ function DevicePage() {
   const navigate = useNavigate();
   const [device, setDevice] = useState<Device | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [proofOfPlayLogs, setProofOfPlayLogs] = useState<ProofOfPlayLog[]>([]);
+  // const [proofOfPlayLogs, setProofOfPlayLogs] = useState<ProofOfPlayLog[]>([]);
   const [deviceEventLogs, setDeviceEventLogs] = useState<DeviceEventLog[]>([]);
   const [deviceTelemetry, setDeviceTelemetry] = useState<DeviceTelemetry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,63 +174,63 @@ function DevicePage() {
 
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const handleChange = (field, value) => {
-    setEditedDevice({ ...editedDevice, [field]: value });
-  };
+  // const handleChange = (field, value) => {
+  //   setEditedDevice({ ...editedDevice, [field]: value });
+  // };
 
-  const handleCancel = () => {
-    setEditedDevice(device);
-    setIsEditing(false);
-  };
+  // const handleCancel = () => {
+  //   setEditedDevice(device);
+  //   setIsEditing(false);
+  // };
 
-  const handleSave = () => {
-    handleUpdateDeviceData();
-  };
+  // const handleSave = () => {
+  //   handleUpdateDeviceData();
+  // };
 
-  const handleUpdateDeviceData = async () => {
-    try {
-      setLoading(true);
+  // const handleUpdateDeviceData = async () => {
+  //   try {
+  //     setLoading(true);
 
-      // Collect editable fields
-      const editableFields = [
-        "device_on_time",
-        "device_off_time",
-        "device_resolution",
-        "device_orientation",
-      ];
+  //     // Collect editable fields
+  //     const editableFields = [
+  //       "device_on_time",
+  //       "device_off_time",
+  //       "device_resolution",
+  //       "device_orientation",
+  //     ];
 
-      // Compare old (device) vs new (editedDevice)
-      const updatedData = {};
-      editableFields.forEach((field) => {
-        if (editedDevice[field] !== device[field]) {
-          updatedData[field] = editedDevice[field];
-        }
-      });
+  //     // Compare old (device) vs new (editedDevice)
+  //     const updatedData = {};
+  //     editableFields.forEach((field) => {
+  //       if (editedDevice[field] !== device[field]) {
+  //         updatedData[field] = editedDevice[field];
+  //       }
+  //     });
 
-      // If nothing changed, skip request
-      if (Object.keys(updatedData).length === 0) {
-        console.log("No changes detected, skipping update");
-        setIsEditing(false);
-        return;
-      }
+  //     // If nothing changed, skip request
+  //     if (Object.keys(updatedData).length === 0) {
+  //       console.log("No changes detected, skipping update");
+  //       setIsEditing(false);
+  //       return;
+  //     }
 
-      // Send only changed fields
-      const response = await api.post(
-        `/device/update/location/${device?.device_id}`,
-        updatedData,
-      );
+  //     // Send only changed fields
+  //     const response = await api.post(
+  //       `/device/update/location/${device?.device_id}`,
+  //       updatedData,
+  //     );
 
-      // Update local data and exit edit mode
-      // setEditedDevice(response.data);
-      setIsEditing(false);
+  //     // Update local data and exit edit mode
+  //     // setEditedDevice(response.data);
+  //     setIsEditing(false);
 
-      console.log(" Device updated successfully:", response.data);
-    } catch (error) {
-      console.error("❌ Failed to update device data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     console.log(" Device updated successfully:", response.data);
+  //   } catch (error) {
+  //     console.error("❌ Failed to update device data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Export function
   // const handleExport = async () => {
@@ -453,61 +437,61 @@ function DevicePage() {
   //   }
   // };
 
-  const handleEventLogsExport = async () => {
-    try {
-      setIsEventLogsExporting(true);
+  // const handleEventLogsExport = async () => {
+  //   try {
+  //     setIsEventLogsExporting(true);
 
-      let startDate = "";
-      let endDate = "";
+  //     let startDate = "";
+  //     let endDate = "";
 
-      const today = new Date();
+  //     const today = new Date();
 
-      if (eventLogsExportFilter === "today") {
-        startDate = today.toISOString().split("T")[0];
-        endDate = startDate;
-      }
+  //     if (eventLogsExportFilter === "today") {
+  //       startDate = today.toISOString().split("T")[0];
+  //       endDate = startDate;
+  //     }
 
-      if (eventLogsExportFilter === "yesterday") {
-        const d = new Date();
-        d.setDate(today.getDate() - 1);
-        startDate = d.toISOString().split("T")[0];
-        endDate = startDate;
-      }
+  //     if (eventLogsExportFilter === "yesterday") {
+  //       const d = new Date();
+  //       d.setDate(today.getDate() - 1);
+  //       startDate = d.toISOString().split("T")[0];
+  //       endDate = startDate;
+  //     }
 
-      if (eventLogsExportFilter === "full") {
-        startDate = "2025-03-01";
-        endDate = today.toISOString().split("T")[0];
-      }
+  //     if (eventLogsExportFilter === "full") {
+  //       startDate = "2025-03-01";
+  //       endDate = today.toISOString().split("T")[0];
+  //     }
 
-      if (eventLogsExportFilter === "date_range") {
-        startDate = eventLogsExportStartDate;
-        endDate = eventLogsExportEndDate;
-      }
+  //     if (eventLogsExportFilter === "date_range") {
+  //       startDate = eventLogsExportStartDate;
+  //       endDate = eventLogsExportEndDate;
+  //     }
 
-      const payload = {
-        job_type: "DEVICE_EVENTS",
-        device_id: device_id,
-        start_date: startDate,
-        end_date: endDate,
-      };
+  //     const payload = {
+  //       job_type: "DEVICE_EVENTS",
+  //       device_id: device_id,
+  //       start_date: startDate,
+  //       end_date: endDate,
+  //     };
 
-      await api.post("/exports", payload);
+  //     await api.post("/exports", payload);
 
-      setEventLogsExportDialogOpen(false);
+  //     setEventLogsExportDialogOpen(false);
 
-      setEventLogsExportFilter("today");
-      setEventLogsExportStartDate("");
-      setEventLogsExportEndDate("");
+  //     setEventLogsExportFilter("today");
+  //     setEventLogsExportStartDate("");
+  //     setEventLogsExportEndDate("");
 
-      toast.success("Event logs export job created!");
-      navigate("/all-exports");
-    } catch (error) {
-      console.error("Event logs export failed:", error);
-      toast.error(error.message || "Export job failed.");
-    } finally {
-      setIsEventLogsExporting(false);
-    }
-  };
+  //     toast.success("Event logs export job created!");
+  //     navigate("/all-exports");
+  //   } catch (error) {
+  //     console.error("Event logs export failed:", error);
+  //     toast.error(error.message || "Export job failed.");
+  //   } finally {
+  //     setIsEventLogsExporting(false);
+  //   }
+  // };
 
   // Handle Full Device Details export
   // const handleFullDeviceExport = async () => {
@@ -694,7 +678,7 @@ function DevicePage() {
             `/device/${device_id}/proof-of-play-logs?page=${proofOfPlayPage}&limit=${proofOfPlayLimit}`,
           );
 
-        setProofOfPlayLogs(proofOfPlayResponse.data || []);
+        // setProofOfPlayLogs(proofOfPlayResponse.data || []);
         setProofOfPlayTotal(proofOfPlayResponse.total);
         setProofOfPlayTotalPages(proofOfPlayResponse.totalPages);
 
@@ -909,24 +893,28 @@ function DevicePage() {
               </DialogHeader>
               <div className="space-y-6 py-4">
                 <div className="space-y-2">
-                <Label htmlFor="jobType">Export Type</Label>
-                <Select
-                  value={fullDeviceJobType}
-                  onValueChange={setFullDeviceJobType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select export type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PROOF_OF_PLAY">Proof of Play</SelectItem>
-                    <SelectItem value="DEVICE_EVENTS">Device Events</SelectItem>
-                    <SelectItem value="DEVICE_TELEMETRY">
-                      Device Telemetry
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
+                  <Label htmlFor="jobType">Export Type</Label>
+                  <Select
+                    value={fullDeviceJobType}
+                    onValueChange={setFullDeviceJobType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select export type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PROOF_OF_PLAY">
+                        Proof of Play
+                      </SelectItem>
+                      <SelectItem value="DEVICE_EVENTS">
+                        Device Events
+                      </SelectItem>
+                      <SelectItem value="DEVICE_TELEMETRY">
+                        Device Telemetry
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="fullDeviceFilter">Export Filter</Label>
                   <Select
                     value={fullDeviceExportFilter}
