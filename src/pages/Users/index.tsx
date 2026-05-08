@@ -24,10 +24,10 @@ function Users() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
-        <div>
-          <p className="text-lg md:text-xl font-semibold">Users</p>
+    <div className="sw-full min-w-0 space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-2xl font-semibold">Users</p>
           <p className="text-sm text-muted-foreground">List of all users</p>
         </div>
         <div className="w-full sm:w-auto">
@@ -36,25 +36,21 @@ function Users() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-4 md:p-6">
-          <div
-            className="
-            max-w-[350px]
-            md:max-w-[calc(100vw-20rem)]
-            relative
-          "
-          >
+      <Card className="w-full overflow-hidden">
+        <CardContent className="p-0 ">
+          <div className="w-full overflow-x-auto">
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
               Scroll →
             </div>
-            <DataTable
-              data={data}
-              columns={userColumns}
-              filters={[{ label: "Name", value: "name" }]}
-              maxHeight="none"
-            />
+            <div className="min-w-[950px]">
+              <DataTable
+                data={data}
+                columns={userColumns}
+                filters={[{ label: "Name", value: "name" }]}
+                maxHeight="none"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
