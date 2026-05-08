@@ -25,7 +25,7 @@ const MessageCell = ({ schedule_id }: { schedule_id: Schedule }) => {
   //     location.reload();
   //     setOpen(false);
   //     setLoading(false);
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     setLoading(false);
   //     console.log(error);
   //   }
@@ -39,7 +39,7 @@ const MessageCell = ({ schedule_id }: { schedule_id: Schedule }) => {
 
       setOpen(false);
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       console.log(error);
     }

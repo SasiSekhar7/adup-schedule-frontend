@@ -40,7 +40,7 @@
 
 //         setData(sortedData);
 //         setTotal(response.total);
-//       } catch (error) {
+//       } catch (error:any) {
 //         console.error("Error fetching schedules:", error);
 //       } finally {
 //         setLoading(false);
@@ -415,7 +415,7 @@ export default function Schedule() {
   //     toast.success(isEnable ? "Live content started" : "Live content stopped");
 
   //     getSchedules(); // refresh list
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Live toggle failed", error);
   //     toast.error("Failed to update live content");
   //   }
@@ -475,7 +475,7 @@ export default function Schedule() {
 
       closeLiveModal();
       getSchedules();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast.error("Failed to update live content");
     }
@@ -637,7 +637,7 @@ export default function Schedule() {
 
       closeDeleteModal();
       getSchedules();
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Delete API error:", error);
       toast.error("Failed to delete schedule. Please try again.");
     } finally {
@@ -817,7 +817,7 @@ export default function Schedule() {
       }
 
       setSchedules(transformedSchedules);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching schedules:", error);
     }
   }

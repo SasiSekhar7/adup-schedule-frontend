@@ -28,7 +28,7 @@ export function getRole(): string | null {
 
     // Assuming your role is stored in a 'role' claim in the payload
     return payload.role || null; // Return the role, or null if it's not present
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error decoding or parsing JWT:", error);
     return null; // Or handle the error as needed
   }
@@ -54,7 +54,7 @@ export function getUser(): string | null {
 
     // Assuming your role is stored in a 'role' claim in the payload
     return payload || null; // Return the role, or null if it's not present
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error decoding or parsing JWT:", error);
     return null; // Or handle the error as needed
   }

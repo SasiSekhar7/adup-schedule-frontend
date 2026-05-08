@@ -87,7 +87,7 @@ function Clients() {
   //   try {
   //     const response = await api.get("/tiers");
   //     setTiers(response);
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     console.error("Failed to fetch tiers", error);
   //   }
   // };
@@ -133,7 +133,7 @@ function Clients() {
       fetchDta();
       setLoading(false);
       setOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       toast.error(error?.message);
       console.error("error", error);
@@ -166,7 +166,7 @@ function Clients() {
 
       fetchDta();
       setEditOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };

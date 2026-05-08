@@ -40,7 +40,7 @@ export default function NewCampaignPage() {
       try {
         const data = await api.get("/ads/clients");
         setClients(data?.clients || []);
-      } catch (error) {
+      } catch (error: any) {
         console.log(error);
       }
     };

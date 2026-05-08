@@ -227,7 +227,7 @@ function AddAdComponent({
         const response = await api.get("/ads/clients");
 
         setClients((response as any).clients);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
       }
     };
@@ -243,8 +243,8 @@ function AddAdComponent({
   const [newFileSize, setNewFileSize] = useState(0);
   const [isPlanExpired, setIsPlanExpired] = useState(false);
   const [features, setFeatures] = useState(null);
-  const [maxAds, setMaxAds] = useState(null);
-  const [currentAdsCount, setCurrentAdsCount] = useState(0);
+  // const [maxAds, setMaxAds] = useState(null);
+  // const [currentAdsCount, setCurrentAdsCount] = useState(0);
   const fetchPlans = async () => {
     // try {
     //   let response;
@@ -285,7 +285,7 @@ function AddAdComponent({
 
     //     setPlans([]);
     //   }
-    // } catch (err) {
+    // } catch (err:any) {
     //   console.error("Plan fetch error:", err);
     //   setPlans([]);
     // }
@@ -327,12 +327,12 @@ function AddAdComponent({
       }
 
       // MAX ADS
-      if (userRole === "Admin") {
-        setMaxAds(null); // unlimited
-      } else {
-        setMaxAds(sub.features_cache?.MAX_ADS ?? 0);
-      }
-    } catch (err) {
+      // if (userRole === "Admin") {
+      //   setMaxAds(null); // unlimited
+      // } else {
+      //   setMaxAds(sub.features_cache?.MAX_ADS ?? 0);
+      // }
+    } catch (err: any) {
       console.error("Plan fetch error:", err);
       setPlans([]);
     }
@@ -353,7 +353,7 @@ function AddAdComponent({
 
   //     const ads = res?.data || res || [];
   //     setCurrentAdsCount(ads.length);
-  //   } catch (err) {
+  //   } catch (err:any) {
   //     console.error("Ads count error:", err);
   //   }
   // };
@@ -361,8 +361,8 @@ function AddAdComponent({
   //   fetchAdsCount();
   // }, [userRole, ad?.client_id]);
 
-  const isAdLimitReached =
-    userRole !== "Admin" && maxAds !== null && currentAdsCount >= maxAds;
+  // const isAdLimitReached =
+  //   userRole !== "Admin" && maxAds !== null && currentAdsCount >= maxAds;
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -376,10 +376,10 @@ function AddAdComponent({
     (selectedFile: File | null) => {
       setError(undefined); // Clear previous errors
 
-      if (isAdLimitReached) {
-        setError("Ad limit reached. Upgrade your plan.");
-        return;
-      }
+      // if (isAdLimitReached) {
+      //   setError("Ad limit reached. Upgrade your plan.");
+      //   return;
+      // }
       //  Block if expired
       if (isPlanExpired) {
         setError(
@@ -866,7 +866,7 @@ function AddAdComponent({
               </div>
             )}
 
-            {isAdLimitReached && (
+            {/* {isAdLimitReached && (
               <div className="bg-red-100 text-red-600 p-3 rounded-md mb-3">
                 ⚠️ You have reached your ad limit. Upgrade your plan.
               </div>
@@ -875,7 +875,7 @@ function AddAdComponent({
               <p className="text-xs text-gray-500">
                 Ads: {currentAdsCount} / {maxAds}
               </p>
-            )}
+            )} */}
 
             <div className="mt-4">
               <div className="flex justify-between text-sm mb-1">
@@ -971,8 +971,8 @@ function AddAdComponent({
               (userRole === "Admin" && !ad.client_id) ||
               !!error ||
               totalUsed >= storageLimit ||
-              plans.length == 0 ||
-              isAdLimitReached
+              plans.length == 0
+              // ||isAdLimitReached
             }
           >
             <Save className="mr-2 h-4 w-4" />

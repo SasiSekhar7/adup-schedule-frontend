@@ -33,7 +33,7 @@ function ExportDetails() {
       );
 
       setExports(sorted);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch exports", error);
     } finally {
       setLoading(false);

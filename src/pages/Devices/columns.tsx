@@ -109,7 +109,7 @@ const DevicePreviewDialog = ({ device }: { device: Device }) => {
       } else {
         setTelemetry(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch device telemetry:", error);
       setTelemetry(null);
     } finally {

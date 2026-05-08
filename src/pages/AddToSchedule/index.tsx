@@ -176,7 +176,7 @@ function AddToSchedule() {
         navigate("/schedule");
         // setLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       // setLoading(false);
     }
@@ -192,7 +192,7 @@ function AddToSchedule() {
         const response = await api.get("/ads/all");
         setAdsData(response.data?.ads || (response as any).ads || []);
         console.log("-----", response.data?.ads || (response as any).ads);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching ads:", error);
       }
     };
@@ -202,7 +202,7 @@ function AddToSchedule() {
         const response = await api.get("/carousel/all");
         setCarouselsData(response.data || []);
         console.log("Carousels:", response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching carousel:", error);
       }
     };
@@ -212,7 +212,7 @@ function AddToSchedule() {
         const response = await api.get("/live-content/all");
         setLiveContentData(response.data || []);
         console.log("Live content:", response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching live content:", error);
       }
     };
@@ -222,7 +222,7 @@ function AddToSchedule() {
         const response = await api.get("/device/fetch-groups");
 
         setDevicesData(response.groups);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching devices:", error);
       }
     };

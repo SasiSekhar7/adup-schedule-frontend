@@ -322,7 +322,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
       // } else {
       //   console.error(result.error)
       // }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit ad", error);
     }
   };
@@ -401,7 +401,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
         setUploadSpeed("0 B/s");
         setTimeLeft("calculating...");
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
       setUploadStatus("Upload failed. Please try again.");
 
@@ -429,7 +429,7 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
 
       setLoading(false);
       navigate("/ads");
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
 
       console.log(error);

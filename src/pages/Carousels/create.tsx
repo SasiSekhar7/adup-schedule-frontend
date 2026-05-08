@@ -16,6 +16,32 @@ import {
 import { toast } from "sonner";
 import api from "@/api";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useFeature } from "@/context/hooks/useFeature";
+
 // File upload utility functions
 const getFileExtension = (filename: string): string => {
   return filename.substring(filename.lastIndexOf("."));
@@ -59,6 +85,7 @@ async function uploadSingleFile(
   }
 
   onProgress?.(100, "Upload complete!");
+
   return { url: generatedFileName };
 }
 
@@ -146,23 +173,6 @@ async function uploadLargeFile(
 
   return { response: completeResponse, url: generatedFileName };
 }
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 interface Ad {
   ad_id: string;
@@ -239,8 +249,15 @@ function SortableCarouselItem({
 
       onItemUpdate({ file_url: uploadResult.url });
       setUploadStatus("Upload complete!");
+
+      try {
+        await api.post("/storage/increment", { fileSizeBytes: file.size });
+      } catch (storageError) {
+        console.error("Storage update failed:", storageError);
+      }
+
       toast.success("File uploaded successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
       toast.error("Failed to upload file");
       setUploadStatus("Upload failed");
@@ -387,6 +404,25 @@ export default function CreateCarousel() {
   // const [selectOpen, setSelectOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
 
+  const { subscription, limit } = useFeature();
+
+  const storageLimit = limit("STORAGE_LIMIT");
+
+  const usedStorage = Number(subscription?.Client?.used_storage_bytes || 0);
+
+  const canAddNewAd = usedStorage < storageLimit;
+
+  const formatStorage = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -412,7 +448,7 @@ export default function CreateCarousel() {
           ) ||
           [],
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching ads:", error);
       toast.error("Failed to fetch available ads");
     } finally {
@@ -439,7 +475,7 @@ export default function CreateCarousel() {
           isNew: false,
         })) || [],
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching carousel:", error);
       toast.error("Failed to fetch carousel data");
       navigate("/carousels");
@@ -571,7 +607,7 @@ export default function CreateCarousel() {
       }
 
       navigate("/carousels");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving carousel:", error);
       toast.error(`Failed to ${isEdit ? "update" : "create"} carousel`);
     } finally {
@@ -678,10 +714,38 @@ export default function CreateCarousel() {
                         ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={addNewAd} variant="outline" size="sm">
+                  {/* <Button onClick={addNewAd} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     New Ad
-                  </Button>
+                  </Button> */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={!canAddNewAd ? "cursor-not-allowed" : ""}
+                        >
+                          <Button
+                            onClick={addNewAd}
+                            variant="outline"
+                            size="sm"
+                            disabled={!canAddNewAd}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            New Ad
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+
+                      {!canAddNewAd && (
+                        <TooltipContent>
+                          <p>
+                            Storage limit reached ({formatStorage(usedStorage)}{" "}
+                            / {formatStorage(storageLimit)}). Upgrade your plan.
+                          </p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             </CardHeader>

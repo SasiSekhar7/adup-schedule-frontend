@@ -103,7 +103,7 @@ const AddDeviceDialog = ({
 
         setAllGroups(groups); // ✅ store original
         setDeviceGroups(groups);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch device groups", error);
       }
     };
@@ -193,7 +193,7 @@ const AddDeviceDialog = ({
           }));
 
           setIsVerified(true);
-        } catch (error) {
+        } catch (error: any) {
           console.error("❌ Failed to fetch device details:", error);
           setIsVerified(false);
         }
@@ -314,7 +314,7 @@ const AddDeviceDialog = ({
       fetchDta();
       handleClose();
       setStep(1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save device", error);
       toast.error("Failed to save device.");
     }
@@ -337,7 +337,7 @@ const AddDeviceDialog = ({
       fetchDta();
       handleClose();
       setStep(1);
-    } catch (error) {
+    } catch (error:any) {
       console.error("Failed to save device configuration", error);
       toast.error("Failed to save device configuration.");
     }

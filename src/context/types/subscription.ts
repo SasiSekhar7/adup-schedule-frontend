@@ -4,8 +4,9 @@ export type Features = {
   LIVE_IN_LAYOUT: boolean;
   LIVE_STREAMING: boolean;
   PROOF_OF_PLAY: boolean;
+  MULTI_VIDEO_IN_LAYOUT: boolean;
 
-  MAX_ADS: number;
+  MAX_MULTI_VIDEOS_IN_LAYOUT: number;
   MAX_DEVICES: number;
   MAX_LAYOUTS: number;
   STORAGE_LIMIT: number;
@@ -19,6 +20,12 @@ export type Tier = {
   billing_cycle: string;
 };
 
+export type Client = {
+  client_id: string;
+  name: string;
+  email: string;
+  used_storage_bytes: string;
+};
 export type Subscription = {
   subscription_id: string;
   client_id: string;
@@ -31,4 +38,5 @@ export type Subscription = {
   no_of_months: number;
   features_cache: Features;
   Tier: Tier;
+  Client: Client;
 };

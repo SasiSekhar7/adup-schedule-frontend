@@ -90,7 +90,7 @@ export default function ProviderChannelsPage() {
 
       // setAllProviders(res.data);
       return res?.data;
-    } catch (err) {
+    } catch (err: any) {
       console.error("error : ", err);
     }
   };
@@ -99,7 +99,7 @@ export default function ProviderChannelsPage() {
     try {
       const res = await api.get("/eligible-streaming-clients");
       setClients(res.clients || res.data.clients || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -116,7 +116,7 @@ export default function ProviderChannelsPage() {
       console.log("Channels:", res.data);
 
       setAllChannels(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     }
   };
@@ -162,7 +162,7 @@ export default function ProviderChannelsPage() {
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
         await fetchChannels(provider);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle stream:", error);
     } finally {
       setActionLoading(null);
@@ -214,7 +214,7 @@ export default function ProviderChannelsPage() {
 
       // optional refresh
       await fetchChannels(provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create channel:", error);
     } finally {
       setDeleteLoading(null);

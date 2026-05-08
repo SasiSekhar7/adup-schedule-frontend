@@ -14,7 +14,7 @@ const PlaceholderEditor = () => {
     try {
       const res = await api.get("/schedule/placeholder");
       setImageUrl(res.url);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching image:", error);
     } finally {
       setLoading(false);
@@ -36,7 +36,7 @@ const PlaceholderEditor = () => {
 
       await api.post(`/schedule/change-placeholder`, fileData);
       fetchImage();
-    } catch (error) {
+    } catch (error: any) {
       setUploading(false);
       console.log(error);
     }

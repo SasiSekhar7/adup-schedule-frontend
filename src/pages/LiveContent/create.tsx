@@ -80,7 +80,7 @@ export default function CreateLiveContent() {
       setLoadingChannels(true);
       const response = await api.get("/streaming/channels");
       setChannels(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Failed to fetch Dacast channels");
     } finally {
       setLoadingChannels(false);
@@ -116,7 +116,7 @@ export default function CreateLiveContent() {
           loop: content.config?.loop || false,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching live content:", error);
       toast.error("Failed to fetch live content data");
       navigate("/live-content");
@@ -190,7 +190,7 @@ export default function CreateLiveContent() {
       }
 
       navigate("/live-content");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving live content:", error);
       toast.error(`Failed to ${isEdit ? "update" : "create"} live content`);
     } finally {
