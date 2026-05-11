@@ -50,7 +50,7 @@ export default function DeviceGroupHeader({ data }: DeviceGroupHeaderProps) {
       </div>
 
       {/* Details Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
             Created
@@ -59,14 +59,7 @@ export default function DeviceGroupHeader({ data }: DeviceGroupHeaderProps) {
             {new Date(data.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Content Type
-          </p>
-          <p className="mt-1 text-sm font-medium text-slate-900 capitalize">
-            {data.current_content_type}
-          </p>
-        </div>
+
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
             Max Days Schedules
