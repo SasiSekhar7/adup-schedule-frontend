@@ -620,23 +620,23 @@ export default function Schedule() {
 
       console.log("[v0] Calling delete API with payload:", payload);
 
-      // const result = await api.post("/schedule/multiple-delete", payload);
+      const result = await api.post("/schedule/multiple-delete", payload);
 
-      // console.log("[v0] Delete API response:", result);
+      console.log("[v0] Delete API response:", result);
 
-      //SUCCESS CHECK (backend-driven)
-      // if (result?.deleted_count > 0) {
-      //   toast.success(
-      //     `${result.deleted_count} schedule${
-      //       result.deleted_count > 1 ? "s" : ""
-      //     } deleted successfully`,
-      //   );
-      // } else {
-      //   throw new Error("No schedules were deleted");
-      // }
+      // SUCCESS CHECK (backend-driven)
+      if (result?.deleted_count > 0) {
+        toast.success(
+          `${result.deleted_count} schedule${
+            result.deleted_count > 1 ? "s" : ""
+          } deleted successfully`,
+        );
+      } else {
+        throw new Error("No schedules were deleted");
+      }
 
-      // closeDeleteModal();
-      // getSchedules();
+      closeDeleteModal();
+      getSchedules();
     } catch (error: any) {
       console.error("[v0] Delete API error:", error);
       toast.error("Failed to delete schedule. Please try again.");
@@ -651,12 +651,12 @@ export default function Schedule() {
     }
   };
 
-  useEffect(() => {
-    const group = deleteModal.schedule?.originalGroups?.find(
-      (g) => g.groupId === selectedGroupId,
-    );
-    setSelectedGroup(group || null);
-  }, [selectedGroupId, deleteModal.schedule?.originalGroups]);
+  // useEffect(() => {
+  //   const group = deleteModal.schedule?.originalGroups?.find(
+  //     (g) => g.groupId === selectedGroupId,
+  //   );
+  //   setSelectedGroup(group || null);
+  // }, [selectedGroupId, deleteModal.schedule?.originalGroups]);
 
   useEffect(() => {
     getSchedules();
