@@ -611,7 +611,7 @@ export default function Schedule() {
       const payload = {
         adId: deleteModal.schedule.id,
         contentId: deleteModal.schedule.id,
-        groupId: selectedGroupId === "all" ? null : selectedGroupId,
+        groupId: selectedGroupId === "all" ? "all" : selectedGroupId,
         startDate: dateRange.from,
         endDate: dateRange.to,
         timeRangeType: timeRange,
@@ -620,23 +620,23 @@ export default function Schedule() {
 
       console.log("[v0] Calling delete API with payload:", payload);
 
-      const result = await api.post("/schedule/multiple-delete", payload);
+      // const result = await api.post("/schedule/multiple-delete", payload);
 
-      console.log("[v0] Delete API response:", result);
+      // console.log("[v0] Delete API response:", result);
 
       //SUCCESS CHECK (backend-driven)
-      if (result?.deleted_count > 0) {
-        toast.success(
-          `${result.deleted_count} schedule${
-            result.deleted_count > 1 ? "s" : ""
-          } deleted successfully`,
-        );
-      } else {
-        throw new Error("No schedules were deleted");
-      }
+      // if (result?.deleted_count > 0) {
+      //   toast.success(
+      //     `${result.deleted_count} schedule${
+      //       result.deleted_count > 1 ? "s" : ""
+      //     } deleted successfully`,
+      //   );
+      // } else {
+      //   throw new Error("No schedules were deleted");
+      // }
 
-      closeDeleteModal();
-      getSchedules();
+      // closeDeleteModal();
+      // getSchedules();
     } catch (error: any) {
       console.error("[v0] Delete API error:", error);
       toast.error("Failed to delete schedule. Please try again.");
@@ -1558,6 +1558,7 @@ export default function Schedule() {
                     <SelectValue placeholder="Choose a device group" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Device Groups</SelectItem>
                     {deleteModal.schedule.originalGroups?.map((group) => (
                       <SelectItem key={group.groupId} value={group.groupId}>
                         {group.groupName}
@@ -1642,6 +1643,20 @@ export default function Schedule() {
                     onValueChange={setTimeRange}
                     className="space-y-3"
                   >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="entire"
+                        id="entire"
+                        className="transition-colors"
+                      />
+                      <Label
+                        htmlFor="entire"
+                        className="text-sm cursor-pointer font-medium text-destructive"
+                      >
+                        Entire Schedule Time
+                      </Label>
+                    </div>
+
                     {availableTimeRanges.map((option) => (
                       <div
                         key={option.value}
