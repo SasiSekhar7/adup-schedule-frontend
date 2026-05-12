@@ -1057,6 +1057,11 @@ export default function Schedule() {
     setShowDatePicker(false);
   };
 
+  const selectedStartDate =
+    customStartDate || dateRange.from.toISOString().split("T")[0];
+
+  const selectedEndDate =
+    customEndDate || dateRange.to.toISOString().split("T")[0];
   return (
     <div className="flex-1 flex flex-col h-full min-h-0">
       {/* Header */}
@@ -1581,13 +1586,13 @@ export default function Schedule() {
                     From {formatDate(selectedGroup.fromDate)} to{" "}
                     {formatDate(selectedGroup.toDate)}
                   </p>
-                  <div className="mt-2 flex items-center gap-4">
+                  {/* <div className="mt-2 flex items-center gap-4">
                     <span className="text-sm text-muted-foreground">
                       Progress: {selectedGroup.completedPercentage}% (
                       {selectedGroup.completedDays}/{selectedGroup.totalDays}{" "}
                       days)
                     </span>
-                  </div>
+                  </div> */}
 
                   {/* Advanced Scheduling Information in Delete Modal */}
                   {selectedGroup.weekdays && selectedGroup.time_slots && (
@@ -1675,7 +1680,18 @@ export default function Schedule() {
                               : ""
                           }`}
                         >
-                          {option.label}
+                          {/* {option.label} */}
+                          {option.value === "today"
+                            ? `Today Only (${formatDate(selectedStartDate)})`
+                            : option.value === "week"
+                              ? `This Entire Week (${formatDate(
+                                  selectedStartDate,
+                                )})`
+                              : option.value === "month"
+                                ? `This Entire Month (${formatDate(
+                                    selectedStartDate,
+                                  )})`
+                                : option.label}
                         </Label>
                       </div>
                     ))}

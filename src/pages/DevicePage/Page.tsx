@@ -207,14 +207,12 @@ export default function DeviceDetailPage({
     { label: "Resolution", value: device?.device_resolution },
     {
       label: "Total RAM",
-      value: data?.device.total_ram_mb
-        ? `${data?.device.total_ram_mb} MB`
-        : "N/A",
+      value: device.total_ram_mb ? `${device.total_ram_mb} MB` : "N/A",
     },
 
     {
       label: "Video Streams",
-      value: data?.device.max_supported_video_streams || "N/A",
+      value: device.max_supported_video_streams || "N/A",
     },
   ];
 

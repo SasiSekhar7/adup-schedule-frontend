@@ -35,12 +35,16 @@ export default function DeviceGroupDetailPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     status: "",
     registrationStatus: "",
     deviceType: "",
+    orientation: "",
+    videoStreams: "",
   });
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Filter devices based on search and filters
@@ -134,6 +138,7 @@ export default function DeviceGroupDetailPage() {
               <DeviceListFilters
                 filters={filters}
                 onFiltersChange={setFilters}
+                devices={deviceGroupData?.Devices}
               />
             </div>
           </div>

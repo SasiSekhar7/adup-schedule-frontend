@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Smartphone } from "lucide-react";
+import { Eye, MonitorSmartphone, Smartphone } from "lucide-react";
 
 interface DeviceCardProps {
   device: {
@@ -22,6 +22,9 @@ interface DeviceCardProps {
 
 export default function DeviceCard({ device, onView }: DeviceCardProps) {
   const isActive = device.status === "active";
+  const isPortrait = device.device_orientation === "portrait";
+
+  const DeviceIcon = isPortrait ? Smartphone : MonitorSmartphone;
 
   return (
     <Card className="border-slate-200 overflow-hidden transition-all hover:shadow-lg">
@@ -29,8 +32,10 @@ export default function DeviceCard({ device, onView }: DeviceCardProps) {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
-            <Smartphone
-              className={`h-5 w-5 mt-0.5 ${isActive ? "text-emerald-600" : "text-slate-400"}`}
+            <DeviceIcon
+              className={`h-5 w-5 mt-0.5 ${
+                isActive ? "text-emerald-600" : "text-slate-400"
+              }`}
             />
             <div>
               <h3 className="font-semibold text-slate-900">
@@ -69,6 +74,22 @@ export default function DeviceCard({ device, onView }: DeviceCardProps) {
 
         {/* Device Info */}
         <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-600">Orientation:</span>
+
+            <div className="flex items-center gap-1">
+              <span className="font-medium text-slate-900 capitalize">
+                {device?.device_orientation}
+              </span>
+            </div>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-600">Video Streams:</span>
+
+            <span className="font-medium text-slate-900">
+              {device?.max_supported_video_streams || 0}
+            </span>
+          </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-600">Type:</span>
             <span className="font-medium text-slate-900 capitalize">
