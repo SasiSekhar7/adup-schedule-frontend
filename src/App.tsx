@@ -34,6 +34,7 @@ import ProtectedRoute from "./context/components/ProtectedRoute";
 import ClientChannelsPage from "./pages/StreamProviders/components/clientChannelsPage";
 import ClientChannelDetailPage from "./pages/StreamProviders/components/clientchannelDetailsPage";
 import PublicRoute from "./routes/PublicRoute";
+import DeviceGroupDetailPage from "./pages/DeviceGroups/components/DeviceGroupDetails";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -247,6 +248,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <DeviceGroup />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/device-groups/:groupId"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <DeviceGroupDetailPage />
                 </Suspense>
               }
             />

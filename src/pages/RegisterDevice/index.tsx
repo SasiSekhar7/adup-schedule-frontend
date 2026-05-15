@@ -20,7 +20,7 @@ export default function InstallPage() {
 
         setApkUrl(apkRes.url);
         setWgtUrl(wgtRes.url);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching download URLs:", error);
       } finally {
         setLoading(false);
@@ -30,7 +30,12 @@ export default function InstallPage() {
     fetchDownloadUrls();
   }, []);
 
-  const handleDownload = (url, filename, setDownloading) => {
+  // const handleDownload = (url , filename, setDownloading)
+  const handleDownload = (
+    url: string | null,
+    filename: string,
+    setDownloading: React.Dispatch<React.SetStateAction<boolean>>,
+  ) => {
     if (!url) return;
 
     setDownloading(true);
@@ -55,24 +60,33 @@ export default function InstallPage() {
         <div className="flex flex-col items-center gap-4">
           {apkUrl && (
             <Button
-              onClick={() => handleDownload(apkUrl, "app.apk", setDownloadingApk)}
+              onClick={() =>
+                handleDownload(apkUrl, "app.apk", setDownloadingApk)
+              }
               disabled={downloadingApk}
             >
-              {downloadingApk ? <Loader2 className="w-5 h-5 animate-spin" /> : "Install APK"}
+              {downloadingApk ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Install APK"
+              )}
             </Button>
           )}
-
-          or 
-          
+          or
           {wgtUrl && (
             <Button
-              onClick={() => handleDownload(wgtUrl, "app.wgt", setDownloadingWgt)}
+              onClick={() =>
+                handleDownload(wgtUrl, "app.wgt", setDownloadingWgt)
+              }
               disabled={downloadingWgt}
             >
-              {downloadingWgt ? <Loader2 className="w-5 h-5 animate-spin" /> : "Install WGT"}
+              {downloadingWgt ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Install WGT"
+              )}
             </Button>
           )}
-
           {/* <Button variant="outline">Register</Button> */}
         </div>
       ) : (

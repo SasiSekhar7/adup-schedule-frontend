@@ -20,7 +20,6 @@ interface Tier {
 function Plans() {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [currentTierId, setCurrentTierId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTiers();
@@ -38,7 +37,7 @@ function Plans() {
       } else {
         setTiers([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Failed to load plans");
     }
   };
@@ -48,7 +47,7 @@ function Plans() {
     try {
       const response = await api.get(`/subscription`);
       setCurrentTierId(response.tier_id);
-    } catch (error) {
+    } catch (error: any) {
       console.log("Subscription not found");
     }
   };

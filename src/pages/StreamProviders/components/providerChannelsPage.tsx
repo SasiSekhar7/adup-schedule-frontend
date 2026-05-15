@@ -2,23 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
-  Clock,
   ExternalLink,
   MoreHorizontal,
   Search,
-  Eye,
   Plus,
   Play,
   Square,
   Trash,
 } from "lucide-react";
-import {
-  getProvider,
-  type Channel,
-} from "@/pages/StreamProviders/components/providers";
+import { getProvider } from "@/pages/StreamProviders/components/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +59,7 @@ export default function ProviderChannelsPage() {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [provider, setProvider] = useState<any>(null);
-  const [channels, setChannels] = useState<Channel[]>(provider?.channels ?? []);
+  // const [channels, setChannels] = useState<Channel[]>(provider?.channels ?? []);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -95,7 +90,7 @@ export default function ProviderChannelsPage() {
 
       // setAllProviders(res.data);
       return res?.data;
-    } catch (err) {
+    } catch (err: any) {
       console.error("error : ", err);
     }
   };
@@ -104,7 +99,7 @@ export default function ProviderChannelsPage() {
     try {
       const res = await api.get("/eligible-streaming-clients");
       setClients(res.clients || res.data.clients || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -121,7 +116,7 @@ export default function ProviderChannelsPage() {
       console.log("Channels:", res.data);
 
       setAllChannels(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     }
   };
@@ -137,21 +132,21 @@ export default function ProviderChannelsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const toggleLive = (channelId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setChannels((prev) =>
-      prev.map((ch) =>
-        ch.id === channelId
-          ? {
-              ...ch,
-              status: ch.status === "live" ? "active" : "live",
-              viewers:
-                ch.status === "live" ? 0 : Math.floor(Math.random() * 500) + 10,
-            }
-          : ch,
-      ),
-    );
-  };
+  // const toggleLive = (channelId: string, e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setChannels((prev) =>
+  //     prev.map((ch) =>
+  //       ch.id === channelId
+  //         ? {
+  //             ...ch,
+  //             status: ch.status === "live" ? "active" : "live",
+  //             viewers:
+  //               ch.status === "live" ? 0 : Math.floor(Math.random() * 500) + 10,
+  //           }
+  //         : ch,
+  //     ),
+  //   );
+  // };
 
   const handleToggleLive = async (channel: any) => {
     try {
@@ -167,7 +162,7 @@ export default function ProviderChannelsPage() {
         await api.put(`/streaming/channel/${channel.channel_id}/start`);
         await fetchChannels(provider);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to toggle stream:", error);
     } finally {
       setActionLoading(null);
@@ -219,7 +214,7 @@ export default function ProviderChannelsPage() {
 
       // optional refresh
       await fetchChannels(provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create channel:", error);
     } finally {
       setDeleteLoading(null);

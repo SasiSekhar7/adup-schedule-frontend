@@ -27,7 +27,7 @@ const MessageCell = ({ group }: { group: Group }) => {
       location.reload();
       setOpen(false);
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       console.log(error);
     }
@@ -41,7 +41,7 @@ const MessageCell = ({ group }: { group: Group }) => {
 
       setOpen(false);
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       console.log(error);
     }
@@ -72,7 +72,7 @@ const MessageCell = ({ group }: { group: Group }) => {
             <DialogTitle>Add Scrolling Message</DialogTitle>
           </DialogHeader>
           <Textarea
-            value={inputMessage}
+            value={inputMessage || ""}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Enter message here..."
           />

@@ -46,7 +46,7 @@ export function LoginForm({ className = "" }: LoginFormProps) {
       localStorage.setItem("token", token);
       // Navigate to dashboard (you'll need to implement navigation)
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.message);
       console.log(error);
     } finally {

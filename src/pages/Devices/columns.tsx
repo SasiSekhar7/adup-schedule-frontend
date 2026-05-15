@@ -32,6 +32,7 @@ const statusVariants: Record<string, string> = {
 
 interface DeviceGroup {
   name: string;
+  orientation: string;
 }
 
 export interface Device {
@@ -46,6 +47,9 @@ export interface Device {
   createdAt: Date;
   updatedAt: Date;
   group_name: string;
+  device_name: string;
+  device_orientation: string;
+  DeviceGroup: DeviceGroup;
 }
 
 export interface DeviceMetrics {
@@ -96,7 +100,7 @@ const DevicePreviewDialog = ({ device }: { device: Device }) => {
     try {
       // Fetch only the latest telemetry entry (page=1, limit=1)
       const response: PaginatedResponse<DeviceTelemetry> = await api.get(
-        `/device/${device.device_id}/telemetry-logs?page=1&limit=1`
+        `/device/${device.device_id}/telemetry-logs?page=1&limit=1`,
       );
 
       // Get the latest telemetry entry
@@ -105,7 +109,7 @@ const DevicePreviewDialog = ({ device }: { device: Device }) => {
       } else {
         setTelemetry(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch device telemetry:", error);
       setTelemetry(null);
     } finally {
@@ -300,7 +304,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
           className={cn(
             "px-3 py-1 rounded-full text-sm font-medium",
             statusVariants[status] ||
-              "bg-gray-100 text-gray-700 border border-gray-300"
+              "bg-gray-100 text-gray-700 border border-gray-300",
           )}
         >
           {status}

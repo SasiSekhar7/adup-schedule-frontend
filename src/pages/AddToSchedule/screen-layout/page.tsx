@@ -820,7 +820,7 @@
 //     try {
 //       const data = await getLayouts();
 //       setLayouts(data);
-//     } catch (error) { toast.error("Failed to load layouts"); }
+//     } catch (error:any) { toast.error("Failed to load layouts"); }
 //   };
 
 //   const handleStartEdit = async (layout: LayoutType) => {
@@ -850,7 +850,7 @@
 //       setEditingLayout(null);
 //       setIsCreating(false);
 //       toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-//     } catch (error) { toast.error("Error saving layout"); }
+//     } catch (error:any) { toast.error("Error saving layout"); }
 //   };
 
 //   const handleDeleteLayout = async (layoutId: string) => {
@@ -859,7 +859,7 @@
 //       deleteLayout(layoutId);
 //       await loadData();
 //       toast.success("Layout deleted");
-//     } catch (error) { toast.error("Error deleting layout"); }
+//     } catch (error:any) { toast.error("Error deleting layout"); }
 //   };
 
 //   const displayState = currentBuilderState || editingLayout || (isCreating ? null : layouts[0] || null);
@@ -1554,7 +1554,7 @@
 //     try {
 //       const data = await getLayouts();
 //       setLayouts(data);
-//     } catch (error) { toast.error("Failed to load layouts"); }
+//     } catch (error:any) { toast.error("Failed to load layouts"); }
 //   };
 
 //   const handleStartEdit = async (layout: LayoutType) => {
@@ -1584,7 +1584,7 @@
 //       // setEditingLayout(null);
 //       // setIsCreating(false);
 //       // toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-//     } catch (error) { toast.error("Error saving layout"); }
+//     } catch (error:any) { toast.error("Error saving layout"); }
 //   };
 
 //   const handleDeleteLayout = async (layoutId: string) => {
@@ -1593,7 +1593,7 @@
 //       deleteLayout(layoutId);
 //       await loadData();
 //       toast.success("Layout deleted");
-//     } catch (error) { toast.error("Error deleting layout"); }
+//     } catch (error:any) { toast.error("Error deleting layout"); }
 //   };
 
 //   const displayState = currentBuilderState || editingLayout || (isCreating ? null : layouts[0] || null);
@@ -2065,6 +2065,12 @@ interface BuilderProps {
   onChange: (layout: any) => void;
 }
 
+const generateZoneColor = (index) => {
+  // Golden angle for evenly distributed colors
+  const hue = (index * 137.508) % 360;
+
+  return `hsl(${hue}, 70%, 55%)`;
+};
 function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
   const [name, setName] = useState(initialLayout?.name || "New Layout");
   const [zones, setZones] = useState<any[]>(initialLayout?.zones || []);
@@ -2159,12 +2165,13 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
       height: 30,
       z_index: zones.length + 1,
       content_type_allowed: "media",
-      color:
-        zones.length % 3 === 0
-          ? "#3b82f6"
-          : zones.length % 3 === 1
-            ? "#22c55e"
-            : "#f59e0b",
+      // color:
+      //   zones.length % 3 === 0
+      //     ? "#3b82f6"
+      //     : zones.length % 3 === 1
+      //       ? "#22c55e"
+      //       : "#f59e0b",
+      color: generateZoneColor(zones.length),
       is_muted: true,
     };
     setZones([...zones, newZone]);
@@ -2378,6 +2385,17 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
   const handleBackgroundClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) setSelectedZoneId(null);
   };
+
+  const { subscription, limit } = useFeature();
+
+  const maxMultiVideosInLayout = Number(
+    limit("MAX_MULTI_VIDEOS_IN_LAYOUT") || 0,
+  );
+
+  // count selected video_input_media zones
+  const selectedVideoInputZones = zones.filter(
+    (z) => z.content_type_allowed === "video_input_media",
+  ).length;
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full select-none">
@@ -2616,17 +2634,39 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                     <select
                       className="text-[9px] font-bold uppercase tracking-widest bg-white border border-slate-200 rounded px-1.5 py-1 outline-none text-slate-600 w-full sm:w-auto"
                       value={zone.content_type_allowed}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // prevent selecting more than allowed
+                        if (
+                          value === "video_input_media" &&
+                          zone.content_type_allowed !== "video_input_media" &&
+                          selectedVideoInputZones >= maxMultiVideosInLayout
+                        ) {
+                          toast.error(
+                            `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                          );
+                          return;
+                        }
                         setZones(
                           zones.map((z) =>
                             z.zone_id === zone.zone_id
                               ? { ...z, content_type_allowed: e.target.value }
                               : z,
                           ),
-                        )
-                      }
+                        );
+                      }}
                     >
                       <option value="media">🎥 Media Zone</option>
+                      <option
+                        value="video_input_media"
+                        // disabled={
+                        //   selectedVideoInputZones >= maxMultiVideosInLayout &&
+                        //   zone.content_type_allowed !== "video_input_media"
+                        // }
+                      >
+                        📹 Video Input Media
+                      </option>
                       <option value="widget">🧩 Widget Zone</option>
                     </select>
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
@@ -2782,7 +2822,7 @@ export default function ScreenLayoutPage() {
       setLoadingClients(true);
       const res = await api.get("/ads/clients");
       setClients(res.clients || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       setLoadingClients(false);
@@ -2803,7 +2843,7 @@ export default function ScreenLayoutPage() {
     try {
       const data = await getLayouts();
       setLayouts(data);
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Failed to load layouts");
     }
   };
@@ -2858,13 +2898,13 @@ export default function ScreenLayoutPage() {
         };
       }
 
-      // console.log("payload", payload);
+      console.log("payload", payload);
       await saveLayout(payload);
       await loadData();
       setEditingLayout(null);
       setIsCreating(false);
       toast.success(`Layout "${currentBuilderState.name}" saved successfully.`);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.error || "Error saving layout");
     }
   };
@@ -2878,7 +2918,7 @@ export default function ScreenLayoutPage() {
   //     await deleteLayout(layoutId);
   //     await loadData();
   //     toast.success("Layout deleted");
-  //   } catch (error) {
+  //   } catch (error:any) {
   //     toast.error("Error deleting layout");
   //   }
   // };
@@ -2886,10 +2926,15 @@ export default function ScreenLayoutPage() {
     if (!layoutToDelete) return;
 
     try {
-      await deleteLayout(layoutToDelete);
+      // await deleteLayout(layoutToDelete);
+      const response = await deleteLayout(layoutToDelete);
+      if (!response.success) {
+        toast.error(response.error);
+        return;
+      }
       await loadData();
       toast.success("Layout deleted");
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.error || "Error deleting layout");
     } finally {
       setDeleteDialogOpen(false);
@@ -3132,6 +3177,9 @@ export default function ScreenLayoutPage() {
                         (z) => z.content_type_allowed === "widget",
                       ).length;
 
+                      const videoInputZones = layout.zones.filter(
+                        (z) => z.content_type_allowed === "video_input_media",
+                      ).length;
                       return (
                         <TableRow key={layout.layout_id}>
                           <TableCell className="font-medium">
@@ -3154,6 +3202,11 @@ export default function ScreenLayoutPage() {
                                 <Badge variant="secondary" className="text-xs">
                                   <LayoutGrid className="w-3 h-3 mr-1" />
                                   {widgetZones} Widget
+                                </Badge>
+                              )}
+                              {videoInputZones > 0 && (
+                                <Badge variant="outline" className="text-xs">
+                                  📹 {videoInputZones} Video Input
                                 </Badge>
                               )}
                             </div>

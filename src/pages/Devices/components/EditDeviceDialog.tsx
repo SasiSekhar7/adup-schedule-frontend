@@ -79,7 +79,7 @@ const EditDeviceDialog = ({
 
         setAllGroups(groups);
         setDeviceGroups(groups); // default
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch device groups", error);
       }
     };
@@ -180,7 +180,7 @@ const EditDeviceDialog = ({
       toast.success("Device saved successfully!");
       fetchDta();
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save device location", error);
       toast.error("Failed to save device.");
     }

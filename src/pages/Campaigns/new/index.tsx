@@ -23,8 +23,8 @@ import {
 import api from "@/api";
 export default function NewCampaignPage() {
   const navigate = useNavigate();
-  const [clients, setClients] = useState();
-  const [selectedClient, setSelectedClient] = useState();
+  const [clients, setClients] = useState<any[]>();
+  const [selectedClient, setSelectedClient] = useState<string>();
   const [formData, setFormData] = useState<
     Omit<Campaign, "campaign_id" | "client_id">
   >({
@@ -39,8 +39,8 @@ export default function NewCampaignPage() {
     const fetchData = async () => {
       try {
         const data = await api.get("/ads/clients");
-        setClients(data?.clients);
-      } catch (error) {
+        setClients(data?.clients || []);
+      } catch (error: any) {
         console.log(error);
       }
     };
@@ -112,7 +112,7 @@ export default function NewCampaignPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {clients?.map((client) => (
+                  {clients?.map((client: any) => (
                     <SelectItem value={client.client_id}>
                       {client.name}
                     </SelectItem>

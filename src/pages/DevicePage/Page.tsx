@@ -2,22 +2,18 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
   TrendingUp,
   Activity,
   HardDrive,
-  Wifi,
   Clock,
   MapPin,
-  RefreshCw,
-  Settings,
+  MemoryStick,
+  MonitorPlay,
 } from "lucide-react";
 
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -42,10 +38,6 @@ import {
 } from "@/components/ui/table";
 import api from "@/api";
 
-// Dummy data based on actual models
-
-// Network distribution
-
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
 export default function DeviceDetailPage({
@@ -59,6 +51,7 @@ export default function DeviceDetailPage({
   setSchedulesPage,
   setSchedulesLimit,
 }: any) {
+  console.log("these is device details:-", device);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +75,7 @@ export default function DeviceDetailPage({
       });
 
       setData(res);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       if (isCustom) setApplyLoading(false);
@@ -92,25 +85,10 @@ export default function DeviceDetailPage({
   useEffect(() => {
     if (!device_id) return;
 
-    if (range === "custom") return; // ❌ prevent auto fetch
+    if (range === "custom") return; //  prevent auto fetch
 
     fetchData(false);
   }, [device_id, range]);
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const res = await api.get(`/device/${device_id}/details`);
-  //       console.log(res);
-  //       setData(res); // ✅ IMPORTANT
-  //     } catch (err) {
-  //       console.error(err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (device_id) fetchData();
-  // }, [device_id]);
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -140,26 +118,6 @@ export default function DeviceDetailPage({
       color: "text-red-600",
     },
   ];
-
-  const [logPage, setLogPage] = useState(1);
-  const logsPerPage = 5;
-
-  const totalLogPages = Math.ceil(data?.logs?.length / logsPerPage);
-
-  const paginatedLogs = data?.logs?.slice(
-    (logPage - 1) * logsPerPage,
-    logPage * logsPerPage,
-  );
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
-
-  const totalPages = Math.ceil(data?.events?.length / rowsPerPage);
-
-  const paginatedEvents = data?.events?.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage,
-  );
 
   const [resolvedAddress, setResolvedAddress] = useState("Loading...");
 
@@ -201,14 +159,14 @@ export default function DeviceDetailPage({
 
     if (range === "weekly") {
       return {
-        start: new Date(now - 7 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
 
     if (range === "monthly") {
       return {
-        start: new Date(now - 30 * 24 * 60 * 60 * 1000),
+        start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
         end: now,
       };
     }
@@ -241,77 +199,36 @@ export default function DeviceDetailPage({
   ];
   const metaFields = [
     { label: "Group", value: device?.DeviceGroup?.name },
-    { label: "Type", value: data?.device.device_type },
+    { label: "Type", value: device.device_type },
     { label: "Model", value: device?.device_model },
     { label: "OS", value: device?.device_os },
     { label: "OS Version", value: device?.device_os_version },
     { label: "Orientation", value: device?.device_orientation },
     { label: "Resolution", value: device?.device_resolution },
+    {
+      label: "Total RAM",
+      value: device.total_ram_mb ? `${device.total_ram_mb} MB` : "N/A",
+    },
+
+    {
+      label: "Video Streams",
+      value: device.max_supported_video_streams || "N/A",
+    },
   ];
 
   if (loading) return <div className="p-6">Loading...</div>;
   if (!data) return <div className="p-6">No Data</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-        {/* <div className="mb-8 flex flex-col lg:flex-row justify-between gap-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
-              {data.device.device_name}
-            </h1>
-            <p className="text-slate-500 mt-1">
-              {resolvedAddress === "Loading..." ? (
-                <span className="text-gray-400 animate-pulse">
-                  Fetching location...
-                </span>
-              ) : (
-                resolvedAddress
-              )}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              <Badge className="bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 inline-block" />
-                {data.device.status}
-              </Badge>
-
-              <span className="text-sm text-slate-500">
-                Last synced: {new Date(device.last_synced).toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white border rounded-xl p-4 shadow-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              {[
-                { label: "Group", value: device.DeviceGroup?.name },
-                { label: "Type", value: data.device.device_type },
-                { label: "Model", value: device.device_model },
-                { label: "OS", value: device.device_os },
-                { label: "OS Version", value: device.device_os_version },
-                { label: "Orientation", value: device.device_orientation },
-                { label: "Resolution", value: device.device_resolution },
-              ].map((item, index) => (
-                <div key={index} className="border rounded-lg p-3 bg-slate-50">
-                  <p className="text-slate-500 text-xs">{item.label}</p>
-                  <p className="font-medium text-slate-800">
-                    {item.value || "—"}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div> */}
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4 md:p-6">
+      <div className="">
         <div className="flex flex-col gap-6 py-2">
           {/* Top row: identity + actions */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             {/* Left: name, location, status */}
             <div className="flex-1 min-w-[220px]">
               <h1 className="text-2xl md:text-3xl font-medium text-slate-900 leading-tight mb-1.5">
-                {data.device.device_name}
+                {device.device_name}
               </h1>
 
               <div className="flex items-center gap-1.5 text-slate-400 text-[13px]">
@@ -326,7 +243,7 @@ export default function DeviceDetailPage({
               <div className="flex flex-wrap items-center gap-2 mt-3.5">
                 <Badge className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2.5 py-1 shadow-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                  {data.device.status}
+                  {device.status}
                 </Badge>
 
                 <span className="flex items-center gap-1 text-[12px] text-slate-400">
@@ -390,7 +307,7 @@ export default function DeviceDetailPage({
           <div className="border-t border-slate-300" />
 
           {/* Metadata grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-2.5 mb-4">
             {metaFields.map((item) => (
               <div
                 key={item.label}
@@ -429,10 +346,6 @@ export default function DeviceDetailPage({
                       <Icon className={`w-5 h-5 ${metric.color}`} />
                     </div>
                   </div>
-
-                  {/* <p className="text-xs text-green-600 font-medium">
-                    {metric.trend} from yesterday
-                  </p> */}
                 </CardContent>
               </Card>
             );
@@ -512,7 +425,7 @@ export default function DeviceDetailPage({
                         outerRadius={80}
                         dataKey="value"
                       >
-                        {data.networkDistribution.map((entry, index) => (
+                        {data.networkDistribution.map((index: any) => (
                           <Cell key={index} fill={COLORS[index]} />
                         ))}
                       </Pie>
@@ -521,101 +434,6 @@ export default function DeviceDetailPage({
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-
-              {/* TABLE */}
-              {/* <Card className="lg:col-span-2 border shadow-sm rounded-xl">
-                <CardHeader className="border-b">
-                  <CardTitle>Recent Play Logs</CardTitle>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Ad</TableHead>
-                          <TableHead>Duration</TableHead>
-                          <TableHead>Completion</TableHead>
-                          <TableHead>Schedule</TableHead>
-                        </TableRow>
-                      </TableHeader>
-
-                      <TableBody>
-                        {paginatedLogs.map((log: any) => {
-                          const duration = log.duration_played_ms / 1000;
-                          const completion = (duration / 30) * 100;
-
-                          return (
-                            <TableRow key={log.id}>
-                              <TableCell>
-                                <p className="font-medium">{log.ad_name}</p>
-                                <p className="text-xs text-slate-500">
-                                  {log.ad_id}
-                                </p>
-                              </TableCell>
-
-                              <TableCell>{log.duration.toFixed(1)}s</TableCell>
-
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-24 h-2 bg-slate-200 rounded-full">
-                                    <div
-                                      className="h-2 bg-green-500 rounded-full"
-                                      style={{ width: `${log.completion}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs">
-                                    {log.completion}%
-                                  </span>
-                                </div>
-                              </TableCell>
-
-                              <TableCell>{log.schedule}</TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                    <div className="flex justify-between items-center mt-4">
-                      <span className="text-sm text-gray-500">
-                        Showing {(logPage - 1) * logsPerPage + 1} to{" "}
-                        {Math.min(logPage * logsPerPage, data.logs.length)} of{" "}
-                        {data.logs.length} entries
-                      </span>
-
-                      <div className="flex gap-2">
-                        <button
-                          className="px-3 py-1 border rounded"
-                          disabled={logPage === 1}
-                          onClick={() => setLogPage((p) => p - 1)}
-                        >
-                          Prev
-                        </button>
-
-                        {Array.from({ length: totalLogPages }, (_, i) => (
-                          <button
-                            key={i}
-                            className={`px-3 py-1 border rounded ${
-                              logPage === i + 1 ? "bg-blue-500 text-white" : ""
-                            }`}
-                            onClick={() => setLogPage(i + 1)}
-                          >
-                            {i + 1}
-                          </button>
-                        ))}
-
-                        <button
-                          className="px-3 py-1 border rounded"
-                          disabled={logPage === totalLogPages}
-                          onClick={() => setLogPage((p) => p + 1)}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card> */}
             </div>
           </>
         )}
@@ -651,21 +469,6 @@ export default function DeviceDetailPage({
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[
-                { label: "CPU Usage", value: "72%" },
-                { label: "RAM Usage", value: "48%" },
-                { label: "Storage", value: "32%" },
-              ].map((item, i) => (
-                <Card key={i} className="border shadow-sm rounded-xl">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-slate-500">{item.label}</p>
-                    <p className="text-3xl font-bold mt-2">{item.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div> */}
           </>
         )}
 

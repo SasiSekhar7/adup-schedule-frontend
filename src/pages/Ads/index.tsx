@@ -273,14 +273,29 @@ function Ads() {
     }
   };
 
-  const { has, limit } = useFeature();
+  const { has, limit, subscription } = useFeature();
   const canExport = has("PROOF_OF_PLAY");
 
-  const maxAds = limit("MAX_ADS");
-  const currentAds = data.length;
-  const canAddAd = currentAds < maxAds;
+  // const maxAds = limit("MAX_ADS");
+  // const currentAds = data.length;
+  // const canAddAd = currentAds < maxAds;
 
+  const storageLimit = limit("STORAGE_LIMIT");
 
+  const usedStorage = Number(subscription?.Client?.used_storage_bytes || 0);
+
+  const canAddAd = usedStorage < storageLimit;
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
   const handleRowClick = (ad: Ad) => {
     navigate(`/ads/${ad.ad_id}`);
   };
@@ -479,9 +494,13 @@ function Ads() {
 
               {!canAddAd && (
                 <TooltipContent>
-                  <p>
+                  {/* <p>
                     You have reached your plan limit ({maxAds} ads). Upgrade to
                     add more.
+                  </p> */}
+                  <p>
+                    Storage limit reached ({formatBytes(usedStorage)} /{" "}
+                    {formatBytes(storageLimit)}). Upgrade your plan.
                   </p>
                 </TooltipContent>
               )}

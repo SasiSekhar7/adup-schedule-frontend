@@ -1,10 +1,34 @@
 import { useEffect, useState } from "react";
 import api from "@/api";
 
+interface Series {
+  series_id: string;
+  name: string;
+}
+
+interface Match {
+  id: string;
+  name: string;
+  status: "upcoming" | "live" | "completed";
+  dateTimeGMT: string;
+  score?: string;
+}
+
+interface MatchesState {
+  upcoming: Match[];
+  live: Match | null;
+}
+
 function CricketPage() {
-  const [seriesList, setSeriesList] = useState([]);
-  const [selectedSeries, setSelectedSeries] = useState(null);
-  const [matches, setMatches] = useState({ upcoming: [], live: null });
+  // const [seriesList, setSeriesList] = useState([]);
+  // const [selectedSeries, setSelectedSeries] = useState(null);
+  // const [matches, setMatches] = useState({ upcoming: [], live: null });
+  const [seriesList, setSeriesList] = useState<Series[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
+  const [matches, setMatches] = useState<MatchesState>({
+    upcoming: [],
+    live: null,
+  });
 
   // Fetch current selected series
   useEffect(() => {
@@ -20,11 +44,11 @@ function CricketPage() {
 
         setMatches({
           upcoming: data.match_list
-            .filter((m) => m.status === "upcoming")
+            .filter((m: any) => m.status === "upcoming")
             .slice(0, 10),
           live: data.live_match || null,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching selected series:", error);
       }
     };
@@ -38,7 +62,7 @@ function CricketPage() {
       try {
         const response = await api.get("/device/cricket/fetch-series-list");
         setSeriesList(response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching series:", error);
       }
     };
@@ -46,11 +70,11 @@ function CricketPage() {
   }, []);
 
   // Change selected series
-  const handleSeriesChange = async (series_id) => {
+  const handleSeriesChange = async (series_id: string) => {
     try {
       await api.post("/device/cricket/update-series", { series_id });
       window.location.reload(); // Refresh page to fetch new matches
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating series:", error);
     }
   };

@@ -8,13 +8,13 @@ const PlaceholderEditor = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const fetchImage = async () => {
     try {
       const res = await api.get("/schedule/placeholder");
       setImageUrl(res.url);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching image:", error);
     } finally {
       setLoading(false);
@@ -36,7 +36,7 @@ const PlaceholderEditor = () => {
 
       await api.post(`/schedule/change-placeholder`, fileData);
       fetchImage();
-    } catch (error) {
+    } catch (error: any) {
       setUploading(false);
       console.log(error);
     }
@@ -62,7 +62,7 @@ const PlaceholderEditor = () => {
         <Input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0])}
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
         />
 
         <Button

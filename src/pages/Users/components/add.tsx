@@ -30,7 +30,9 @@ function AddUsers({ onIsOpenChange }) {
     role: "",
     password: "",
   });
-  const [clients, setClients] = useState<{ client_id: string; name: string }[]>([]);
+  const [clients, setClients] = useState<{ client_id: string; name: string }[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
@@ -44,22 +46,21 @@ function AddUsers({ onIsOpenChange }) {
           api.get("/user/all"),
         ]);
         setClients(clientsResponse.clients || []);
-        
+
         console.log("Users response:", usersResponse);
         console.log("existingEmails:", existingEmails);
         console.log("Current email trying to add:", user.email);
 
-  
         const usersList = usersResponse.users || usersResponse.data || [];
         const emails = usersList.map((user: any) => user.email) || [];
         setExistingEmails(emails);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching clients or users:", error);
       }
     };
     fetchClientsAndUsers();
   }, []);
-  
+
   useEffect(() => {
     if (user.role === "Admin") {
       // Assuming you have a special admin client, you can fetch it from the clients list
@@ -76,29 +77,29 @@ function AddUsers({ onIsOpenChange }) {
     try {
       setLoading(true);
       const { name, email, phone_number, password, role } = user;
-  
+
       if (!name || !email || !phone_number || !password || !role) {
         throw "All fields are required.";
       }
-  
+
       const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(email)) {
         throw "Please enter a valid email address.";
       }
-  
+
       if (existingEmails.includes(email)) {
         throw "This email is already registered. Please use a different email.";
       }
-  
+
       const phoneRegex = /^[0-9]{10}$/;
       if (!phoneRegex.test(phone_number)) {
         throw "Please enter a valid 10-digit phone number.";
       }
-  
+
       if (role === "Client" && !user.client_id) {
         throw "Please select a client.";
       }
-  
+
       const payload = {
         name,
         email,
@@ -108,9 +109,9 @@ function AddUsers({ onIsOpenChange }) {
         ...(role === "Client" && { client_id: user.client_id }),
         ...(role === "Admin" && { client_id: user.client_id }),
       };
-  
+
       console.log("Submitting user to backend:", payload);
-  
+
       await api.post("/user/add", payload);
       setUser({
         name: "",
@@ -124,7 +125,10 @@ function AddUsers({ onIsOpenChange }) {
       onIsOpenChange();
       setLoading(false);
     } catch (err: any) {
-      console.error("Error submitting user:", err.response?.data || err.message);
+      console.error(
+        "Error submitting user:",
+        err.response?.data || err.message,
+      );
       let message = "Something went wrong.";
       if (typeof err === "string") {
         message = err;
@@ -137,7 +141,6 @@ function AddUsers({ onIsOpenChange }) {
       setLoading(false);
     }
   };
-  
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -213,23 +216,27 @@ function AddUsers({ onIsOpenChange }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {user.role === "Admin" ? (
-                      clients
-                        .filter((client) => client.name === "ADUP")
-                        .map((client) => (
-                          <SelectItem key={client.client_id} value={client.client_id}>
-                            {client.name}
-                          </SelectItem>
-                        ))
-                    ) : (
-                      clients
-                        .filter((client) => client.client_id !== "ADUP")
-                        .map((client) => (
-                          <SelectItem key={client.client_id} value={client.client_id}>
-                            {client.name}
-                          </SelectItem>
-                        ))
-                    )}
+                    {user.role === "Admin"
+                      ? clients
+                          .filter((client) => client.name === "ADUP")
+                          .map((client) => (
+                            <SelectItem
+                              key={client.client_id}
+                              value={client.client_id}
+                            >
+                              {client.name}
+                            </SelectItem>
+                          ))
+                      : clients
+                          .filter((client) => client.client_id !== "ADUP")
+                          .map((client) => (
+                            <SelectItem
+                              key={client.client_id}
+                              value={client.client_id}
+                            >
+                              {client.name}
+                            </SelectItem>
+                          ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -251,4 +258,3 @@ function AddUsers({ onIsOpenChange }) {
 }
 
 export default AddUsers;
-

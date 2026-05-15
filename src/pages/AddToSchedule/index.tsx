@@ -1,26 +1,22 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-// ✅ UI Components
+//  UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 // import DateTimeRangePicker from "@wojtekmaj/react-datetimerange-picker";
 
-// ✅ Styles
+//  Styles
 // import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
-// ✅ Data Table & Columns
+//  Data Table & Columns
 import { DataTable } from "@/components/data-table";
 import { adcolumns, Ad } from "./components/ad-columns";
-import {
-  devicecolumns,
-  DeviceGroup,
-  DevicesGroupsResponse,
-} from "./components/device-columns";
+import { devicecolumns, DeviceGroup } from "./components/device-columns";
 
-// ✅ API & Types
+//  API & Types
 import api from "@/api";
-import { Device, DevicesResponse } from "../Devices/columns";
+import { Device } from "../Devices/columns";
 // import DateRangePicker from 'react-date-range';
 // import { DateRangePicker } from "@/components/ui/date-range-picker";
 // import { DateRangePicker } from 'react-date-range';
@@ -43,14 +39,19 @@ import { Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ScheduleAddPage from "./add/page";
 import { useFeature } from "@/context/hooks/useFeature";
-import { useSubscription } from "@/context/SubscriptionContext";
-import { t } from "node_modules/framer-motion/dist/types.d-BSoEx4Ea";
 
-type ValuePiece = Date | null;
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+// type ValuePiece = Date | null;
+// type Value = ValuePiece | [ValuePiece, ValuePiece];
+
+type DateRangePickerProps = {
+  startDate: Date | null;
+  endDate: Date | null;
+  setStartDate: (date: Date | null) => void;
+  setEndDate: (date: Date | null) => void;
+  isSingleDay: boolean;
+};
 
 function AddToSchedule() {
-  const [dateRange, setDateRange] = useState<Value>([new Date(), new Date()]);
   const [devicesData, setDevicesData] = useState<DeviceGroup[]>([]);
   const [adsData, setAdsData] = useState<Ad[]>([]);
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
@@ -58,7 +59,7 @@ function AddToSchedule() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [plays, setPlays] = useState("360");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Advanced scheduling states
@@ -111,7 +112,7 @@ function AddToSchedule() {
 
   // New state for content type selection
   const [contentType, setContentType] = useState<
-    "ad" | "carousel" | "live_content"
+    "ad" | "carousel" | "live_content" | "screen_layouts"
   >("ad");
   const [carouselsData, setCarouselsData] = useState<any[]>([]);
   const [liveContentData, setLiveContentData] = useState<any[]>([]);
@@ -121,14 +122,21 @@ function AddToSchedule() {
   );
 
   const [isSingleDay, setIsSingleDay] = useState(true);
+  // const totalDays = isSingleDay
+  //   ? 1
+  //   : startDate && endDate
+  //     ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+  //     : 0;
   const totalDays = isSingleDay
     ? 1
     : startDate && endDate
-      ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+      ? Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+        ) + 1
       : 0;
 
   const handleScheduleContent = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const selectedContent =
         contentType === "ad"
@@ -166,25 +174,25 @@ function AddToSchedule() {
         console.log("Scheduling data:", data);
         await api.post("/schedule/add_v2", data);
         navigate("/schedule");
-        setLoading(false);
+        // setLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   // const totalDays =
   //   startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0; // Include start date
 
-  // ✅ Fetch Ads Data
+  //  Fetch Ads Data
   useEffect(() => {
     const fetchAdsData = async () => {
       try {
         const response = await api.get("/ads/all");
         setAdsData(response.data?.ads || (response as any).ads || []);
         console.log("-----", response.data?.ads || (response as any).ads);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching ads:", error);
       }
     };
@@ -194,7 +202,7 @@ function AddToSchedule() {
         const response = await api.get("/carousel/all");
         setCarouselsData(response.data || []);
         console.log("Carousels:", response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching carousel:", error);
       }
     };
@@ -204,18 +212,17 @@ function AddToSchedule() {
         const response = await api.get("/live-content/all");
         setLiveContentData(response.data || []);
         console.log("Live content:", response.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching live content:", error);
       }
     };
 
     const fetchDevicesData = async () => {
       try {
-        const response = await api.get<DevicesGroupsResponse>(
-          "/device/fetch-groups",
-        );
+        const response = await api.get("/device/fetch-groups");
+
         setDevicesData(response.groups);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching devices:", error);
       }
     };
@@ -231,7 +238,7 @@ function AddToSchedule() {
     console.log(adsData);
   }, [adsData]);
 
-  // ✅ Stable event handlers
+  //  Stable event handlers
   const handleSelectedAd = useCallback((rows: Ad[]) => {
     setSelectedAd(rows[0] || null);
   }, []);
@@ -246,7 +253,7 @@ function AddToSchedule() {
     endDate,
     setEndDate,
     isSingleDay,
-  }) => {
+  }: DateRangePickerProps) => {
     return (
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex flex-col gap-1">
@@ -303,7 +310,9 @@ function AddToSchedule() {
         <CardContent>
           <Select
             value={contentType}
-            onValueChange={(value: "ad" | "carousel" | "live_content") => {
+            onValueChange={(
+              value: "ad" | "carousel" | "live_content" | "screen_layouts",
+            ) => {
               setContentType(value);
               // Reset selections when changing content type
               setSelectedAd(null);
@@ -330,7 +339,7 @@ function AddToSchedule() {
         <>
           {contentType !== "screen_layouts" && (
             <div className="grid gap-4 md:gap-6 lg:grid-cols-2 w-full">
-              {/* ✅ Select Content */}
+              {/*  Select Content */}
               <Card className="w-full h-full min-w-0">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base md:text-lg">
@@ -475,7 +484,7 @@ function AddToSchedule() {
                 </CardContent>
               </Card>
 
-              {/* ✅ Select Device */}
+              {/*  Select Device */}
               <Card className="w-full min-w-0">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base md:text-lg">
@@ -501,7 +510,7 @@ function AddToSchedule() {
               </Card>
               {/* </div> */}
 
-              {/* ✅ Date Range Picker */}
+              {/*  Date Range Picker */}
               <Card className="lg:col-span-2">
                 <CardHeader className="space-y-4">
                   <CardTitle className="text-base md:text-lg">

@@ -6,13 +6,13 @@ import { Card } from "@/components/ui/card";
 
 export default function AccountPage() {
   const [account, setAccount] = useState<any>(null);
-  const [editOpen, setEditOpen] = useState(false);
+  // const [editOpen, setEditOpen] = useState(false);
 
   const fetchAccount = async () => {
     try {
       const response = await api.get("/user/account");
       setAccount(response.account);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch account:", error);
     }
   };
@@ -70,7 +70,7 @@ export default function AccountPage() {
 
         <EditAccount
           onIsOpenChange={(open) => {
-            setEditOpen(open);
+            // setEditOpen(open);
             if (!open) fetchAccount(); // Refresh data on close
           }}
         />

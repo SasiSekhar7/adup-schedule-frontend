@@ -37,13 +37,50 @@ import { Search, MoreHorizontal, Edit2, Trash2, Eye } from "lucide-react";
 import api from "@/api";
 import { toast } from "sonner";
 
+type SubscriptionRow = {
+  id: string;
+  clientName: string;
+  email: string;
+  plan: string;
+  status: string;
+  startDate: string;
+  renewalDate: string;
+  amount: number;
+  currency: string;
+  hasSubscription: boolean;
+};
+
+type Tier = {
+  tier_id: string;
+  name: string;
+  price: number;
+  billing_cycle: "monthly" | "yearly";
+  is_trial?: boolean;
+};
+
+type Client = {
+  client_id: string;
+  name: string;
+  email: string;
+  currentSubscription?: {
+    tier_id: string;
+    status: string;
+    start_date: string;
+    end_date: string;
+    billing_cycle: "monthly" | "yearly";
+    no_of_months: number;
+    Tier?: Tier;
+  };
+};
 // Mock data
 
 export default function ManageSubscriptionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
-  const [selectedSubscription, setSelectedSubscription] = useState<null>(null);
+  // const [selectedSubscription, setSelectedSubscription] = useState<null>(null);
+  const [selectedSubscription, setSelectedSubscription] =
+    useState<SubscriptionRow | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
@@ -53,7 +90,8 @@ export default function ManageSubscriptionsPage() {
     renewalPeriod: "1-month",
   });
 
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10; // you can change (5, 10, 20)
@@ -63,12 +101,12 @@ export default function ManageSubscriptionsPage() {
       const response = await api.get("/subscribe/get-by-client");
       console.log("response of clients:-", response);
       setClients((response as any).data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching clients:", error);
     }
   };
 
-  const [tiers, setTiers] = useState([]);
+  // const [tiers, setTiers] = useState([]);
   const fetchTiers = async () => {
     const res = await api.get("/tiers_v2/all");
     console.log("tiers:-", res);
@@ -179,7 +217,7 @@ export default function ManageSubscriptionsPage() {
       const no_of_months = billingType === "monthly" ? duration : duration * 12;
 
       const payload = {
-        client_id: selectedSubscription.id, // ⚠️ make sure this is UUID from API
+        client_id: selectedSubscription?.id, // ⚠️ make sure this is UUID from API
         tier_id: selectedTier.tier_id,
         no_of_months,
         is_trial: selectedTier.is_trial === true, // you can make this dynamic later
@@ -196,7 +234,7 @@ export default function ManageSubscriptionsPage() {
 
       // optional refresh
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("CREATE ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }
@@ -215,7 +253,7 @@ export default function ManageSubscriptionsPage() {
       const no_of_months = billingType === "monthly" ? duration : duration * 12;
 
       const payload = {
-        client_id: selectedSubscription.id,
+        client_id: selectedSubscription?.id,
         new_tier_id: selectedTier.tier_id,
         no_of_months,
         immediate: buttonType === "renew" ? false : true,
@@ -233,7 +271,7 @@ export default function ManageSubscriptionsPage() {
 
       // refresh
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("UPDATE ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }
@@ -263,7 +301,7 @@ export default function ManageSubscriptionsPage() {
 
       // refresh data
       fetchClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error("CANCEL ERROR:", error);
       toast.error(error?.message || "Something went wrong");
     }
@@ -555,7 +593,7 @@ export default function ManageSubscriptionsPage() {
                               {subscription.hasSubscription && (
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleViewDetails(subscription)
+                                    handleViewDetails(subscription as any)
                                   }
                                 >
                                   <Eye className="h-4 w-4 mr-2" />

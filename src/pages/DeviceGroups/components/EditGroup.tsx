@@ -58,7 +58,7 @@ const EditGroup = ({ group }: { group: Group }) => {
 
       setOpen(false);
       // location.reload(); // Refresh to show updated data
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating group:", error);
     } finally {
       setLoading(false);
@@ -95,7 +95,9 @@ const EditGroup = ({ group }: { group: Group }) => {
 
               <Select
                 value={orientationValue}
-                onValueChange={(value) => setOrientationValue(value)}
+                onValueChange={(value: "portrait" | "landscape") =>
+                  setOrientationValue(value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Orientation" />

@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
-import MessageCell from "./componets/MessageCell";
+import MessageCell from "./components/MessageCell";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, RefreshCcw, Edit } from "lucide-react";
 import api from "@/api";
@@ -13,7 +13,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { getRole } from "@/helpers";
-import EditGroup from "./componets/EditGroup";
+import EditGroup from "./components/EditGroup";
 
 // Extend your Group type to include client information.
 export interface Group {
@@ -22,6 +22,11 @@ export interface Group {
   orientation: "portrait" | "landscape";
   reg_code: string;
   device_count: number;
+
+  rcs_enabled?: boolean;
+  placeholder_enabled?: boolean;
+  logo_enabled?: boolean;
+
   message: string | null;
   Client?: {
     client_id: string;

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,101 +10,58 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Calendar,
-  CreditCard,
-  Download,
-  RotateCw,
-  ChevronRight,
-  Zap,
-} from "lucide-react";
+
+import { CheckCircle2 } from "lucide-react";
 import api from "@/api";
 
-// Mock data
-// const currentSubscription = {
-//   id: "SUB-12345",
-//   plan: "Professional",
-//   status: "active",
-//   startDate: "2024-05-01",
-//   renewalDate: "2025-05-01",
-//   nextBillingDate: "2025-05-01",
-//   amount: 4999,
-//   currency: "₹",
-//   billingCycle: "Yearly",
-//   features: {
-//     storage: "100 GB",
-//     devices: "5 Devices",
-//     ads: "50 Ads",
-//     livestream: true,
-//     proofLogs: true,
-//     analytics: true,
-//     support: "24/7 Email Support",
-//   },
-// };
+type FeatureItem = {
+  label: string;
+  value: string;
+};
 
-const planOptions = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: 1999,
-    period: "/year",
-    description: "Perfect for getting started",
-    features: ["10 GB Storage", "1 Device", "5 Ads", "Email Support"],
-    current: false,
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    price: 4999,
-    period: "/year",
-    description: "Most popular plan",
-    features: [
-      "100 GB Storage",
-      "5 Devices",
-      "50 Ads",
-      "24/7 Support",
-      "Analytics",
-    ],
-    current: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: 9999,
-    period: "/year",
-    description: "For large teams",
-    features: [
-      "Unlimited Storage",
-      "Unlimited Devices",
-      "Unlimited Ads",
-      "Priority Support",
-      "Custom Features",
-    ],
-    current: false,
-  },
-];
+type Subscription = {
+  id: string;
+  plan: string;
+  status: string;
+  startDate: string;
+  renewalDate: string;
+  nextBillingDate: string;
+  amount: number;
+  currency: string;
+  billingCycle: string;
+  features: FeatureItem[];
+};
+
+type SubscriptionHistoryItem = {
+  subscription_id: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  billing_cycle: string;
+  Tier?: {
+    name: string;
+    price: number;
+  };
+};
+
+type FeaturesCache = {
+  STORAGE_LIMIT?: number;
+  MAX_DEVICES?: number;
+  MAX_ADS?: number;
+  LIVE_STREAMING?: boolean;
+  PROOF_OF_PLAY?: boolean;
+  LIVE_IN_LAYOUT?: boolean;
+};
 
 export default function ClientSubscriptionPage() {
-  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<
-    (typeof planOptions)[0] | null
-  >(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // const [currentSubscription, setCurrentSubscription] = useState<{
+  //   features: { label: string; value: string }[];
+  // } | null>(null);
+  // const [history, setHistory] = useState([]);
+  const [currentSubscription, setCurrentSubscription] =
+    useState<Subscription | null>(null);
 
-  const [currentSubscription, setCurrentSubscription] = useState<{
-    features: { label: string; value: string }[];
-  } | null>(null);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<SubscriptionHistoryItem[]>([]);
   const fetchClients = async () => {
     try {
       const response = await api.get("/subscription/my_active");
@@ -131,53 +87,87 @@ export default function ClientSubscriptionPage() {
       setCurrentSubscription(formatted);
 
       console.log("formatted subscription:", formatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching clients:", error);
     }
   };
 
-  const formatFeatures = (features = {}) => {
+  // const formatFeatures = (features: FeaturesCache = {}) => {
+  //   const GB = 1024 * 1024 * 1024;
+
+  //   return [
+  //     {
+  //       label: "Storage",
+  //       value: features.STORAGE_LIMIT
+  //         ? `${Math.round(features.STORAGE_LIMIT / GB)} GB`
+  //         : "0 GB",
+  //     },
+  //     {
+  //       label: "Devices",
+  //       value: features.MAX_DEVICES
+  //         ? `${features.MAX_DEVICES} Devices`
+  //         : "0 Devices",
+  //     },
+  //     {
+  //       label: "Ads",
+  //       value: features.MAX_ADS ? `${features.MAX_ADS} Ads` : "0 Ads",
+  //     },
+  //     {
+  //       label: "Live Streaming",
+  //       value: features.LIVE_STREAMING ? "Enabled" : "Disabled",
+  //     },
+  //     {
+  //       label: "Proof of Play",
+  //       value: features.PROOF_OF_PLAY ? "Enabled" : "Disabled",
+  //     },
+  //     {
+  //       label: "Live in Layout",
+  //       value: features.LIVE_IN_LAYOUT ? "Enabled" : "Disabled",
+  //     },
+  //   ];
+  // };
+
+  const formatFeatures = (features: any = {}) => {
     const GB = 1024 * 1024 * 1024;
 
-    return [
-      {
-        label: "Storage",
-        value: features.STORAGE_LIMIT
-          ? `${Math.round(features.STORAGE_LIMIT / GB)} GB`
-          : "0 GB",
-      },
-      {
-        label: "Devices",
-        value: features.MAX_DEVICES
-          ? `${features.MAX_DEVICES} Devices`
-          : "0 Devices",
-      },
-      {
-        label: "Ads",
-        value: features.MAX_ADS ? `${features.MAX_ADS} Ads` : "0 Ads",
-      },
-      {
-        label: "Live Streaming",
-        value: features.LIVE_STREAMING ? "Enabled" : "Disabled",
-      },
-      {
-        label: "Proof of Play",
-        value: features.PROOF_OF_PLAY ? "Enabled" : "Disabled",
-      },
-      {
-        label: "Live in Layout",
-        value: features.LIVE_IN_LAYOUT ? "Enabled" : "Disabled",
-      },
-    ];
-  };
+    const toNumber = (val: any) => Number(val || 0);
+    const toBool = (val: any) => val === true || val === "true";
 
+    const formatKey = (key: string) =>
+      key
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return Object.keys(features).map((key) => {
+      const value = features[key];
+
+      // STORAGE (convert bytes → GB)
+      if (key === "STORAGE_LIMIT") {
+        return {
+          label: "Storage",
+          value: `${Math.round(toNumber(value) / GB)} GB`,
+        };
+      }
+
+      // BOOLEAN FEATURES
+      if (value === "true" || value === "false" || typeof value === "boolean") {
+        return {
+          label: formatKey(key),
+          value: toBool(value) ? "Enabled" : "Disabled",
+        };
+      }
+
+      // NUMBER FEATURES
+      return {
+        label: formatKey(key),
+        value: `${toNumber(value)}`,
+      };
+    });
+  };
   useEffect(() => {
     fetchClients();
   }, []);
-  const handleUpgradePlan = (plan: (typeof planOptions)[0]) => {
-    setSelectedPlan(plan);
-    setIsConfirmOpen(true);
-  };
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -553,118 +543,6 @@ export default function ClientSubscriptionPage() {
           </Card>
         </div>
       </div>
-
-      {/* Upgrade Plan Dialog */}
-      <Dialog open={isUpgradeOpen} onOpenChange={setIsUpgradeOpen}>
-        <DialogContent className="max-w-4xl rounded-lg">
-          <DialogHeader>
-            <DialogTitle>Choose Your Plan</DialogTitle>
-            <DialogDescription>
-              Upgrade to access more features and storage
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-6">
-            {planOptions.map((plan: any) => (
-              <Card
-                key={plan.id}
-                className={`rounded-lg cursor-pointer transition border-2 ${
-                  plan.current
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-slate-200"
-                }`}
-                onClick={() => !plan.current && handleUpgradePlan(plan)}
-              >
-                <CardHeader>
-                  {plan.current && (
-                    <Badge className="w-fit bg-blue-600 text-white rounded-full mb-2">
-                      Current Plan
-                    </Badge>
-                  )}
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription className="text-base">
-                    {plan?.currency || "₹"}
-                    {plan.price.toLocaleString()}
-                    <span className="text-xs">{plan.period}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-600 mb-4">
-                    {plan.description}
-                  </p>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature: string) => (
-                      <li
-                        key={feature}
-                        className="flex items-center gap-2 text-sm text-slate-700"
-                      >
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  {!plan.current && (
-                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 rounded-lg">
-                      Upgrade Now
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirm Upgrade Dialog */}
-      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent className="max-w-md rounded-lg">
-          <DialogHeader>
-            <DialogTitle>Confirm Upgrade</DialogTitle>
-            <DialogDescription>
-              Upgrade to {selectedPlan?.name} plan
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedPlan && (
-            <div className="space-y-4">
-              <Alert className="border-blue-200 bg-blue-50">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-slate-700">
-                  You will be charged ₹{(selectedPlan.price / 12).toFixed(0)}{" "}
-                  per month for the{" "}
-                  <span className="font-semibold">{selectedPlan.name}</span>{" "}
-                  plan. Your new plan will be effective immediately.
-                </AlertDescription>
-              </Alert>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Current plan refund:</span>
-                  <span className="text-slate-900 font-medium">-₹1250</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">New plan charge:</span>
-                  <span className="text-slate-900 font-medium">₹4999</span>
-                </div>
-                <div className="border-t border-slate-200 pt-2 flex justify-between font-semibold">
-                  <span className="text-slate-900">Amount due today:</span>
-                  <span className="text-slate-900">₹3749</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 rounded-lg">
-                  Cancel
-                </Button>
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-lg">
-                  Confirm Upgrade
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -40,7 +40,7 @@
 
 //         setData(sortedData);
 //         setTotal(response.total);
-//       } catch (error) {
+//       } catch (error:any) {
 //         console.error("Error fetching schedules:", error);
 //       } finally {
 //         setLoading(false);
@@ -119,7 +119,6 @@ import {
   ExternalLinkIcon,
   Video,
   RotateCcw,
-  Activity,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -131,7 +130,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
+
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -174,13 +173,6 @@ interface ApiCarousel {
   contentDuration: number;
   contentType: "carousel";
   groups: ApiGroup[];
-}
-
-interface ApiResponse {
-  ads: ApiAd[];
-  live_contents: ApiLiveContent[];
-  carousels: ApiCarousel[];
-  total: number;
 }
 
 interface Schedule {
@@ -408,26 +400,26 @@ export default function Schedule() {
     return options;
   };
 
-  const handleLiveToggle = async (schedule: Schedule) => {
-    try {
-      const groupIds = schedule.originalGroups.map((g) => g.groupId);
+  // const handleLiveToggle = async (schedule: Schedule) => {
+  //   try {
+  //     const groupIds = schedule.originalGroups.map((g) => g.groupId);
 
-      const isEnable = schedule.status !== "Active";
+  //     const isEnable = schedule.status !== "Active";
 
-      await api.patch("/schedule/live/toggle", {
-        groupIds,
-        content_id: schedule.id,
-        is_enabled: isEnable,
-      });
+  //     await api.patch("/schedule/live/toggle", {
+  //       groupIds,
+  //       content_id: schedule.id,
+  //       is_enabled: isEnable,
+  //     });
 
-      toast.success(isEnable ? "Live content started" : "Live content stopped");
+  //     toast.success(isEnable ? "Live content started" : "Live content stopped");
 
-      getSchedules(); // refresh list
-    } catch (error) {
-      console.error("Live toggle failed", error);
-      toast.error("Failed to update live content");
-    }
-  };
+  //     getSchedules(); // refresh list
+  //   } catch (error:any) {
+  //     console.error("Live toggle failed", error);
+  //     toast.error("Failed to update live content");
+  //   }
+  // };
 
   const openLiveModal = (schedule: Schedule) => {
     setLiveModal({
@@ -483,7 +475,7 @@ export default function Schedule() {
 
       closeLiveModal();
       getSchedules();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast.error("Failed to update live content");
     }
@@ -619,7 +611,7 @@ export default function Schedule() {
       const payload = {
         adId: deleteModal.schedule.id,
         contentId: deleteModal.schedule.id,
-        groupId: selectedGroupId === "all" ? null : selectedGroupId,
+        groupId: selectedGroupId === "all" ? "all" : selectedGroupId,
         startDate: dateRange.from,
         endDate: dateRange.to,
         timeRangeType: timeRange,
@@ -632,7 +624,7 @@ export default function Schedule() {
 
       console.log("[v0] Delete API response:", result);
 
-      // ✅ SUCCESS CHECK (backend-driven)
+      // SUCCESS CHECK (backend-driven)
       if (result?.deleted_count > 0) {
         toast.success(
           `${result.deleted_count} schedule${
@@ -645,7 +637,7 @@ export default function Schedule() {
 
       closeDeleteModal();
       getSchedules();
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Delete API error:", error);
       toast.error("Failed to delete schedule. Please try again.");
     } finally {
@@ -659,12 +651,12 @@ export default function Schedule() {
     }
   };
 
-  useEffect(() => {
-    const group = deleteModal.schedule?.originalGroups?.find(
-      (g) => g.groupId === selectedGroupId,
-    );
-    setSelectedGroup(group || null);
-  }, [selectedGroupId, deleteModal.schedule?.originalGroups]);
+  // useEffect(() => {
+  //   const group = deleteModal.schedule?.originalGroups?.find(
+  //     (g) => g.groupId === selectedGroupId,
+  //   );
+  //   setSelectedGroup(group || null);
+  // }, [selectedGroupId, deleteModal.schedule?.originalGroups]);
 
   useEffect(() => {
     getSchedules();
@@ -825,7 +817,7 @@ export default function Schedule() {
       }
 
       setSchedules(transformedSchedules);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching schedules:", error);
     }
   }
@@ -1065,6 +1057,11 @@ export default function Schedule() {
     setShowDatePicker(false);
   };
 
+  const selectedStartDate =
+    customStartDate || dateRange.from.toISOString().split("T")[0];
+
+  const selectedEndDate =
+    customEndDate || dateRange.to.toISOString().split("T")[0];
   return (
     <div className="flex-1 flex flex-col h-full min-h-0">
       {/* Header */}
@@ -1566,6 +1563,7 @@ export default function Schedule() {
                     <SelectValue placeholder="Choose a device group" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Device Groups</SelectItem>
                     {deleteModal.schedule.originalGroups?.map((group) => (
                       <SelectItem key={group.groupId} value={group.groupId}>
                         {group.groupName}
@@ -1588,13 +1586,13 @@ export default function Schedule() {
                     From {formatDate(selectedGroup.fromDate)} to{" "}
                     {formatDate(selectedGroup.toDate)}
                   </p>
-                  <div className="mt-2 flex items-center gap-4">
+                  {/* <div className="mt-2 flex items-center gap-4">
                     <span className="text-sm text-muted-foreground">
                       Progress: {selectedGroup.completedPercentage}% (
                       {selectedGroup.completedDays}/{selectedGroup.totalDays}{" "}
                       days)
                     </span>
-                  </div>
+                  </div> */}
 
                   {/* Advanced Scheduling Information in Delete Modal */}
                   {selectedGroup.weekdays && selectedGroup.time_slots && (
@@ -1650,6 +1648,20 @@ export default function Schedule() {
                     onValueChange={setTimeRange}
                     className="space-y-3"
                   >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="entire"
+                        id="entire"
+                        className="transition-colors"
+                      />
+                      <Label
+                        htmlFor="entire"
+                        className="text-sm cursor-pointer font-medium text-destructive"
+                      >
+                        Entire Schedule Time
+                      </Label>
+                    </div>
+
                     {availableTimeRanges.map((option) => (
                       <div
                         key={option.value}
@@ -1668,7 +1680,18 @@ export default function Schedule() {
                               : ""
                           }`}
                         >
-                          {option.label}
+                          {/* {option.label} */}
+                          {option.value === "today"
+                            ? `Today Only (${formatDate(selectedStartDate)})`
+                            : option.value === "week"
+                              ? `This Entire Week (${formatDate(
+                                  selectedStartDate,
+                                )})`
+                              : option.value === "month"
+                                ? `This Entire Month (${formatDate(
+                                    selectedStartDate,
+                                  )})`
+                                : option.label}
                         </Label>
                       </div>
                     ))}
