@@ -1018,6 +1018,12 @@ export default function ScheduleAddPage() {
                                   <Film className="w-3 h-3 mr-1" />
                                   Media
                                 </>
+                              ) : zone.content_type_allowed ===
+                                "video_input_media" ? (
+                                <>
+                                  <LayoutGrid className="w-3 h-3 mr-1" />
+                                  Media + Video Zone
+                                </>
                               ) : (
                                 <>
                                   <LayoutGrid className="w-3 h-3 mr-1" />
