@@ -169,6 +169,81 @@ export default function ClientSubscriptionPage() {
     fetchClients();
   }, []);
 
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "bg-green-100 text-green-800";
+
+      case "trial":
+        return "bg-yellow-100 text-yellow-800";
+
+      case "expired":
+        return "bg-red-100 text-red-800";
+
+      case "cancelled":
+        return "bg-gray-200 text-gray-800";
+
+      case "changed":
+        return "bg-blue-100 text-blue-800";
+
+      case "scheduled":
+        return "bg-purple-100 text-purple-800";
+
+      default:
+        return "bg-slate-100 text-slate-800";
+    }
+  };
+
+  const getCardBackgroundColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "bg-gradient-to-br from-green-100 to-white border-green-200";
+
+      case "trial":
+        return "bg-gradient-to-br from-yellow-100 to-white border-yellow-200";
+
+      case "expired":
+        return "bg-gradient-to-br from-red-100 to-white border-red-200";
+
+      case "cancelled":
+        return "bg-gradient-to-br from-gray-150 to-white border-gray-300";
+
+      case "changed":
+        return "bg-gradient-to-br from-blue-100 to-white border-blue-200";
+
+      case "scheduled":
+        return "bg-gradient-to-br from-purple-100 to-white border-purple-200";
+
+      default:
+        return "bg-gradient-to-br from-slate-100 to-white border-slate-200";
+    }
+  };
+
+  const getHistoryCardBackgroundColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "bg-gradient-to-br from-green-50 to-white border-green-200";
+
+      case "trial":
+        return "bg-gradient-to-br from-yellow-50 to-white border-yellow-200";
+
+      case "expired":
+        return "bg-gradient-to-br from-red-50 to-white border-red-200";
+
+      case "cancelled":
+        return "bg-gradient-to-br from-gray-100 to-white border-gray-300";
+
+      case "changed":
+        return "bg-gradient-to-br from-blue-50 to-white border-blue-200";
+
+      case "scheduled":
+        return "bg-gradient-to-br from-purple-50 to-white border-purple-200";
+
+      default:
+        return "bg-gradient-to-br from-slate-50 to-white border-slate-200";
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
@@ -186,7 +261,11 @@ export default function ClientSubscriptionPage() {
 
           {/* Current Plan Card */}
           {currentSubscription ? (
-            <Card className="mb-8 border-slate-200 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-white">
+            <Card
+              className={`mb-8 rounded-lg overflow-hidden ${getCardBackgroundColor(
+                currentSubscription?.status || "",
+              )}`}
+            >
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -196,9 +275,13 @@ export default function ClientSubscriptionPage() {
                     <CardDescription>Your current plan</CardDescription>
                   </div>
                   {/* {currentSubscription?.status === "active" && ( */}
-                  <Badge className="bg-green-100 text-green-800 rounded-full text-base px-4 py-1">
+                  <Badge
+                    className={`rounded-full text-base px-4 py-1 ${getStatusColor(
+                      currentSubscription?.status || "",
+                    )}`}
+                  >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Active
+                    {currentSubscription?.status}
                   </Badge>
                   {/* )} */}
                 </div>
@@ -486,7 +569,9 @@ export default function ClientSubscriptionPage() {
                   history.map((item) => (
                     <div
                       key={item.subscription_id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      className={`flex items-center justify-between p-3 rounded-lg border ${getHistoryCardBackgroundColor(
+                        item.status,
+                      )}`}
                     >
                       {/* LEFT */}
                       <div>
@@ -526,11 +611,9 @@ export default function ClientSubscriptionPage() {
                         </p>
 
                         <Badge
-                          className={`rounded-full cursor-default pointer-events-none ${
-                            item.status === "trial"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
+                          className={`rounded-full cursor-default pointer-events-none ${getStatusColor(
+                            item.status,
+                          )}`}
                         >
                           {item.status}
                         </Badge>
