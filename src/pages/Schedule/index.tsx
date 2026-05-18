@@ -938,7 +938,7 @@ export default function Schedule() {
                     ? `/carousels/${schedule.id}`
                     : schedule.contentType === "ad"
                       ? `/ads/${schedule.id}`
-                      : `/layout-details/${schedule.id}`
+                      : `/layout-details/${schedule.id}?from=${dateRange.from.toISOString()}&to=${dateRange.to.toISOString()}`
               }
               className="flex items-center gap-1"
             >
