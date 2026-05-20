@@ -37,14 +37,14 @@ export default function ChangePassword() {
         return toast.error("Passwords do not match");
       }
 
-      const passwordRegex =
-        /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+      // const passwordRegex =
+      //   /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
 
-      if (!passwordRegex.test(form.newPassword)) {
-        return toast.error(
-          "Password must be at least 8 characters long and include one number and one special character.",
-        );
-      }
+      // if (!passwordRegex.test(form.newPassword)) {
+      //   return toast.error(
+      //     "Password must be at least 8 characters long and include one number and one special character.",
+      //   );
+      // }
 
       setLoading(true);
 
