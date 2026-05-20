@@ -1400,6 +1400,11 @@ export default function ScheduleAddPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  useEffect(() => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  }, [contentType]);
+
   // const getFilteredData = () => {
   //   let data: any[] = [];
 

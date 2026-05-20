@@ -3,6 +3,7 @@ import EditAccount from "@/pages/Account/components/editacc"; // adjust the path
 import api from "@/api";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import ResetPassword from "./components/ResetPassword";
 
 export default function AccountPage() {
   const [account, setAccount] = useState<any>(null);
@@ -68,12 +69,16 @@ export default function AccountPage() {
           <p className="text-center text-gray-500">Loading account info...</p>
         )}
 
-        <EditAccount
-          onIsOpenChange={(open) => {
-            // setEditOpen(open);
-            if (!open) fetchAccount(); // Refresh data on close
-          }}
-        />
+        <div className="flex flex-col md:flex-row gap-2">
+          <EditAccount
+            account={account}
+            onIsOpenChange={(open) => {
+              // setEditOpen(open);
+              if (!open) fetchAccount(); // Refresh data on close
+            }}
+          />
+          <ResetPassword />
+        </div>
       </Card>
     </div>
   );

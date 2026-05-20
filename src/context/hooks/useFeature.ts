@@ -15,17 +15,15 @@ export const useFeature = () => {
     isClient,
     // has: (feature: keyof Features) => hasFeature(subscription, feature),
     has: (feature: keyof Features) => {
-      if (isAdmin) return true; // admin override
       return hasFeature(subscription, feature);
     },
     // limit: (key: keyof Features) => getLimit(subscription, key),
     limit: (key: keyof Features) => {
-      if (isAdmin) return Infinity; // admin unlimited
       return getLimit(subscription, key);
     },
 
     // expired: isExpired(subscription),
-    expired: isAdmin ? false : isExpired(subscription),
+    expired: isExpired(subscription),
 
     subscription,
   };

@@ -158,7 +158,11 @@ export const columns: ColumnDef<Group>[] = [
       return (
         <div className="">
           <Button
-            onClick={() => handleRefreah(row.getValue("group_id"))}
+            // onClick={() => handleRefreah(row.getValue("group_id"))}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRefreah(row.getValue("group_id"));
+            }}
             variant="ghost"
           >
             <RefreshCcw size="sm" />

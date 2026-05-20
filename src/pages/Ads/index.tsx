@@ -545,10 +545,12 @@ function Ads() {
             <DataTable
               data={data}
               columns={columns}
+              hideSelectionColumn={true}
               onRowClick={handleRowClick}
               filters={[
                 { label: "Ad Name", value: "name" },
                 { label: "ad_id", value: "ad_id" },
+                { label: "Type", value: "type" },
               ]}
               maxHeight="none"
               onRowSelectionChange={(rows) => {

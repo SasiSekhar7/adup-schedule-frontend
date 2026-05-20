@@ -6,6 +6,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   Hand,
+  KeyRound,
   LogOut,
   Sparkles,
 } from "lucide-react";
@@ -103,6 +104,10 @@ export function NavUser({
               <DropdownMenuItem onClick={handleUser}>
                 <BadgeCheck />
                 Account
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/change-password")}>
+                <KeyRound />
+                Change Password
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
