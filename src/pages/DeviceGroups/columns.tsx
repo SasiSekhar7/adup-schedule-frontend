@@ -172,15 +172,33 @@ export const columns: ColumnDef<Group>[] = [
     },
     enableSorting: true,
   },
+  // {
+  //   id: "message",
+  //   header: "Message",
+  //   cell: ({ row }) => <MessageCell group={row.original} />,
+  // },
   {
     id: "message",
     header: "Message",
-    cell: ({ row }) => <MessageCell group={row.original} />,
+    cell: ({ row }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <MessageCell group={row.original} />
+      </div>
+    ),
   },
+  // {
+  //   id: "action",
+  //   header: "Action",
+  //   cell: ({ row }) => <EditGroup group={row.original} />,
+  // },
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => <EditGroup group={row.original} />,
+    cell: ({ row }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <EditGroup group={row.original} />
+      </div>
+    ),
   },
 ].filter((column) => {
   // Filter out admin-only columns if the user is not an admin
