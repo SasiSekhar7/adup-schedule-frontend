@@ -3111,7 +3111,7 @@ export default function ScreenLayoutPage() {
             />
 
             {/* RESTORED JSON CONSOLE */}
-            {displayState && (
+            {/* {displayState && (
               <Card className="mt-8">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -3150,7 +3150,7 @@ export default function ScreenLayoutPage() {
                   </CardContent>
                 )}
               </Card>
-            )}
+            )} */}
           </div>
         ) : (
           <div className="space-y-6">

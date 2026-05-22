@@ -24,7 +24,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ChevronRight, EllipsisVertical, MoreHorizontal } from "lucide-react";
+import {
+  ChevronRight,
+  EllipsisVertical,
+  ImageIcon,
+  MoreHorizontal,
+  Video,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -123,12 +129,65 @@ export const columns: ColumnDef<Ad>[] = [
       );
     },
   },
+  // {
+  //   accessorKey: "url",
+  //   header: "URL",
+  //   cell: ({ row }) => {
+  //     const path = row.getValue("url") as string;
+  //     return path ? path.split("/")?.pop()?.split("?")[0] : "";
+  //   },
+  // },
   {
-    accessorKey: "url",
-    header: "URL",
+    id: "type",
+
+    accessorFn: (row) => {
+      const url = row.url?.toLowerCase() || "";
+
+      const isVideo =
+        url.includes(".mp4") || url.includes(".mov") || url.includes(".webm");
+
+      const isImage =
+        url.includes(".jpg") ||
+        url.includes(".jpeg") ||
+        url.includes(".png") ||
+        url.includes(".gif");
+
+      if (isVideo) return "video";
+      if (isImage) return "image";
+
+      return "unknown";
+    },
+
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
+
     cell: ({ row }) => {
-      const path = row.getValue("url") as string;
-      return path ? path.split("/")?.pop()?.split("?")[0] : "";
+      const type = row.getValue("type") as string;
+
+      if (type === "video") {
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-blue-100 text-blue-800 border-blue-200">
+            <Video className="w-3.5 h-3.5" />
+            Video
+          </span>
+        );
+      }
+
+      if (type === "image") {
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-green-100 text-green-800 border-green-200">
+            <ImageIcon className="w-3.5 h-3.5" />
+            Image
+          </span>
+        );
+      }
+
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-gray-100 text-gray-800 border-gray-200">
+          Unknown
+        </span>
+      );
     },
   },
   {

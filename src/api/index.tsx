@@ -8,6 +8,11 @@ api.interceptors.request.use(
   async (config) => {
     // const token = sessionStorage.getItem('token');
     const token = localStorage.getItem("token");
+    // Redirect if token does not exist
+    if (!token) {
+      window.location.href = "/login";
+      return Promise.reject(new Error("No token found"));
+    }
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }

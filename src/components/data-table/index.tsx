@@ -28,6 +28,13 @@ import {
 import { DataTablePagination } from "./components/data-table-pagination";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -38,6 +45,8 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (selectedRows: any) => void;
   onRowClick?: (row: TData) => void; // ✅ New prop for row click
   getRowCanSelect?: (row: TData) => boolean; // ✅ New prop for conditional selection
+  singleSelect?: boolean;
+  hideSelectionColumn?: boolean;
 }
 type filter = {
   label: string;
@@ -53,6 +62,8 @@ export function DataTable<TData, TValue>({
   onRowSelectionChange,
   onRowClick, // ✅ Destructure the row click callback
   getRowCanSelect, // ✅ Destructure the conditional selection callback
+  singleSelect = false,
+  hideSelectionColumn = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -69,13 +80,19 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange?.(selectedRows);
   }, [rowSelection]);
 
+  const filteredColumns = hideSelectionColumn
+    ? columns.filter((col: any) => col.id !== "select")
+    : columns;
+
   const table = useReactTable({
     data,
-    columns,
+    // columns,
+    columns: filteredColumns,
     state: { sorting, columnVisibility, rowSelection, columnFilters },
     enableRowSelection: getRowCanSelect
       ? (row) => getRowCanSelect(row.original)
       : true,
+    enableMultiRowSelection: !singleSelect,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -94,7 +111,7 @@ export function DataTable<TData, TValue>({
       <div className="flex flex-col gap-4 md:flex-row  overflow-x-auto pb-4 flex-shrink-0">
         {filters?.map((filter) => (
           <div className="flex items-center " key={filter.value}>
-            <Input
+            {/* <Input
               placeholder={`Filter ${filter.label}...`}
               type={filter.value === "start_time" ? "date" : "text"}
               value={
@@ -108,7 +125,46 @@ export function DataTable<TData, TValue>({
                   ?.setFilterValue(event.target.value)
               }
               className="max-w-sm"
-            />
+            /> */}
+            {filter.value === "type" ? (
+              <Select
+                value={
+                  (table.getColumn(filter.value)?.getFilterValue() as string) ??
+                  "all"
+                }
+                onValueChange={(value) =>
+                  table
+                    .getColumn(filter.value)
+                    ?.setFilterValue(value === "all" ? "" : value)
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder={`Filter ${filter.label}...`}
+                type={filter.value === "start_time" ? "date" : "text"}
+                value={
+                  (table
+                    .getColumn(`${filter.value}`)
+                    ?.getFilterValue() as string) ?? ""
+                }
+                onChange={(event) =>
+                  table
+                    .getColumn(`${filter.value}`)
+                    ?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+            )}
           </div>
         ))}
       </div>

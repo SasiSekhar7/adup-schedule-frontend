@@ -308,7 +308,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import api from "@/api";
 import { Monitor } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import Hls from "hls.js";
 
 // ================== HLS LIVE STREAM COMPONENT ==================
@@ -738,6 +738,11 @@ const ZonePlayer = ({ zone, scheduleData, zoneWidth }: any) => {
 // ================== MAIN VIEW ==================
 export default function LayoutViewer() {
   const { layout_id } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+
   const [layout, setLayout] = useState<any>(null);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [groupWiseData, setGroupWiseData] = useState<any[]>([]);
@@ -745,7 +750,9 @@ export default function LayoutViewer() {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const res = await api.get(`/layout/shedule/get/${layout_id}`);
+        const res = await api.get(
+          `/layout/shedule/get/${layout_id}?from=${from}&to=${to}`,
+        );
         const apiData = res.data;
         setLayout(apiData.layout);
         setGroupWiseData(apiData.group_wise_data || []);

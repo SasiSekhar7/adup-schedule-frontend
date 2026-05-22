@@ -342,6 +342,7 @@ function DeviceGroup() {
               // data={data}
               data={filteredData}
               columns={columns}
+              hideSelectionColumn={true}
               maxHeight="none"
               onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
             />

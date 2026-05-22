@@ -365,6 +365,7 @@ function AddToSchedule() {
                         columns={adcolumns}
                         filters={[{ label: "Ad Name", value: "name" }]}
                         onRowSelectionChange={handleSelectedAd}
+                        singleSelect={true}
                         maxHeight="40vh"
                         getRowCanSelect={(row) => {
                           const ad = row as Ad;

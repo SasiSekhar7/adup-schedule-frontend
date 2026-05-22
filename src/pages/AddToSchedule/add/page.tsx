@@ -1018,6 +1018,12 @@ export default function ScheduleAddPage() {
                                   <Film className="w-3 h-3 mr-1" />
                                   Media
                                 </>
+                              ) : zone.content_type_allowed ===
+                                "video_input_media" ? (
+                                <>
+                                  <LayoutGrid className="w-3 h-3 mr-1" />
+                                  Media + Video Zone
+                                </>
                               ) : (
                                 <>
                                   <LayoutGrid className="w-3 h-3 mr-1" />
@@ -1393,6 +1399,11 @@ export default function ScheduleAddPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  }, [contentType]);
 
   // const getFilteredData = () => {
   //   let data: any[] = [];

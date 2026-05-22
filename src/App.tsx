@@ -35,6 +35,7 @@ import ClientChannelsPage from "./pages/StreamProviders/components/clientChannel
 import ClientChannelDetailPage from "./pages/StreamProviders/components/clientchannelDetailsPage";
 import PublicRoute from "./routes/PublicRoute";
 import DeviceGroupDetailPage from "./pages/DeviceGroups/components/DeviceGroupDetails";
+import ChangePassword from "./pages/Account/changePassword";
 
 // Lazy load components
 const Devices = lazy(() => import("./pages/Devices"));
@@ -149,6 +150,15 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <Account />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/change-password"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ChangePassword />
                 </Suspense>
               }
             />

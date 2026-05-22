@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,15 +15,16 @@ import api from "@/api";
 
 interface EditAccountProps {
   onIsOpenChange?: (open: boolean) => void;
+  account?: any;
 }
 
-function EditAccount({ onIsOpenChange }: EditAccountProps) {
+function EditAccount({ onIsOpenChange, account }: EditAccountProps) {
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone_number: "",
-    newPassword: "",
-    confirmPassword: "",
+    // newPassword: "",
+    // confirmPassword: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,12 +35,27 @@ function EditAccount({ onIsOpenChange }: EditAccountProps) {
     onIsOpenChange?.(isOpen);
   };
 
+  useEffect(() => {
+    if (account && open) {
+      setForm({
+        name: account.name || "",
+        email: account.email || "",
+        phone_number: account.phone_number || "",
+      });
+    }
+  }, [account, open]);
+
   const handleSubmit = async () => {
     try {
       setError(null);
       setLoading(true);
 
-      const { name, email, phone_number, newPassword, confirmPassword } = form;
+      const {
+        name,
+        email,
+        phone_number,
+        // , newPassword, confirmPassword
+      } = form;
 
       if (!name || !email || !phone_number) {
         throw "Name, Email, and Phone number are required.";
@@ -54,29 +70,34 @@ function EditAccount({ onIsOpenChange }: EditAccountProps) {
       if (!phoneRegex.test(phone_number)) {
         throw "Please enter a valid 10-digit phone number.";
       }
-        if (newPassword) {
-            const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
-            if (!passwordRegex.test(newPassword)) {
-                throw "Password must be at least 8 characters long and include at least one number and one special character.";
-            }
-        }
-      if (newPassword && newPassword !== confirmPassword) {
-        throw "Passwords do not match.";
-      }
+      // if (newPassword) {
+      //   const passwordRegex =
+      //     /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+      //   if (!passwordRegex.test(newPassword)) {
+      //     throw "Password must be at least 8 characters long and include at least one number and one special character.";
+      //   }
+      // }
+      // if (newPassword && newPassword !== confirmPassword) {
+      //   throw "Passwords do not match.";
+      // }
 
       const payload = {
         name,
         email,
         phone_number,
-        ...(newPassword && { password: newPassword }),
+        // ...(newPassword && { password: newPassword }),
       };
 
       await api.put("/user/update", payload);
       setLoading(false);
-      handleDialogChange(false); 
+      handleDialogChange(false);
     } catch (err: any) {
       console.error("Update error:", err);
-      setError(typeof err === "string" ? err : err?.response?.data?.message || "Update failed.");
+      setError(
+        typeof err === "string"
+          ? err
+          : err?.response?.data?.message || "Update failed.",
+      );
       setLoading(false);
     }
   };
@@ -116,7 +137,7 @@ function EditAccount({ onIsOpenChange }: EditAccountProps) {
             onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
           />
 
-          <Label>New Password</Label>
+          {/* <Label>New Password</Label>
           <Input
             type="password"
             value={form.newPassword}
@@ -127,8 +148,10 @@ function EditAccount({ onIsOpenChange }: EditAccountProps) {
           <Input
             type="password"
             value={form.confirmPassword}
-            onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-          />
+            onChange={(e) =>
+              setForm({ ...form, confirmPassword: e.target.value })
+            }
+          /> */}
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
