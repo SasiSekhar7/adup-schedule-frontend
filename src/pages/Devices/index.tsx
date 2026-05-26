@@ -33,7 +33,10 @@ function Home() {
   const { limit } = useFeature();
 
   const maxDevices = limit("MAX_DEVICES");
-  const currentDevices = data.length;
+  // const currentDevices = data.length;
+  const currentDevices = data.filter(
+    (device: any) => device.registration_status !== "pairing",
+  ).length;
 
   const canAddDevice = currentDevices < maxDevices;
 
