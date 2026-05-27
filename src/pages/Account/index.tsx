@@ -3,7 +3,7 @@ import EditAccount from "@/pages/Account/components/editacc"; // adjust the path
 import api from "@/api";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import ResetPassword from "./components/ResetPassword";
+import ResetPassword from "./components/resetPassword";
 
 export default function AccountPage() {
   const [account, setAccount] = useState<any>(null);
