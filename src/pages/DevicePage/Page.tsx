@@ -113,7 +113,10 @@ export default function DeviceDetailPage({
     },
     {
       label: "Storage Used",
-      value: `${data?.kpis.storageUsed}%`,
+      value: `${(
+        ((device?.total_storage_mb || 0) - (data?.kpis.storageUsed || 0)) /
+        1024
+      ).toFixed(2)} GB`,
       icon: HardDrive,
       color: "text-red-600",
     },

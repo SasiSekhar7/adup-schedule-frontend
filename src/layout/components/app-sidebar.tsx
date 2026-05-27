@@ -2,6 +2,21 @@
 
 import * as React from "react";
 import {
+  Users,
+  MonitorSmartphone,
+  Megaphone,
+  PlaySquare,
+  PanelsTopLeft,
+  CalendarDays,
+  GitBranch,
+  PackageCheck,
+  FileOutput,
+  RadioTower,
+  Radio,
+  LayoutTemplate,
+  CreditCard,
+  WalletCards,
+  // Existing
   SquareTerminal,
   Bot,
   BookOpen,
@@ -29,6 +44,22 @@ import api from "@/api";
 
 // Maps icon string names from backend to actual React components
 const iconMap: Record<string, React.ElementType> = {
+  Users,
+  MonitorSmartphone,
+  Megaphone,
+  PlaySquare,
+  PanelsTopLeft,
+  CalendarDays,
+  GitBranch,
+
+  PackageCheck,
+  FileOutput,
+  RadioTower,
+  Radio,
+  LayoutTemplate,
+  CreditCard,
+  WalletCards,
+  //existing
   SquareTerminal,
   Bot,
   BookOpen,
