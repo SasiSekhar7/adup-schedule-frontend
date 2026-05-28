@@ -66,7 +66,12 @@ const Map = ({
   onLocationSelect,
   initialPosition,
 }: {
-  onLocationSelect: (pos: LatLngLiteral) => void;
+  // onLocationSelect: (pos: LatLngLiteral) => void;
+  onLocationSelect: (pos: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => void;
 }) => {
   const [position, setPosition] = useState<LatLngLiteral>({
     lat: initialPosition?.lat || 20.5937,
@@ -75,7 +80,7 @@ const Map = ({
 
   const handlePositionChange = (pos: LatLngLiteral) => {
     setPosition(pos);
-    onLocationSelect(pos);
+    // onLocationSelect(pos);
   };
 
   const LocationMarker = () => {
@@ -106,7 +111,18 @@ const Map = ({
       <div style={{ marginTop: "10px", fontFamily: "monospace" }}>
         <strong>Location:</strong>
         <br />
-        <LocationCell cords={position.lat + "," + position.lng} />
+        <LocationCell
+          cords={position.lat + "," + position.lng}
+          onAddressChange={(addr) => {
+            console.log("address:-", addr);
+
+            onLocationSelect({
+              lat: position.lat,
+              lng: position.lng,
+              address: addr,
+            });
+          }}
+        />
       </div>
     </div>
   );
