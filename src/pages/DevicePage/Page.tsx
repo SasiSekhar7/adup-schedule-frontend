@@ -163,32 +163,32 @@ export default function DeviceDetailPage({
 
   const [resolvedAddress, setResolvedAddress] = useState("Loading...");
 
-  useEffect(() => {
-    if (device?.location) {
-      const [lat, lon] = device.location.split(",");
+  // useEffect(() => {
+  //   if (device?.location) {
+  //     const [lat, lon] = device.location.split(",");
 
-      if (lat && lon) {
-        getAddressFromCoordinates(lat.trim(), lon.trim()).then((address) =>
-          setResolvedAddress(address),
-        );
-      } else {
-        setResolvedAddress("Invalid Location");
-      }
-    } else {
-      setResolvedAddress("—");
-    }
-  }, [device]);
+  //     if (lat && lon) {
+  //       getAddressFromCoordinates(lat.trim(), lon.trim()).then((address) =>
+  //         setResolvedAddress(address),
+  //       );
+  //     } else {
+  //       setResolvedAddress("Invalid Location");
+  //     }
+  //   } else {
+  //     setResolvedAddress("—");
+  //   }
+  // }, [device]);
 
-  async function getAddressFromCoordinates(lat: string, lon: string) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.display_name || "Unknown Location";
-    } catch {
-      return "Unknown Location";
-    }
-  }
+  // async function getAddressFromCoordinates(lat: string, lon: string) {
+  //   try {
+  //     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     return data.display_name || "Unknown Location";
+  //   } catch {
+  //     return "Unknown Location";
+  //   }
+  // }
 
   const getDateRange = () => {
     const now = new Date();
@@ -316,11 +316,12 @@ export default function DeviceDetailPage({
 
               <div className="flex items-center gap-1.5 text-slate-400 text-[13px]">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                {resolvedAddress === "Loading..." ? (
+                {/* {resolvedAddress === "Loading..." ? (
                   <span className="animate-pulse">Fetching location...</span>
                 ) : (
                   <span>{resolvedAddress}</span>
-                )}
+                )} */}
+                <span>{device?.address || "Unknown"}</span>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 mt-3.5">
