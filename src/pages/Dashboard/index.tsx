@@ -519,36 +519,36 @@ function TelemetryInsights({
     Record<string, string>
   >({});
 
-  async function getAddressFromCoordinates(lat, lon) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      return data.display_name || "Unknown Location";
-    } catch (error) {
-      return "Unknown Location";
-    }
-  }
+  // async function getAddressFromCoordinates(lat , lon) {
+  //   try {
+  //     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+  //     const response = await fetch(url);
+  //     const data = await response.json();
+  //     return data.display_name || "Unknown Location";
+  //   } catch (error) {
+  //     return "Unknown Location";
+  //   }
+  // }
 
-  useEffect(() => {
-    async function resolveAddresses() {
-      const updates: Record<string, string> = {};
+  // useEffect(() => {
+  //   async function resolveAddresses() {
+  //     const updates: Record<string, string> = {};
 
-      for (const outlier of performanceOutliers) {
-        if (!resolvedLocations[outlier.location]) {
-          const { lat, lon } = parseLatLon(outlier.location);
-          const address = await getAddressFromCoordinates(lat, lon);
-          updates[outlier.location] = address;
-        }
-      }
+  //     for (const outlier of performanceOutliers) {
+  //       if (!resolvedLocations[outlier.location]) {
+  //         const { lat, lon } = parseLatLon(outlier.location);
+  //         const address = await getAddressFromCoordinates(lat, lon);
+  //         updates[outlier.location] = address;
+  //       }
+  //     }
 
-      setResolvedLocations((prev) => ({ ...prev, ...updates }));
-    }
+  //     setResolvedLocations((prev) => ({ ...prev, ...updates }));
+  //   }
 
-    if (performanceOutliers.length > 0) {
-      resolveAddresses();
-    }
-  }, [performanceOutliers]);
+  //   if (performanceOutliers.length > 0) {
+  //     resolveAddresses();
+  //   }
+  // }, [performanceOutliers]);
   function formatTimeAgo(date: string) {
     return formatDistanceToNow(new Date(date), { addSuffix: true });
   }
@@ -596,16 +596,19 @@ function TelemetryInsights({
           {performanceOutliers.length === 0 ? (
             <p className="text-xs text-slate-500">No outliers detected</p>
           ) : (
-            performanceOutliers.map((outlier) => (
+            performanceOutliers.map((outlier: any) => (
               <div
                 key={outlier.id}
                 className={`p-3 rounded text-xs ${getSeverityColor(outlier.severity)}`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    {/* <p className="font-semibold text-slate-900">
                       {resolvedLocations[outlier.location] ||
                         "Resolving location..."}
+                    </p> */}
+                    <p className="font-semibold text-slate-900">
+                      {outlier?.address}
                     </p>
                     <p className="text-slate-600 text-xs mt-1">
                       {outlier.metric}
@@ -633,7 +636,7 @@ function TelemetryInsights({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 space-y-2">
-          {recentErrors.map((error) => (
+          {recentErrors.map((error: any) => (
             <div
               key={error.id}
               className="flex items-start gap-3 p-2 bg-slate-50 rounded border border-slate-200"
@@ -649,8 +652,7 @@ function TelemetryInsights({
                   </p>
                 </div>
                 <p className="text-xs text-slate-600 mt-1">
-                  {error.device} •{" "}
-                  {resolvedLocations[error.location] || "Resolving location..."}
+                  {error.device} • {error?.address}
                 </p>
               </div>
             </div>
