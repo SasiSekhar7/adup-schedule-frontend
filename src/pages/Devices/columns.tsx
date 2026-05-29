@@ -46,6 +46,7 @@ export interface Device {
   createdAt: Date;
   updatedAt: Date;
   group_name: string;
+  address: string;
 }
 
 export interface DeviceMetrics {
@@ -279,7 +280,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
     enableHiding: false,
   },
   {
-    accessorKey: "location",
+    accessorKey: "address",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Location" />
     ),
@@ -287,7 +288,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
     //   const cords = row.getValue("location");
     //   return <LocationCell cords={cords} />;
     // },
-    cell: ({ row }) => row.getValue("address") || "Unknown Location",
+    cell: ({ row }) => row.getValue("address"),
   },
   {
     accessorKey: "status",
