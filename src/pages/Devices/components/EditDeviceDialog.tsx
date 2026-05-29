@@ -67,7 +67,7 @@ const EditDeviceDialog = ({
     const fetchDeviceGroups = async () => {
       try {
         const response = await api.get<{ groups: DeviceGroup[] }>(
-          "/device/group-list"
+          "/device/group-list",
         );
         setDeviceGroups(response.groups || []);
       } catch (error) {
@@ -139,7 +139,9 @@ const EditDeviceDialog = ({
     try {
       let payload = {
         ...deviceData,
+        address: deviceData.location.address,
       };
+
       await api.post(`/device/update/metadata/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
       fetchDta();
@@ -303,7 +305,8 @@ const EditDeviceDialog = ({
               onLocationSelect={(location) => {
                 setDeviceData({
                   ...deviceData,
-                  location: { ...location, address: "" },
+                  // location: { ...location, address: "" },
+                  location,
                 });
               }}
               initialPosition={deviceData.location}

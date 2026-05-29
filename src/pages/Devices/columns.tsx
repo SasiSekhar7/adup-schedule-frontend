@@ -46,6 +46,7 @@ export interface Device {
   createdAt: Date;
   updatedAt: Date;
   group_name: string;
+  address: string;
 }
 
 export interface DeviceMetrics {
@@ -96,7 +97,7 @@ const DevicePreviewDialog = ({ device }: { device: Device }) => {
     try {
       // Fetch only the latest telemetry entry (page=1, limit=1)
       const response: PaginatedResponse<DeviceTelemetry> = await api.get(
-        `/device/${device.device_id}/telemetry-logs?page=1&limit=1`
+        `/device/${device.device_id}/telemetry-logs?page=1&limit=1`,
       );
 
       // Get the latest telemetry entry
@@ -279,14 +280,15 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
     enableHiding: false,
   },
   {
-    accessorKey: "location",
+    accessorKey: "address",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Location" />
     ),
-    cell: ({ row }) => {
-      const cords = row.getValue("location");
-      return <LocationCell cords={cords} />;
-    },
+    // cell: ({ row }) => {
+    //   const cords = row.getValue("location");
+    //   return <LocationCell cords={cords} />;
+    // },
+    cell: ({ row }) => row.getValue("address"),
   },
   {
     accessorKey: "status",
@@ -300,7 +302,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
           className={cn(
             "px-3 py-1 rounded-full text-sm font-medium",
             statusVariants[status] ||
-              "bg-gray-100 text-gray-700 border border-gray-300"
+              "bg-gray-100 text-gray-700 border border-gray-300",
           )}
         >
           {status}

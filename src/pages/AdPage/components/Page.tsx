@@ -528,13 +528,13 @@ export default function AdDetailPage({
                 <tbody>
                   {paginatedLogs.map((log: any) => (
                     <tr
-                      key={log.id}
+                      key={log?.id}
                       className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                     >
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium text-slate-900">
-                            {log.device}
+                            {log?.device}
                           </p>
                           <p className="text-xs text-slate-500">{log.id}</p>
                         </div>
@@ -542,20 +542,21 @@ export default function AdDetailPage({
 
                       <td className="py-3 px-4 text-slate-900">
                         <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                          {log.deviceType}
+                          {log?.deviceType}
                         </span>
                       </td>
 
                       <td className="py-3 px-4 text-slate-900 text-xs">
-                        {log.location}
+                        {/* {log.location} */}
+                        {log?.address}
                       </td>
 
                       <td className="py-3 px-4 text-slate-900 text-xs">
-                        {new Date(log.playDate).toLocaleString("en-IN")}
+                        {new Date(log?.playDate).toLocaleString("en-IN")}
                       </td>
 
                       <td className="py-3 px-4 text-slate-900 font-medium">
-                        {log.duration}s
+                        {log?.duration}s
                       </td>
 
                       <td className="py-3 px-4">
@@ -563,19 +564,19 @@ export default function AdDetailPage({
                           <div className="w-12 h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                              style={{ width: `${log.engagement}%` }}
+                              style={{ width: `${log?.engagement}%` }}
                             />
                           </div>
                           <span className="text-xs font-semibold text-slate-900">
-                            {log.engagement}%
+                            {log?.engagement}%
                           </span>
                         </div>
                       </td>
 
                       <td className="py-3 px-4">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                          {log.status.charAt(0).toUpperCase() +
-                            log.status.slice(1)}
+                          {log?.status.charAt(0).toUpperCase() +
+                            log?.status.slice(1)}
                         </span>
                       </td>
                     </tr>

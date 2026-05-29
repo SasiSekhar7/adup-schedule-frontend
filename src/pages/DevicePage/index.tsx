@@ -732,32 +732,32 @@ function DevicePage() {
 
   const [resolvedAddress, setResolvedAddress] = useState("Loading...");
 
-  useEffect(() => {
-    if (device?.location) {
-      const [lat, lon] = device.location.split(",");
+  // useEffect(() => {
+  //   if (device?.location) {
+  //     const [lat, lon] = device.location.split(",");
 
-      if (lat && lon) {
-        getAddressFromCoordinates(lat.trim(), lon.trim()).then((address) =>
-          setResolvedAddress(address),
-        );
-      } else {
-        setResolvedAddress("Invalid Location");
-      }
-    } else {
-      setResolvedAddress("—");
-    }
-  }, [device]);
+  //     if (lat && lon) {
+  //       getAddressFromCoordinates(lat.trim(), lon.trim()).then((address) =>
+  //         setResolvedAddress(address),
+  //       );
+  //     } else {
+  //       setResolvedAddress("Invalid Location");
+  //     }
+  //   } else {
+  //     setResolvedAddress("—");
+  //   }
+  // }, [device]);
 
-  async function getAddressFromCoordinates(lat: string, lon: string) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.display_name || "Unknown Location";
-    } catch {
-      return "Unknown Location";
-    }
-  }
+  // async function getAddressFromCoordinates(lat: string, lon: string) {
+  //   try {
+  //     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     return data.display_name || "Unknown Location";
+  //   } catch {
+  //     return "Unknown Location";
+  //   }
+  // }
 
   if (loading) {
     return (

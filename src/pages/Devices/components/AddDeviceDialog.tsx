@@ -266,10 +266,12 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
       let payload = {
         group_id: deviceData.group_id,
         location: deviceData.location,
+        address: deviceData.location.address,
         device_orientation: deviceData.device_orientation,
         device_resolution: deviceData.device_resolution,
         device_type: deviceData.device_type,
       };
+
       await api.post(`/device/update/location/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
       fetchDta();
@@ -564,7 +566,8 @@ const AddDeviceDialog = ({ fetchDta }: { fetchDta: () => void }) => {
               onLocationSelect={(location) => {
                 setDeviceData({
                   ...deviceData,
-                  location: { ...location, address: "" },
+                  // location: { ...location, address: "" },
+                  location,
                 });
               }}
             />
