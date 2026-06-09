@@ -548,7 +548,7 @@ export default function Schedule() {
         to: dateRange.to.toISOString().split("T")[0],
       };
 
-      const response = await api.get("/schedule/all_v2", { params });
+      const response : any = await api.get("/schedule/all_v2", { params });
       if (!response || !response.ads) {
         throw new Error("Failed to fetch schedules");
       }

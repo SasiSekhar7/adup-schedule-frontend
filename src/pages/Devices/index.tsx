@@ -10,18 +10,59 @@ function Home() {
   const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
 
-  const fetchDta = async () => {
-    const response: DevicesResponse = await api.get("/device/all");
-    setData(response.devices);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  const [search, setSearch] = useState("");
+
+  // const fetchDta = async () => {
+  //   const response: DevicesResponse = await api.get("/device/all");
+  //   setData(response.devices);
+  // };
+
+  const fetchDta = async (pageNumber = page, searchValue = search) => {
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: String(limit),
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(`/device/all?${params.toString()}`);
+
+    setData(response.devices || []);
+
+    if (response.pagination) {
+      setPagination(response.pagination);
+    }
+  };
+
+  const handleFilterChange = (_field: string, value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchDta(1, value);
   };
 
   const handleRowClick = (device: Device) => {
     navigate(`/devices/${device.device_id}`);
   };
 
+  // useEffect(() => {
+  //   fetchDta();
+  // }, []);
+
   useEffect(() => {
-    fetchDta();
-  }, []);
+    fetchDta(page, search);
+  }, [page, search]);
 
   return (
     <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
@@ -55,13 +96,29 @@ function Home() {
               data={data}
               columns={columns(fetchDta)}
               onRowClick={handleRowClick}
+              // filters={[
+              //   { label: "Locations", value: "location" },
+              //   { label: "Device ID", value: "device_id" },
+              //   { label: "Group Name", value: "group_name" },
+              //   { label: "Device Name", value: "device_name" },
+              // ]}
               filters={[
-                { label: "Locations", value: "location" },
-                { label: "Device ID", value: "device_id" },
-                { label: "Group Name", value: "group_name" },
-                { label: "Device Name", value: "device_name" },
+                {
+                  label: "Search Device Name, Locations, ID, Group Name",
+                  value: "search",
+                },
               ]}
               maxHeight="none"
+              serverPagination
+              serverFiltering
+              onFilterChange={handleFilterChange}
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              onPaginationChange={(newPage) => {
+                setPage(newPage);
+              }}
             />
           </div>
         </CardContent>

@@ -52,12 +52,29 @@ function AddToSchedule() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [adPage, setAdPage] = useState(1);
+  const [adSearch, setAdSearch] = useState("");
+
+  const [adPagination, setAdPagination] = useState({
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  const [groupPage, setGroupPage] = useState(1);
+  const [groupSearch, setGroupSearch] = useState("");
+
+  const [groupPagination, setGroupPagination] = useState({
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [isSingleDay, setIsSingleDay] = useState(true);
   const totalDays = isSingleDay
     ? 1
     : startDate && endDate
-    ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-    : 0;
+      ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+      : 0;
 
   const handleScheduleAd = async () => {
     setLoading(true);
@@ -86,37 +103,111 @@ function AddToSchedule() {
   // const totalDays =
   //   startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0; // Include start date
 
+  const fetchAdsData = async (pageNumber = adPage, searchValue = adSearch) => {
+    // const response: any = await api.get(
+    //   `/ads/all?page=${pageNumber}&limit=10&search=${searchText}`,
+    // );
+
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: "10",
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(`/ads/all?${params.toString()}`);
+
+    setAdsData(response.ads || []);
+
+    if (response.pagination) {
+      setAdPagination(response.pagination);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdsData(adPage, adSearch);
+  }, [adPage]);
+
+  const handleAdFilterChange = (_field: string, value: string) => {
+    setAdSearch(value);
+    setAdPage(1);
+    fetchAdsData(1, value);
+  };
+
+  const fetchDevicesData = async (
+    pageNumber = groupPage,
+    searchValue = groupSearch,
+  ) => {
+    try {
+      // const response: any = await api.get(
+      //   `/device/fetch-groups?page=${pageNumber}&limit=10&name=${searchText}`,
+      // );
+      const params = new URLSearchParams({
+        page: String(pageNumber),
+        limit: "10",
+      });
+
+      if (searchValue.trim()) {
+        params.append("search", searchValue);
+      }
+
+      const response: any = await api.get(
+        `/device/fetch-groups?${params.toString()}`,
+      );
+
+      setDevicesData(response.groups || []);
+
+      if (response.pagination) {
+        setGroupPagination(response.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDevicesData(groupPage, groupSearch);
+  }, [groupPage]);
+
+  const handleGroupFilterChange = (_field: string, value: string) => {
+    setGroupSearch(value);
+    setGroupPage(1);
+    fetchDevicesData(1, value);
+  };
   // ✅ Fetch Ads Data
-  useEffect(() => {
-    const fetchAdsData = async () => {
-      try {
-        const response = await api.get<DevicesResponse>("/ads/all");
-        setAdsData(response.ads);
-        console.log("-----", response.ads);
-      } catch (error) {
-        console.error("Error fetching ads:", error);
-      }
-    };
+  // useEffect(() => {
+  // const fetchAdsData = async () => {
+  //   try {
+  //     const response = await api.get<DevicesResponse>("/ads/all");
+  //     setAdsData(response.ads);
+  //     console.log("-----", response.ads);
+  //   } catch (error) {
+  //     console.error("Error fetching ads:", error);
+  //   }
+  // };
 
-    const fetchDevicesData = async () => {
-      try {
-        const response = await api.get<DevicesGroupsResponse>(
-          "/device/fetch-groups"
-        );
-        setDevicesData(response.groups);
-      } catch (error) {
-        console.error("Error fetching devices:", error);
-      }
-    };
+  // const fetchDevicesData = async () => {
+  //   try {
+  //     const response = await api.get<DevicesGroupsResponse>(
+  //       "/device/fetch-groups",
+  //     );
+  //     setDevicesData(response.groups);
+  //   } catch (error) {
+  //     console.error("Error fetching devices:", error);
+  //   }
+  // };
 
-    fetchAdsData();
-    fetchDevicesData();
+  // fetchAdsData();
+  // fetchDevicesData();
 
-    console.log(adsData);
-  }, []);
-  useEffect(() => {
-    console.log(adsData);
-  }, [adsData]);
+  // console.log(adsData);
+  // }, []);
+
+  // useEffect(() => {
+  //   console.log(adsData);
+  // }, [adsData]);
 
   // ✅ Stable event handlers
   const handleSelectedAd = useCallback((rows: Ad[]) => {
@@ -189,13 +280,26 @@ function AddToSchedule() {
               <DataTable
                 data={adsData}
                 columns={adcolumns}
-                filters={[{ label: "Ad Name", value: "name" }]}
+                filters={[
+                  {
+                    label: "Search Ads",
+                    value: "search",
+                  },
+                ]}
                 onRowSelectionChange={handleSelectedAd}
                 maxHeight="40vh"
                 getRowCanSelect={(row) => {
                   const ad = row as Ad;
                   return ad.status !== "pending" && ad.status !== "processing";
                 }}
+                serverPagination
+                serverFiltering
+                onFilterChange={handleAdFilterChange}
+                currentPage={adPage}
+                totalPages={adPagination.totalPages}
+                hasNextPage={adPagination.hasNextPage}
+                hasPrevPage={adPagination.hasPrevPage}
+                onPaginationChange={(page) => setAdPage(page)}
               />
             </div>
           </CardContent>
@@ -216,9 +320,22 @@ function AddToSchedule() {
               <DataTable
                 data={devicesData}
                 columns={devicecolumns}
-                filters={[{ label: "Name", value: "name" }]}
+                filters={[
+                  {
+                    label: "Search Group",
+                    value: "search",
+                  },
+                ]}
                 onRowSelectionChange={handleSelectedDevices}
                 maxHeight="40vh"
+                serverPagination
+                serverFiltering
+                onFilterChange={handleGroupFilterChange}
+                currentPage={groupPage}
+                totalPages={groupPagination.totalPages}
+                hasNextPage={groupPagination.hasNextPage}
+                hasPrevPage={groupPagination.hasPrevPage}
+                onPaginationChange={(page) => setGroupPage(page)}
               />
             </div>
           </CardContent>

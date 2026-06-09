@@ -215,21 +215,29 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
     setUserRole(role);
   }, []);
 
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await api.get("/ads/clients");
+  // useEffect(() => {
+  //   const fetchClients = async () => {
+  //     try {
+  //       const response = await api.get("/ads/clients");
 
-        setClients((response as any).clients);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  //       setClients((response as any).clients);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    if (userRole === "Admin") {
-      fetchClients();
+  //   if (userRole === "Admin") {
+  //     fetchClients();
+  //   }
+  // }, [userRole]);
+  const fetchClients = async () => {
+    try {
+      const response = await api.get("/ads/clients");
+      setClients((response as any).clients);
+    } catch (err) {
+      console.error(err);
     }
-  }, [userRole]);
+  };
 
   const [plans, setPlans] = useState<any[]>([]);
   const [storageLimit, setStorageLimit] = useState(0);
@@ -575,8 +583,16 @@ function AddAdComponent({ onIsOpenChange }: { onIsOpenChange: () => void }) {
   return (
     <Dialog
       open={open}
-      onOpenChange={(isOpen) => {
+      onOpenChange={async (isOpen) => {
         setOpen(isOpen);
+        if (isOpen) {
+          if (userRole === "Admin") {
+            await fetchClients();
+          }
+
+          await fetchPlans();
+          return;
+        }
         if (!isOpen) {
           // Reset all states when dialog closes
           setLoading(false);

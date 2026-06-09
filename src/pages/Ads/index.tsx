@@ -40,18 +40,77 @@ function Ads() {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
 
-  const fetchDta = async () => {
-    const response = await api.get<AdsResponse>("/ads/all");
-    setData((response as any).ads);
-    console.log(typeof (response as any).ads);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState("");
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  // const fetchDta = async () => {
+  //   const response = await api.get<AdsResponse>("/ads/all");
+  //   setData((response as any).ads);
+  //   console.log(typeof (response as any).ads);
+  // };
+
+  const fetchDta = async (pageNumber = page, searchValue = search) => {
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: String(limit),
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(`/ads/all?${params.toString()}`);
+
+    setData(response.ads || []);
+
+    if (response.pagination) {
+      setPagination(response.pagination);
+    }
   };
 
-  useEffect(() => {
-    fetchDta();
-  }, []);
+  const handleFilterChange = (_field: string, value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchDta(1, value);
+  };
 
+  // useEffect(() => {
+  //   fetchDta();
+  // }, []);
+
+  useEffect(() => {
+    fetchDta(page);
+  }, [page]);
+
+  const [exportAds, setExportAds] = useState<Ad[]>([]);
+
+  const fetchExportAds = async () => {
+    try {
+      const response: any = await api.get("/ads/all");
+
+      setExportAds(response.ads || []);
+    } catch (error) {
+      console.error("Error fetching ads:", error);
+    }
+  };
+
+  const handleExportDialogChange = async (isOpen: boolean) => {
+    setExportDialogOpen(isOpen);
+
+    if (isOpen) {
+      await fetchExportAds();
+    }
+  };
   function onIsOpenChange() {
-    fetchDta();
+    fetchDta(page);
   }
 
   // Handle export functionality
@@ -281,7 +340,11 @@ function Ads() {
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Export Button */}
-          <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+          {/* <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}> */}
+          <Dialog
+            open={exportDialogOpen}
+            onOpenChange={handleExportDialogChange}
+          >
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
@@ -323,10 +386,12 @@ function Ads() {
                   <Label htmlFor="adSelection">Ad Selection</Label>
 
                   <Select
-                    value={selectedAdId ?? "all"}
-                    onValueChange={(value) =>
-                      setSelectedAdId(value === "all" ? null : value)
-                    }
+                    // value={selectedAdId ?? "all"}
+                    // onValueChange={(value) =>
+                    //   setSelectedAdId(value === "all" ? null : value)
+                    // }
+                    value={selectedAdId || undefined}
+                    onValueChange={setSelectedAdId}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select ad to export" />
@@ -335,10 +400,16 @@ function Ads() {
                     <SelectContent>
                       {/* <SelectItem value="all">All Ads</SelectItem> */}
 
-                      {data.map((ad) => (
+                      {/* {data.map((ad) => (
                         <SelectItem key={ad.ad_id} value={ad.ad_id}>
                           {ad.name}
-                          {/* {ad.ad_id} */}
+                          
+                        </SelectItem>
+                      ))} */}
+
+                      {exportAds.map((ad) => (
+                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                          {ad.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -460,10 +531,26 @@ function Ads() {
             <DataTable
               data={data}
               columns={columns}
+              serverPagination
+              serverFiltering
+              onFilterChange={handleFilterChange}
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              onPaginationChange={(newPage) => {
+                setPage(newPage);
+              }}
               onRowClick={handleRowClick}
+              // filters={[
+              //   { label: "Ad Name", value: "name" },
+              //   { label: "ad_id", value: "ad_id" },
+              // ]}
               filters={[
-                { label: "Ad Name", value: "name" },
-                { label: "ad_id", value: "ad_id" },
+                {
+                  label: "Search Ads by Name or Ad ID",
+                  value: "search",
+                },
               ]}
               maxHeight="none"
               onRowSelectionChange={(rows) => {

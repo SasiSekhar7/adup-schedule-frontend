@@ -38,6 +38,15 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (selectedRows: any) => void;
   onRowClick?: (row: TData) => void; // ✅ New prop for row click
   getRowCanSelect?: (row: TData) => boolean; // ✅ New prop for conditional selection
+
+  // NEW OPTIONAL PROPS
+  serverPagination?: boolean;
+  serverFiltering?: boolean;
+  onFilterChange?: (field: string, value: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 }
 type filter = {
   label: string;
@@ -53,6 +62,14 @@ export function DataTable<TData, TValue>({
   onRowSelectionChange,
   onRowClick, // ✅ Destructure the row click callback
   getRowCanSelect, // ✅ Destructure the conditional selection callback
+
+  serverPagination = false,
+  serverFiltering = false,
+  onFilterChange,
+  currentPage = 1,
+  totalPages = 1,
+  hasNextPage = false,
+  hasPrevPage = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -81,8 +98,18 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // getFilteredRowModel: getFilteredRowModel(),
+    // getPaginationRowModel: getPaginationRowModel(),
+    ...(serverFiltering
+      ? {}
+      : {
+          getFilteredRowModel: getFilteredRowModel(),
+        }),
+    ...(serverPagination
+      ? {}
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+        }),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -91,22 +118,38 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col h-full">
       {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row  overflow-x-auto pb-4 flex-shrink-0">
+      <div className="flex flex-col gap-4 md:flex-row w-full overflow-x-auto pb-4 flex-shrink-0">
         {filters?.map((filter) => (
-          <div className="flex items-center " key={filter.value}>
+          <div className="flex items-center w-full" key={filter.value}>
             <Input
               placeholder={`Filter ${filter.label}...`}
               type={filter.value === "start_time" ? "date" : "text"}
+              // value={
+              //   (table
+              //     .getColumn(`${filter.value}`)
+              //     ?.getFilterValue() as string) ?? ""
+              // }
+              // onChange={(event) =>
+              //   table
+              //     .getColumn(`${filter.value}`)
+              //     ?.setFilterValue(event.target.value)
+              // }
               value={
-                (table
-                  .getColumn(`${filter.value}`)
-                  ?.getFilterValue() as string) ?? ""
+                serverFiltering
+                  ? undefined
+                  : ((table
+                      .getColumn(filter.value)
+                      ?.getFilterValue() as string) ?? "")
               }
-              onChange={(event) =>
-                table
-                  .getColumn(`${filter.value}`)
-                  ?.setFilterValue(event.target.value)
-              }
+              onChange={(event) => {
+                if (serverFiltering) {
+                  onFilterChange?.(filter.value, event.target.value);
+                } else {
+                  table
+                    .getColumn(filter.value)
+                    ?.setFilterValue(event.target.value);
+                }
+              }}
               className="max-w-sm"
             />
           </div>
@@ -179,10 +222,40 @@ export function DataTable<TData, TValue>({
 
       {/* Pagination */}
       <div className="pt-4 flex-shrink-0 flex-row">
-        <DataTablePagination
+        {/* <DataTablePagination
           table={table}
           onPaginationChange={onPaginationChange || (() => {})}
-        />
+        /> */}
+        {serverPagination ? (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                className="border px-3 py-2 rounded disabled:opacity-50"
+                disabled={!hasPrevPage}
+                onClick={() => onPaginationChange?.(currentPage - 1, 10)}
+              >
+                Previous
+              </button>
+
+              <button
+                className="border px-3 py-2 rounded disabled:opacity-50"
+                disabled={!hasNextPage}
+                onClick={() => onPaginationChange?.(currentPage + 1, 10)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        ) : (
+          <DataTablePagination
+            table={table}
+            onPaginationChange={onPaginationChange || (() => {})}
+          />
+        )}
       </div>
     </div>
   );

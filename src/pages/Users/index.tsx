@@ -8,15 +8,56 @@ import { Card, CardContent } from "@/components/ui/card";
 function Users() {
   const [data, setData] = useState<User[]>([]);
 
-  const fetchData = async () => {
-    const response = await api.get("/user/all");
-    setData(response.users);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const [search, setSearch] = useState("");
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  // const fetchData = async () => {
+  //   const response = await api.get("/user/all");
+  //   setData(response.users);
+  // };
+
+  const fetchData = async (pageNumber = page, searchValue = search) => {
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: String(limit),
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(`/user/all?${params.toString()}`);
+
+    setData(response.users || []);
+
+    if (response.pagination) {
+      setPagination(response.pagination);
+    }
+  };
+
+  const handleFilterChange = (_field: string, value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchData(1, value);
   };
 
   // Initial data fetch when the component is mounted
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(page, search);
+  }, [page]);
 
   // Refresh data when a user is added
   const onIsOpenChange = () => {
@@ -52,8 +93,23 @@ function Users() {
             <DataTable
               data={data}
               columns={userColumns}
-              filters={[{ label: "Name", value: "name" }]}
+              filters={[
+                {
+                  label: "Search User by Name, Email, Phone Number",
+                  value: "search",
+                },
+              ]}
               maxHeight="none"
+              serverPagination
+              serverFiltering
+              onFilterChange={handleFilterChange}
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              onPaginationChange={(newPage) => {
+                setPage(newPage);
+              }}
             />
           </div>
         </CardContent>

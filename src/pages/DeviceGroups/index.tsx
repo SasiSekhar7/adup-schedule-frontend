@@ -33,6 +33,7 @@ interface DeviceGroup {
 
 function DeviceGroup() {
   const [data, setData] = useState<Device[]>([]);
+
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
     reg_code: "",
@@ -44,14 +45,52 @@ function DeviceGroup() {
     useState<{ client_id: string; name: string }[]>();
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  const fetchDta = async () => {
-    const response = await api.get<DevicesResponse>("/device/fetch-groups");
-    setData(response.groups);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+  const [search, setSearch] = useState("");
+
+  // const fetchDta = async () => {
+  //   const response = await api.get<DevicesResponse>("/device/fetch-groups");
+  //   setData(response.groups);
+  // };
+
+  const fetchDta = async (pageNumber = page, searchValue = search) => {
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: String(limit),
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(
+      `/device/fetch-groups?${params.toString()}`,
+    );
+
+    setData(response.groups || []);
+
+    if (response.pagination) {
+      setPagination(response.pagination);
+    }
+  };
+
+  const handleGroupFilterChange = (_field: string, value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchDta(1, value);
   };
 
   const fetchClients = async () => {
     try {
-      const data = await api.get("/ads/clients"); // Assuming the same endpoint for clients
+      const data: any = await api.get("/ads/clients"); // Assuming the same endpoint for clients
       setClients(data.clients);
     } catch (error) {
       console.error("Error fetching clients:", error);
@@ -63,12 +102,38 @@ function DeviceGroup() {
     setUserRole(role);
   }, []);
 
-  useEffect(() => {
-    fetchDta();
-    if (userRole === "Admin") {
-      fetchClients();
+  // useEffect(() => {
+  //   fetchDta();
+  //   if (userRole === "Admin") {
+  //     fetchClients();
+  //   }
+  // }, [userRole]);
+
+  const handleDialogChange = async (isOpen: boolean) => {
+    setOpen(isOpen);
+
+    if (isOpen) {
+      setDeviceGroup({
+        name: "",
+        reg_code: "",
+        client_id: "",
+      });
+
+      setError(null);
+
+      if (userRole === "Admin") {
+        await fetchClients();
+      }
     }
-  }, [userRole]);
+  };
+
+  useEffect(() => {
+    fetchDta(page, search);
+
+    // if (userRole === "Admin") {
+    //   fetchClients();
+    // }
+  }, [page]);
 
   const handleCreate = async () => {
     setLoading(true);
@@ -131,7 +196,8 @@ function DeviceGroup() {
         </div>
 
         <div className="w-full sm:w-auto">
-          <Dialog open={open} onOpenChange={setOpen}>
+          {/* <Dialog open={open} onOpenChange={setOpen}> */}
+          <Dialog open={open} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
                 <span className="hidden sm:inline">Create Device Group</span>
@@ -227,16 +293,36 @@ function DeviceGroup() {
         <CardContent className="p-4 md:p-6">
           <div
             className="
-  max-w-[350px]
-  md:max-w-[calc(100vw-20rem)]
-  relative
-"
+              max-w-[350px]
+              md:max-w-[calc(100vw-20rem)]
+              relative
+            "
           >
             {/* Mobile scroll hint */}
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
               Scroll →
             </div>
-            <DataTable data={data} columns={columns} maxHeight="none" />
+            <DataTable
+              data={data}
+              columns={columns}
+              maxHeight="none"
+              filters={[
+                {
+                  label: "Search Group Name, ID, Client Name",
+                  value: "search",
+                },
+              ]}
+              serverPagination
+              serverFiltering
+              onFilterChange={handleGroupFilterChange}
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              hasNextPage={pagination.hasNextPage}
+              hasPrevPage={pagination.hasPrevPage}
+              onPaginationChange={(newPage) => {
+                setPage(newPage);
+              }}
+            />
           </div>
         </CardContent>
       </Card>

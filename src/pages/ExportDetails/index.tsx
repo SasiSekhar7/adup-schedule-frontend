@@ -23,30 +23,58 @@ function ExportDetails() {
   const [exports, setExports] = useState<ExportJob[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchExports = async () => {
-    try {
-      const response = await api.get("/exports");
+  const [page, setPage] = useState(1);
 
-      const sorted = response.sort(
-        (a: ExportJob, b: ExportJob) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
+  // const fetchExports = async () => {
+  //   try {
+  //     const response = await api.get("/exports");
+
+  //     const sorted = response.sort(
+  //       (a: ExportJob, b: ExportJob) =>
+  //         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  //     );
+
+  //     setExports(sorted);
+  //   } catch (error) {
+  //     console.error("Failed to fetch exports", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchExports = async (pageNumber = page) => {
+    try {
+      const response: any = await api.get(
+        `/exports?page=${pageNumber}&limit=10`,
       );
 
-      setExports(sorted);
+      setExports(response.jobs || []);
+
+      if (response.pagination) {
+        setPagination(response.pagination);
+      }
     } catch (error) {
       console.error("Failed to fetch exports", error);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchExports();
+    fetchExports(page);
 
-    const interval = setInterval(fetchExports, 10000);
+    const interval = setInterval(() => {
+      fetchExports(page);
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [page]);
 
   const handleDownload = (url: string) => {
     window.open(url, "_blank");
@@ -153,6 +181,29 @@ function ExportDetails() {
             </Card>
           );
         })}
+      </div>
+      <div className="flex items-center justify-between mt-6">
+        <div className="text-sm text-muted-foreground">
+          Page {page} of {pagination.totalPages}
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={!pagination.hasPrevPage}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+
+          <Button
+            variant="outline"
+            disabled={!pagination.hasNextPage}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

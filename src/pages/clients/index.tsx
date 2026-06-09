@@ -73,6 +73,17 @@ function Clients() {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(12);
+  const [search, setSearch] = useState("");
+
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+
   const [editForm, setEditForm] = useState({
     name: "",
     email: "",
@@ -90,15 +101,45 @@ function Clients() {
     }
   };
 
-  const fetchDta = async () => {
-    const response = await api.get<ClientsResponse>("/ads/clients");
-    setData(response?.clients);
+  // const fetchDta = async () => {
+  //   const response = await api.get<ClientsResponse>("/ads/clients");
+  //   setData(response?.clients);
+  // };
+  const fetchDta = async (pageNumber = page, searchValue = search) => {
+    // const response: any = await api.get(
+    //   `/ads/clients?page=${pageNumber}&limit=${limit}`,
+    // );
+    const params = new URLSearchParams({
+      page: String(pageNumber),
+      limit: String(limit),
+    });
+
+    if (searchValue.trim()) {
+      params.append("search", searchValue);
+    }
+
+    const response: any = await api.get(`/ads/clients?${params.toString()}`);
+
+    setData(response.clients || []);
+
+    if (response.pagination) {
+      setPagination(response.pagination);
+    }
   };
 
+  // useEffect(() => {
+  //   fetchDta();
+  //   fetchTiers();
+  // }, []);
+  const handleFilterChange = (_field: string, value: string) => {
+    setSearch(value);
+    setPage(1);
+    fetchDta(1, value);
+  };
   useEffect(() => {
-    fetchDta();
+    fetchDta(page, search);
     fetchTiers();
-  }, []);
+  }, [page]);
 
   const handleCreate = async () => {
     setLoading(true);
@@ -269,6 +310,13 @@ function Clients() {
         </div>
       </div>
 
+      <Input
+        placeholder="Search Client Name, Email or Client ID..."
+        value={search}
+        onChange={(e) => handleFilterChange("search", e.target.value)}
+        className="max-w-md mb-4"
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* {data.map((client, index) => (
           <Card key={index} className="col-span-1">
@@ -411,6 +459,29 @@ function Clients() {
             </Card>
           );
         })}
+      </div>
+      <div className="flex items-center justify-between mt-6">
+        <p className="text-sm text-muted-foreground">
+          Page {page} of {pagination.totalPages}
+        </p>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={!pagination.hasPrevPage}
+            onClick={() => setPage((prev) => prev - 1)}
+          >
+            Previous
+          </Button>
+
+          <Button
+            variant="outline"
+            disabled={!pagination.hasNextPage}
+            onClick={() => setPage((prev) => prev + 1)}
+          >
+            Next
+          </Button>
+        </div>
       </div>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
