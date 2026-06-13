@@ -129,7 +129,7 @@ async function uploadLargeFile(
     const end = Math.min(start + partSize, file.size);
     const part = file.slice(start, end);
 
-    const uploadResponse = await fetch(urls[i], {
+    const uploadResponse = await fetch(urls[i].signedUrl, {
       method: "PUT",
       body: part,
     });
