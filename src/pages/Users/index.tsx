@@ -9,7 +9,7 @@ function Users() {
   const [data, setData] = useState<User[]>([]);
 
   const fetchData = async () => {
-    const response = await api.get("/user/all");
+    const response: any = await api.get("/user/all");
     setData(response.users);
   };
 
@@ -22,6 +22,11 @@ function Users() {
   const onIsOpenChange = () => {
     fetchData();
   };
+
+  const [search, setSearch] = useState("");
+  const filteredUsers = data.filter((user) =>
+    user.name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="sw-full min-w-0 space-y-4 md:space-y-6">
@@ -36,10 +41,10 @@ function Users() {
         </div>
       </div>
 
-      <Card className="w-full overflow-hidden">
+      {/* <Card className="w-full overflow-hidden">
         <CardContent className="p-0 ">
           <div className="w-full overflow-x-auto">
-            {/* Mobile scroll hint */}
+            
             <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
               Scroll →
             </div>
@@ -50,6 +55,62 @@ function Users() {
                 filters={[{ label: "Name", value: "name" }]}
                 maxHeight="none"
               />
+            </div>
+          </div>
+        </CardContent>
+      </Card> */}
+
+      <Card className="w-full overflow-hidden">
+        <CardContent className="p-0">
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <DataTable
+              data={data}
+              columns={userColumns}
+              filters={[{ label: "Name", value: "name" }]}
+              maxHeight="none"
+            />
+          </div>
+
+          {/* Mobile View */}
+          <div className="md:hidden p-4">
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full mb-4 rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+
+            {/* Cards */}
+            <div className="space-y-3">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user: any) => (
+                  <div
+                    key={user.id}
+                    className="rounded-lg border p-4 bg-background"
+                  >
+                    <div className="font-semibold">{user.name}</div>
+
+                    <div className="text-sm text-muted-foreground mt-1 break-all">
+                      {user.email}
+                    </div>
+
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Role:</span> {user.role}
+                    </div>
+
+                    <div className="mt-1 text-sm">
+                      <span className="font-medium">Status:</span> {user.status}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-sm text-muted-foreground py-6">
+                  No users found
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

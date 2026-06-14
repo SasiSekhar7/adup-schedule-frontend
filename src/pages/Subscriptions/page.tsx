@@ -334,8 +334,8 @@ export default function ManageSubscriptionsPage() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
-      <div className="flex-1">
-        <div className="p-6 md:p-8">
+      <div className="flex-1 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
+        <div className="">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">
@@ -714,7 +714,8 @@ export default function ManageSubscriptionsPage() {
                     ))}
                   </TableBody>
                 </Table>
-                <div className="flex items-center justify-between mt-4">
+                {/* <div className="flex items-center justify-between mt-4"> */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
                   {/* Left info */}
                   <p className="text-sm text-gray-500">
                     Showing {(currentPage - 1) * rowsPerPage + 1} -{" "}
@@ -726,7 +727,8 @@ export default function ManageSubscriptionsPage() {
                   </p>
 
                   {/* Buttons */}
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2"> */}
+                  <div className="flex justify-center sm:justify-end gap-2">
                     <Button
                       variant="outline"
                       size="sm"
