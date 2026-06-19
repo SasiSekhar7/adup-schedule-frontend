@@ -661,9 +661,10 @@ export default function Schedule() {
   useEffect(() => {
     getSchedules();
   }, [dateRange]); // Add dateRange dependency to refetch when date changes
-
+  const [loading, setLoading] = useState(false);
   async function getSchedules() {
     try {
+      setLoading(true);
       const params = {
         from: dateRange.from.toISOString().split("T")[0],
         to: dateRange.to.toISOString().split("T")[0],
@@ -819,6 +820,8 @@ export default function Schedule() {
       setSchedules(transformedSchedules);
     } catch (error: any) {
       console.error("Error fetching schedules:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -1268,7 +1271,14 @@ export default function Schedule() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 md:p-6">
-        {paginatedSchedules.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-3 text-muted-foreground">Loading schedules...</p>
+            </div>
+          </div>
+        ) : paginatedSchedules.length > 0 ? (
           <div className="space-y-6">
             {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

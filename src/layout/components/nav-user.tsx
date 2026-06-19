@@ -1,3 +1,135 @@
+// "use client";
+// import { useNavigate } from "react-router-dom";
+// import {
+//   BadgeCheck,
+//   Bell,
+//   ChevronsUpDown,
+//   CreditCard,
+//   Hand,
+//   KeyRound,
+//   LogOut,
+//   Sparkles,
+// } from "lucide-react";
+
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuGroup,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
+// import {
+//   SidebarMenu,
+//   SidebarMenuButton,
+//   SidebarMenuItem,
+//   useSidebar,
+// } from "@/components/ui/sidebar";
+
+// export function NavUser({
+//   user,
+// }: {
+//   user: {
+//     name: string;
+//     email: string;
+//     avatar: string;
+//   };
+// }) {
+//   const { isMobile } = useSidebar();
+
+//   const handleLogout = () => {
+//     // sessionStorage.clear();
+//     localStorage.clear();
+//     window.location.href = "/login";
+//   };
+
+//   const navigate = useNavigate();
+//   const handleUser = () => {
+//     navigate("/account");
+//   };
+
+//   return (
+//     <SidebarMenu>
+//       <SidebarMenuItem>
+//         <DropdownMenu>
+//           <DropdownMenuTrigger asChild>
+//             <SidebarMenuButton
+//               size="lg"
+//               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+//             >
+//               <Avatar className="h-8 w-8 rounded-lg">
+//                 <AvatarImage src={user.avatar} alt={user.name} />
+//                 <AvatarFallback className="rounded-lg">
+//                   {user.name?.slice(0, 2).toLocaleUpperCase()}
+//                 </AvatarFallback>
+//               </Avatar>
+//               <div className="grid flex-1 text-left text-sm leading-tight">
+//                 <span className="truncate font-semibold">{user.name}</span>
+//                 <span className="truncate text-xs">{user.email}</span>
+//               </div>
+//               <ChevronsUpDown className="ml-auto size-4" />
+//             </SidebarMenuButton>
+//           </DropdownMenuTrigger>
+//           <DropdownMenuContent
+//             className="w-[--radix-dropdown-menu-trigger-width]  min-w-56 rounded-lg"
+//             side={isMobile ? "bottom" : "right"}
+//             align="end"
+//             sideOffset={4}
+//           >
+//             <DropdownMenuLabel className="p-0 font-normal">
+//               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+//                 <Avatar className="h-8 w-8 rounded-lg">
+//                   <AvatarImage src={user.avatar} alt={user.name} />
+//                   <AvatarFallback className="rounded-lg">
+//                     {user.name?.slice(0, 2).toLocaleUpperCase()}
+//                   </AvatarFallback>
+//                 </Avatar>
+//                 <div className="grid flex-1 text-left text-sm leading-tight">
+//                   <span className="truncate font-semibold">{user.name}</span>
+//                   <span className="truncate text-xs">{user.email}</span>
+//                 </div>
+//               </div>
+//             </DropdownMenuLabel>
+//             <DropdownMenuSeparator />
+//             <DropdownMenuGroup>
+//               <DropdownMenuItem>
+//                 <Sparkles />
+//                 Upgrade to Pro
+//               </DropdownMenuItem>
+//             </DropdownMenuGroup>
+//             <DropdownMenuSeparator />
+//             <DropdownMenuGroup>
+//               <DropdownMenuItem onClick={handleUser}>
+//                 <BadgeCheck />
+//                 Account
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => navigate("/change-password")}>
+//                 <KeyRound />
+//                 Change Password
+//               </DropdownMenuItem>
+//               <DropdownMenuItem>
+//                 <CreditCard />
+//                 Billing
+//               </DropdownMenuItem>
+//               <DropdownMenuItem>
+//                 <Bell />
+//                 Notifications
+//               </DropdownMenuItem>
+//             </DropdownMenuGroup>
+//             <DropdownMenuSeparator />
+//             <DropdownMenuItem onClick={handleLogout}>
+//               <LogOut />
+//               Log out
+//             </DropdownMenuItem>
+//           </DropdownMenuContent>
+//         </DropdownMenu>
+//       </SidebarMenuItem>
+//     </SidebarMenu>
+//   );
+// }
+
 "use client";
 import { useNavigate } from "react-router-dom";
 import {
@@ -40,7 +172,6 @@ export function NavUser({
   const { isMobile } = useSidebar();
 
   const handleLogout = () => {
-    // sessionStorage.clear();
     localStorage.clear();
     window.location.href = "/login";
   };
@@ -57,11 +188,11 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-active data-[state=open]:text-primary"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary-100 text-primary">
                   {user.name?.slice(0, 2).toLocaleUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -73,7 +204,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width]  min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -82,7 +213,7 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback className="rounded-lg bg-primary-100 text-primary">
                     {user.name?.slice(0, 2).toLocaleUpperCase()}
                   </AvatarFallback>
                 </Avatar>

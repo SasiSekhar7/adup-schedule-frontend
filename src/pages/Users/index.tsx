@@ -7,10 +7,19 @@ import { Card, CardContent } from "@/components/ui/card";
 
 function Users() {
   const [data, setData] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
-    const response: any = await api.get("/user/all");
-    setData(response.users);
+    try {
+      setLoading(true);
+      const response: any = await api.get("/user/all");
+      setData(response.users);
+    } catch (error: any) {
+      setLoading(false);
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Initial data fetch when the component is mounted
@@ -59,62 +68,71 @@ function Users() {
           </div>
         </CardContent>
       </Card> */}
-
-      <Card className="w-full overflow-hidden">
-        <CardContent className="p-0">
-          {/* Desktop Table */}
-          <div className="hidden md:block">
-            <DataTable
-              data={data}
-              columns={userColumns}
-              filters={[{ label: "Name", value: "name" }]}
-              maxHeight="none"
-            />
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading Users...</p>
           </div>
-
-          {/* Mobile View */}
-          <div className="md:hidden p-4">
-            {/* Search */}
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full mb-4 rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-
-            {/* Cards */}
-            <div className="space-y-3">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user: any) => (
-                  <div
-                    key={user.id}
-                    className="rounded-lg border p-4 bg-background"
-                  >
-                    <div className="font-semibold">{user.name}</div>
-
-                    <div className="text-sm text-muted-foreground mt-1 break-all">
-                      {user.email}
-                    </div>
-
-                    <div className="mt-2 text-sm">
-                      <span className="font-medium">Role:</span> {user.role}
-                    </div>
-
-                    <div className="mt-1 text-sm">
-                      <span className="font-medium">Status:</span> {user.status}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-sm text-muted-foreground py-6">
-                  No users found
-                </div>
-              )}
+        </div>
+      ) : (
+        <Card className="w-full overflow-hidden">
+          <CardContent className="p-0">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <DataTable
+                data={data}
+                columns={userColumns}
+                filters={[{ label: "Name", value: "name" }]}
+                maxHeight="none"
+              />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+
+            {/* Mobile View */}
+            <div className="md:hidden p-4">
+              {/* Search */}
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full mb-4 rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+
+              {/* Cards */}
+              <div className="space-y-3">
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user: any) => (
+                    <div
+                      key={user.id}
+                      className="rounded-lg border p-4 bg-background"
+                    >
+                      <div className="font-semibold">{user.name}</div>
+
+                      <div className="text-sm text-muted-foreground mt-1 break-all">
+                        {user.email}
+                      </div>
+
+                      <div className="mt-2 text-sm">
+                        <span className="font-medium">Role:</span> {user.role}
+                      </div>
+
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium">Status:</span>{" "}
+                        {user.status}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-sm text-muted-foreground py-6">
+                    No users found
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

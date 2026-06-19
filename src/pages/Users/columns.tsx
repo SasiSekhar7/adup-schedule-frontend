@@ -74,7 +74,7 @@ export const userColumns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const role = row.getValue("role") as string;
       return (
-        <Badge className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-300">
+        <Badge className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 hover:text-white text-blue-700 border border-blue-300">
           {role}
         </Badge>
       );

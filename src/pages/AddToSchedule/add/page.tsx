@@ -849,7 +849,7 @@ export default function ScheduleAddPage() {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold">{selectedLayout.name}</h2>
             <p className="text-sm text-muted-foreground">
@@ -869,6 +869,44 @@ export default function ScheduleAddPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => {
+                setSelectedLayout(null);
+                setCurrentStep("select_layout");
+              }}
+            >
+              Change Layout
+            </Button>
+          </div>
+        </div> */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          {/* Left Content */}
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold break-words">
+              {selectedLayout.name}
+            </h2>
+
+            <p className="text-sm text-muted-foreground mt-1">
+              Click zones to assign content | {timeSlots.length} time slot(s)
+              configured
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => setShowTimeDialog(true)}
+            >
+              <Clock className="w-4 h-4 mr-2" />
+              Edit Time Slots
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setSelectedLayout(null);
                 setCurrentStep("select_layout");

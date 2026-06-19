@@ -48,10 +48,18 @@ function DeviceGroup() {
   const [clients, setClients] =
     useState<{ client_id: string; name: string }[]>();
   const [userRole, setUserRole] = useState<string | null>(null);
-
+  const [loadingdata, setLoadingData] = useState(false);
   const fetchDta = async () => {
-    const response = await api.get<DevicesResponse>("/device/fetch-groups");
-    setData(response.groups);
+    try {
+      setLoadingData(true);
+      const response = await api.get<DevicesResponse>("/device/fetch-groups");
+      setData(response.groups);
+    } catch (error: any) {
+      setLoadingData(false);
+      console.error("Error fetching devices:", error);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const fetchClients = async () => {
@@ -267,88 +275,96 @@ function DeviceGroup() {
           </Dialog>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              {/* Search */}
-              <Input
-                placeholder="Search group, client or key..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full sm:w-[260px]"
-              />
-
-              {/* Orientation Filter */}
-              <Select
-                value={orientationFilter}
-                onValueChange={setOrientationFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Orientation" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="all">All Orientation</SelectItem>
-                  <SelectItem value="portrait">Portrait</SelectItem>
-                  <SelectItem value="landscape">Landscape</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Client Filter */}
-              <Select value={clientFilter} onValueChange={setClientFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Client" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
-
-                  {[
-                    ...new Set(
-                      data
-                        ?.map((item: any) => item.Client?.name)
-                        .filter(Boolean),
-                    ),
-                  ].map((clientName) => (
-                    <SelectItem key={clientName} value={clientName}>
-                      {clientName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="text-sm text-muted-foreground whitespace-nowrap">
-              Total Groups: {filteredData.length}
-            </div>
+      {loadingdata ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading Devices...</p>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div
-            className="
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                {/* Search */}
+                <Input
+                  placeholder="Search group, client or key..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full sm:w-[260px]"
+                />
+
+                {/* Orientation Filter */}
+                <Select
+                  value={orientationFilter}
+                  onValueChange={setOrientationFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Orientation" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">All Orientation</SelectItem>
+                    <SelectItem value="portrait">Portrait</SelectItem>
+                    <SelectItem value="landscape">Landscape</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Client Filter */}
+                <Select value={clientFilter} onValueChange={setClientFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Client" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">All Clients</SelectItem>
+
+                    {[
+                      ...new Set(
+                        data
+                          ?.map((item: any) => item.Client?.name)
+                          .filter(Boolean),
+                      ),
+                    ].map((clientName) => (
+                      <SelectItem key={clientName} value={clientName}>
+                        {clientName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="text-sm text-muted-foreground whitespace-nowrap">
+                Total Groups: {filteredData.length}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div
+              className="
               max-w-[350px]
               md:max-w-[calc(100vw-20rem)]
               relative
             "
-          >
-            {/* Mobile scroll hint */}
-            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-              Scroll →
-            </div>
+            >
+              {/* Mobile scroll hint */}
+              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div>
 
-            <DataTable
-              // data={data}
-              data={filteredData}
-              columns={columns}
-              hideSelectionColumn={true}
-              maxHeight="none"
-              onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <DataTable
+                // data={data}
+                data={filteredData}
+                columns={columns}
+                hideSelectionColumn={true}
+                maxHeight="none"
+                onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

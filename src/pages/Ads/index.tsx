@@ -46,11 +46,20 @@ function Ads() {
   // const [selectedAdIds, setSelectedAdIds] = useState("all");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState(false);
   const fetchDta = async () => {
-    const response = await api.get<AdsResponse>("/ads/all");
-    setData((response as any).ads);
-    console.log(typeof (response as any).ads);
+    try {
+      setLoading(true);
+
+      const response = await api.get<AdsResponse>("/ads/all");
+      setData((response as any).ads);
+      console.log(typeof (response as any).ads);
+    } catch (error: any) {
+      setLoading(false);
+      console.error("Error fetching ads:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -299,8 +308,19 @@ function Ads() {
   const handleRowClick = (ad: Ad) => {
     navigate(`/ads/${ad.ad_id}`);
   };
+
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+  //         <p className="mt-2 text-muted-foreground">Loading Ads...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
   return (
-    <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
+    <div className="space-y-4 md:space-y-6 w-full mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
           <p className="text-lg md:text-xl font-semibold">Ads</p>
@@ -508,21 +528,28 @@ function Ads() {
           </TooltipProvider>
         </div>
       </div>
-
-      <Card>
-        <CardContent className="sm:p-0 p-4 md:p-6">
-          <div
-            className="
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading Ads...</p>
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="sm:p-0 p-4 md:p-6">
+            <div
+              className="
             max-w-[350px]
             md:max-w-[calc(100vw-20rem)]
             relative
           "
-          >
-            {/* Mobile scroll hint */}
-            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-              Scroll →
-            </div>
-            {/* <DataTable
+            >
+              {/* Mobile scroll hint */}
+              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div>
+              {/* <DataTable
               data={data}
               columns={columns}
               filters={[
@@ -536,39 +563,40 @@ function Ads() {
               }}
             /> */}
 
-            {selectedAdId && (
-              <p className="text-sm text-muted-foreground">
-                Selected Ad ID: {selectedAdId}
-              </p>
-            )}
+              {selectedAdId && (
+                <p className="text-sm text-muted-foreground">
+                  Selected Ad ID: {selectedAdId}
+                </p>
+              )}
 
-            <DataTable
-              data={data}
-              columns={columns}
-              hideSelectionColumn={true}
-              onRowClick={handleRowClick}
-              filters={[
-                { label: "Ad Name", value: "name" },
-                { label: "ad_id", value: "ad_id" },
-                { label: "Type", value: "type" },
-              ]}
-              maxHeight="none"
-              onRowSelectionChange={(rows) => {
-                if (rows.length > 0) {
-                  const ad = rows[0] as Ad;
-                  setSelectedAdId(ad.ad_id);
-                } else {
-                  setSelectedAdId(null);
-                }
-              }}
-              getRowCanSelect={(row) => {
-                const ad = row as Ad;
-                return ad.status !== "pending" && ad.status !== "processing";
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <DataTable
+                data={data}
+                columns={columns}
+                hideSelectionColumn={true}
+                onRowClick={handleRowClick}
+                filters={[
+                  { label: "Ad Name", value: "name" },
+                  { label: "ad_id", value: "ad_id" },
+                  { label: "Type", value: "type" },
+                ]}
+                maxHeight="none"
+                onRowSelectionChange={(rows) => {
+                  if (rows.length > 0) {
+                    const ad = rows[0] as Ad;
+                    setSelectedAdId(ad.ad_id);
+                  } else {
+                    setSelectedAdId(null);
+                  }
+                }}
+                getRowCanSelect={(row) => {
+                  const ad = row as Ad;
+                  return ad.status !== "pending" && ad.status !== "processing";
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

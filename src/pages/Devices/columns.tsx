@@ -304,7 +304,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
           className={cn(
             "px-3 py-1 rounded-full text-sm font-medium",
             statusVariants[status] ||
-              "bg-gray-100 text-gray-700 border border-gray-300",
+              "bg-gray-100 text-gray-700 border hover:text-white border-gray-300",
           )}
         >
           {status}

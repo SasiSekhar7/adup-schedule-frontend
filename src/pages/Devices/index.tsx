@@ -16,10 +16,19 @@ import {
 function Home() {
   const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchDta = async () => {
-    const response: DevicesResponse = await api.get("/device/all");
-    setData(response.devices);
+    try {
+      setLoading(true);
+      const response: DevicesResponse = await api.get("/device/all");
+      setData(response.devices);
+    } catch (error: any) {
+      setLoading(false);
+      console.error("Error fetching devices:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRowClick = (device: Device) => {
@@ -41,7 +50,7 @@ function Home() {
   const canAddDevice = currentDevices < maxDevices;
 
   return (
-    <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
+    <div className="space-y-4 md:space-y-6 w-full  mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
           <p className="text-lg md:text-xl font-semibold">Devices</p>
@@ -78,34 +87,45 @@ function Home() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-4 md:p-6">
-          <div
-            className="
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading Devices...</p>
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-4 md:p-6">
+            <div
+              className="
               max-w-[350px]
               md:max-w-[calc(100vw-20rem)]
               relative
             "
-          >
-            {/* Mobile scroll hint */}
-            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-              Scroll →
+            >
+              {/* Mobile scroll hint */}
+              {/* <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
+                Scroll →
+              </div> */}
+              <div className="hidden md:block">
+                <DataTable
+                  data={data}
+                  columns={columns(fetchDta)}
+                  onRowClick={handleRowClick}
+                  filters={[
+                    { label: "Locations", value: "location" },
+                    { label: "Device ID", value: "device_id" },
+                    { label: "Group Name", value: "group_name" },
+                    { label: "Device Name", value: "device_name" },
+                  ]}
+                  maxHeight="none"
+                />
+              </div>
             </div>
-            <DataTable
-              data={data}
-              columns={columns(fetchDta)}
-              onRowClick={handleRowClick}
-              filters={[
-                { label: "Locations", value: "location" },
-                { label: "Device ID", value: "device_id" },
-                { label: "Group Name", value: "group_name" },
-                { label: "Device Name", value: "device_name" },
-              ]}
-              maxHeight="none"
-            />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

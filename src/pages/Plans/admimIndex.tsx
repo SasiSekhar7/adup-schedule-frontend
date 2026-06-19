@@ -47,10 +47,19 @@ function AdminPlans() {
     return String(Number(gb) * BYTES_IN_GB);
   };
 
+  const [loading, setLoading] = useState(false);
+
   //  FETCH TIERS
   const fetchTiers = async () => {
-    const res = await api.get("/tiers_v2/all");
-    setTiers(res.data); //  correct
+    try {
+      setLoading(true);
+      const res = await api.get("/tiers_v2/all");
+      setTiers(res.data); //  correct
+    } catch (err) {
+      console.log("err", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   //  FETCH FEATURES MASTER
@@ -258,80 +267,89 @@ function AdminPlans() {
 
       {/*  CARDS */}
       <div className="grid md:grid-cols-3 gap-6">
-        {tiers.map((tier) => (
-          <Card key={tier.tier_id} className="rounded-2xl shadow-lg">
-            <CardContent className="p-6 space-y-3">
-              <h2 className="text-xl font-semibold">{tier.name}</h2>
-              {/* <p className="text-gray-600">{tier.description}</p> */}
-              <p className="text-2xl font-bold">₹{tier.price}</p>
+        {loading ? (
+          <div className="flex items-center justify-center h-64 col-span-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading Tiers...</p>
+            </div>
+          </div>
+        ) : (
+          tiers.map((tier) => (
+            <Card key={tier.tier_id} className="rounded-2xl shadow-lg">
+              <CardContent className="p-6 space-y-3">
+                <h2 className="text-xl font-semibold">{tier.name}</h2>
+                {/* <p className="text-gray-600">{tier.description}</p> */}
+                <p className="text-2xl font-bold">₹{tier.price}</p>
 
-              {/* STATUS */}
-              <div className="flex justify-between">
-                <span>Status</span>
-                <span
-                  className={`text-xs px-2 py-1 rounded ${
-                    tier.is_active
-                      ? "bg-green-100 text-green-600"
-                      : "bg-red-100 text-red-500"
-                  }`}
-                >
-                  {tier.is_active ? "Active" : "Inactive"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Billing Cycle</span>
-                <span
-                  className={`text-xs px-2 py-1 rounded "bg-green-100 text-gray-600
+                {/* STATUS */}
+                <div className="flex justify-between">
+                  <span>Status</span>
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      tier.is_active
+                        ? "bg-green-100 text-green-600"
+                        : "bg-red-100 text-red-500"
+                    }`}
+                  >
+                    {tier.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Billing Cycle</span>
+                  <span
+                    className={`text-xs px-2 py-1 rounded "bg-green-100 text-gray-600
                      
                   `}
-                >
-                  {tier.billing_cycle}
-                </span>
-              </div>
-
-              {/* Trial Badge */}
-              {tier.is_trial && (
-                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                  Trial
-                </span>
-              )}
-
-              {/* FEATURES */}
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                {tier.Features?.map((feature: any, i: number) => (
-                  <div
-                    key={i}
-                    className="flex justify-between border p-1 rounded"
                   >
-                    <span>{formatFeatureKey(feature.key)}</span>
-                    <span>
-                      {formatFeatureValue(
-                        feature.TierFeature?.value ?? feature.value,
-                        feature.key,
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    {tier.billing_cycle}
+                  </span>
+                </div>
 
-              {/* ACTIONS */}
-              <div className="flex gap-2 mt-3">
-                <Button onClick={() => handleEdit(tier)} variant="outline">
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setSelectedTierId(tier.tier_id);
-                    setDeleteDialogOpen(true);
-                  }}
-                >
-                  Deactivate
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                {/* Trial Badge */}
+                {tier.is_trial && (
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                    Trial
+                  </span>
+                )}
+
+                {/* FEATURES */}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {tier.Features?.map((feature: any, i: number) => (
+                    <div
+                      key={i}
+                      className="flex justify-between border p-1 rounded"
+                    >
+                      <span>{formatFeatureKey(feature.key)}</span>
+                      <span>
+                        {formatFeatureValue(
+                          feature.TierFeature?.value ?? feature.value,
+                          feature.key,
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex gap-2 mt-3">
+                  <Button onClick={() => handleEdit(tier)} variant="outline">
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setSelectedTierId(tier.tier_id);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    Deactivate
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/*  DIALOG */}
