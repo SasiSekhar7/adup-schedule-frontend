@@ -3044,6 +3044,8 @@ export default function ScreenLayoutPage() {
 
   const canAddLayout = currentLayouts < maxLayouts;
 
+  const canCreateLayout = limit("MAX_LAYOUTS") > 0;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <main className="flex-1 overflow-auto">
@@ -3416,11 +3418,20 @@ export default function ScreenLayoutPage() {
             ) : (
               <div className="text-center py-12 border rounded-md mb-6 bg-white">
                 <LayoutIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+
                 <h3 className="text-lg font-medium mb-2">No Layouts Yet</h3>
-                <p className="text-muted-foreground mb-4">
+                {/* <p className="text-muted-foreground mb-4">
                   Create your first screen layout to get started.
+                </p> */}
+                <p className="text-muted-foreground mb-4">
+                  {canCreateLayout
+                    ? "Create your first screen layout to get started."
+                    : "Your current plan does not support Screen Layouts."}
                 </p>
-                <Button onClick={() => setIsCreating(true)}>
+                <Button
+                  onClick={() => setIsCreating(true)}
+                  disabled={!canCreateLayout}
+                >
                   <Plus className="w-4 h-4 mr-2" /> Create Layout
                 </Button>
               </div>
