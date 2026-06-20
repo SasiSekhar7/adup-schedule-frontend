@@ -173,7 +173,7 @@ export default function ScheduleAddPage() {
   // }, []);
   useEffect(() => {
     const fetchLayouts = async () => {
-      const data = await getLayouts();
+      const data = await getLayouts('false');
       console.log("data", data);
       setLayouts(data);
     };

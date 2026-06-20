@@ -1804,6 +1804,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertDialogOverlay } from "../components/ui/alert-dialog";
+
 // ============================================================================
 // INTERNAL COMPONENTS (PREVIEW PLAYERS)
 // ============================================================================
@@ -2064,6 +2076,7 @@ interface BuilderProps {
   schedule?: any;
   is_live_content_template?: boolean;
   onChange: (layout: any) => void;
+  onZonesChange?: (zones: any[]) => void;
 }
 
 const generateZoneColor = (index) => {
@@ -2077,13 +2090,41 @@ function LayoutBuilder({
   schedule,
   is_live_content_template,
   onChange,
+  onZonesChange,
 }: BuilderProps) {
   const [name, setName] = useState(initialLayout?.name || "New Layout");
   const [zones, setZones] = useState<any[]>(initialLayout?.zones || []);
+  useEffect(() => {
+    onZonesChange?.(zones);
+  }, [zones]);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [orientation, setOrientation] = useState(
     initialLayout?.orientation || "landscape",
   );
+
+  useEffect(() => {
+    if (!is_live_content_template) return;
+
+    const videoZones = zones.filter(
+      (z) => z.content_type_allowed === "video_input_media",
+    );
+
+    if (videoZones.length <= 1) return;
+
+    const keepZoneId = videoZones[0].zone_id;
+
+    setZones((prev) =>
+      prev.map((zone) =>
+        zone.content_type_allowed === "video_input_media" &&
+        zone.zone_id !== keepZoneId
+          ? {
+              ...zone,
+              content_type_allowed: "media",
+            }
+          : zone,
+      ),
+    );
+  }, [is_live_content_template]);
 
   // MAIN LAYOUT LEVEL: background_color
   const [canvasBg, setCanvasBg] = useState(
@@ -2873,8 +2914,11 @@ export default function ScreenLayoutPage() {
     setUserRole(role || "");
   }, []);
 
-  const [filter, setFilter] = useState(false);
+  const [filter, setFilter] = useState<"all" | "true" | "false">("all");
+  const [builderZones, setBuilderZones] = useState<any[]>([]);
 
+  const [showVideoZoneDialog, setShowVideoZoneDialog] = useState(false);
+  const [pendingLiveTemplate, setPendingLiveTemplate] = useState(false);
   const loadData = async () => {
     try {
       const data = await getLayouts(filter);
@@ -3065,14 +3109,23 @@ export default function ScreenLayoutPage() {
                       <SelectContent>
                         {clients.map((client: any) => {
                           const tierName =
-                            client?.Subscriptions?.[0]?.Tier?.name || "No Tier";
+                            client?.currentSubscription?.Tier?.name ||
+                            "No Subscription";
+                          const subscriptionStatus =
+                            client?.currentSubscription?.status;
+
+                          // Build the label conditionally
+                          const statusLabel = subscriptionStatus
+                            ? ` (${tierName}-${subscriptionStatus})`
+                            : ` (${tierName})`;
 
                           return (
                             <SelectItem
                               key={client.client_id}
                               value={client.client_id}
                             >
-                              {client.client_name || client.name} ({tierName})
+                              {client.client_name || client.name} ({statusLabel}
+                              )
                             </SelectItem>
                           );
                         })}
@@ -3126,9 +3179,24 @@ export default function ScreenLayoutPage() {
                     <input
                       type="checkbox"
                       checked={is_live_content_template}
-                      onChange={(e) =>
-                        setis_live_content_template(e.target.checked)
-                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+
+                        if (checked) {
+                          const videoZones = builderZones.filter(
+                            (z) =>
+                              z.content_type_allowed === "video_input_media",
+                          );
+
+                          if (videoZones.length > 1) {
+                            setPendingLiveTemplate(true);
+                            setShowVideoZoneDialog(true);
+                            return;
+                          }
+                        }
+
+                        setis_live_content_template(checked);
+                      }}
                       className="h-4 w-4"
                     />
                     Is Live Content Template
@@ -3166,6 +3234,7 @@ export default function ScreenLayoutPage() {
               schedule={schedule}
               is_live_content_template={is_live_content_template}
               onChange={setCurrentBuilderState}
+              onZonesChange={setBuilderZones}
             />
 
             {/* RESTORED JSON CONSOLE */}
@@ -3212,16 +3281,22 @@ export default function ScreenLayoutPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-wrap gap-2 mb-4">
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={filter}
-                  onChange={(e) => setFilter(e.target.checked)}
-                  className="h-4 w-4"
-                />
-                Is Live Content Template
+            <div className="mb-4 w-64">
+              <label className="block text-sm font-medium mb-2">
+                Filter Layouts
               </label>
+
+              <select
+                value={filter}
+                onChange={(e) =>
+                  setFilter(e.target.value as "all" | "true" | "false")
+                }
+                className="w-full border rounded-md px-3 py-2"
+              >
+                <option value="all">All</option>
+                <option value="true">Live Content Template</option>
+                <option value="false">Not Live Content Template</option>
+              </select>
             </div>
             {layouts.length > 0 ? (
               <div className="rounded-md border bg-white mb-6">
@@ -3277,12 +3352,6 @@ export default function ScreenLayoutPage() {
                               {videoInputZones > 0 && (
                                 <Badge variant="outline" className="text-xs">
                                   📹 {videoInputZones} Video Input
-                                </Badge>
-                              )}
-                              {(layout.live_streaming === 1 ||
-                                layout.is_live_streaming === true) && (
-                                <Badge className="bg-red-600 text-white">
-                                  🔴 Live Streaming
                                 </Badge>
                               )}
                             </div>
@@ -3375,6 +3444,74 @@ export default function ScreenLayoutPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={showVideoZoneDialog}
+        onOpenChange={setShowVideoZoneDialog}
+      >
+        <AlertDialogOverlay className="fixed inset-0 bg-black/50 z-[9998]" />
+
+        <AlertDialogContent className="fixed left-1/2 top-1/2 z-[9999] -translate-x-1/2 -translate-y-1/2">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Multiple Video Input Zones Found
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Live Content Template allows only one Video Input Media zone.
+              <br />
+              <br />
+              Do you want to keep the first selected Video Input Media zone and
+              convert all remaining Video Input Media zones to Media zones?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingLiveTemplate(false);
+                setShowVideoZoneDialog(false);
+
+                toast.error(
+                  "Live Content Template requires only one Video Input Media zone.",
+                );
+              }}
+            >
+              No
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() => {
+                const videoZones = builderZones.filter(
+                  (z) => z.content_type_allowed === "video_input_media",
+                );
+
+                const firstZoneId = videoZones[0]?.zone_id;
+
+                setBuilderZones((prev) =>
+                  prev.map((zone) =>
+                    zone.content_type_allowed === "video_input_media" &&
+                    zone.zone_id !== firstZoneId
+                      ? {
+                          ...zone,
+                          content_type_allowed: "media",
+                        }
+                      : zone,
+                  ),
+                );
+
+                setis_live_content_template(true);
+
+                toast.success(
+                  "Only first Video Input Media zone retained. Remaining zones converted to Media.",
+                );
+              }}
+            >
+              Yes, Convert Zones
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
