@@ -2935,6 +2935,10 @@ export default function ScreenLayoutPage() {
   const handleStartEdit = async (layout: any) => {
     setEditingLayout(layout);
     setIsCreating(false);
+    setis_live_content_template(
+      layout?.is_live_content_template === true ||
+        layout?.is_live_content_template === 1,
+    );
 
     // try {
     //     const res = await api.get(`/layout/shedule/get/${layout.layout_id}`);
@@ -3366,32 +3370,37 @@ export default function ScreenLayoutPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleStartEdit(layout)}
-                                >
-                                  <Pencil className="w-4 h-4 mr-2" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  // onClick={() =>
-                                  //   handleDeleteLayout(layout.layout_id)
-                                  // }
-                                  onClick={() => {
-                                    setLayoutToDelete(layout.layout_id);
-                                    setDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {!(
+                              userRole === "Client" &&
+                              layout?.is_live_content_template === true
+                            ) && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => handleStartEdit(layout)}
+                                  >
+                                    <Pencil className="w-4 h-4 mr-2" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    // onClick={() =>
+                                    //   handleDeleteLayout(layout.layout_id)
+                                    // }
+                                    onClick={() => {
+                                      setLayoutToDelete(layout.layout_id);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </TableCell>
                         </TableRow>
                       );
