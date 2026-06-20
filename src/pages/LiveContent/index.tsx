@@ -260,6 +260,7 @@ export default function LiveContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="provider">Provider</SelectItem>
             <SelectItem value="streaming">Streaming</SelectItem>
             <SelectItem value="website">Website</SelectItem>
             <SelectItem value="iframe">iFrame</SelectItem>

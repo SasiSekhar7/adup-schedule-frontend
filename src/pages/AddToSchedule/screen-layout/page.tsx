@@ -2062,6 +2062,7 @@ const ZonePlayer = ({ zone, scheduleData, zoneWidth, zoneHeight }: any) => {
 interface BuilderProps {
   initialLayout?: any;
   schedule?: any;
+  is_live_content_template?: boolean;
   onChange: (layout: any) => void;
 }
 
@@ -2071,7 +2072,12 @@ const generateZoneColor = (index) => {
 
   return `hsl(${hue}, 70%, 55%)`;
 };
-function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
+function LayoutBuilder({
+  initialLayout,
+  schedule,
+  is_live_content_template,
+  onChange,
+}: BuilderProps) {
   const [name, setName] = useState(initialLayout?.name || "New Layout");
   const [zones, setZones] = useState<any[]>(initialLayout?.zones || []);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
@@ -2638,15 +2644,42 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                         const value = e.target.value;
 
                         // prevent selecting more than allowed
-                        if (
-                          value === "video_input_media" &&
-                          zone.content_type_allowed !== "video_input_media" &&
-                          selectedVideoInputZones >= maxMultiVideosInLayout
-                        ) {
-                          toast.error(
-                            `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
-                          );
-                          return;
+                        // if (
+                        //   value === "video_input_media" &&
+                        //   zone.content_type_allowed !== "video_input_media" &&
+                        //   selectedVideoInputZones >= maxMultiVideosInLayout
+                        // ) {
+                        //   toast.error(
+                        //     `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                        //   );
+                        //   return;
+                        // }
+                        if (value === "video_input_media") {
+                          // Extra validation ONLY for Live Streaming
+                          if (is_live_content_template) {
+                            const alreadyExists = zones.some(
+                              (z) =>
+                                z.zone_id !== zone.zone_id &&
+                                z.content_type_allowed === "video_input_media",
+                            );
+
+                            if (alreadyExists) {
+                              toast.error(
+                                "Live Streaming layout allows only one Video Input Media zone",
+                              );
+                              return;
+                            }
+                          }
+                          // Existing subscription validation
+                          if (
+                            zone.content_type_allowed !== "video_input_media" &&
+                            selectedVideoInputZones >= maxMultiVideosInLayout
+                          ) {
+                            toast.error(
+                              `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                            );
+                            return;
+                          }
                         }
                         setZones(
                           zones.map((z) =>
@@ -2816,11 +2849,12 @@ export default function ScreenLayoutPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [loadingClients, setLoadingClients] = useState(false);
-
+  const [is_live_content_template, setis_live_content_template] =
+    useState(false);
   const fetchClients = async () => {
     try {
       setLoadingClients(true);
-      const res = await api.get("/ads/clients");
+      const res: any = await api.get("/ads/clients");
       setClients(res.clients || []);
     } catch (err: any) {
       console.error(err);
@@ -2839,14 +2873,20 @@ export default function ScreenLayoutPage() {
     setUserRole(role || "");
   }, []);
 
+  const [filter, setFilter] = useState(false);
+
   const loadData = async () => {
     try {
-      const data = await getLayouts();
+      const data = await getLayouts(filter);
       setLayouts(data);
     } catch (error: any) {
       toast.error("Failed to load layouts");
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, [filter]);
 
   const handleStartEdit = async (layout: any) => {
     setEditingLayout(layout);
@@ -2891,10 +2931,12 @@ export default function ScreenLayoutPage() {
         payload = {
           ...currentBuilderState,
           client_id: selectedClient,
+          is_live_content_template,
         };
       } else {
         payload = {
           ...currentBuilderState,
+          is_live_content_template,
         };
       }
 
@@ -3078,6 +3120,21 @@ export default function ScreenLayoutPage() {
                 >
                   Back to List
                 </Button>
+                {/* Live Streaming Toggle */}
+                {userRole === "Admin" && (
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      checked={is_live_content_template}
+                      onChange={(e) =>
+                        setis_live_content_template(e.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    Is Live Content Template
+                  </label>
+                )}
+
                 {groupWiseData.length > 0 && (
                   <select
                     className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm outline-none"
@@ -3107,6 +3164,7 @@ export default function ScreenLayoutPage() {
             <LayoutBuilder
               initialLayout={editingLayout || undefined}
               schedule={schedule}
+              is_live_content_template={is_live_content_template}
               onChange={setCurrentBuilderState}
             />
 
@@ -3154,6 +3212,17 @@ export default function ScreenLayoutPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={filter}
+                  onChange={(e) => setFilter(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                Is Live Content Template
+              </label>
+            </div>
             {layouts.length > 0 ? (
               <div className="rounded-md border bg-white mb-6">
                 <Table>
@@ -3171,14 +3240,15 @@ export default function ScreenLayoutPage() {
                   <TableBody>
                     {layouts.map((layout) => {
                       const mediaZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "media",
+                        (z: any) => z.content_type_allowed === "media",
                       ).length;
                       const widgetZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "widget",
+                        (z: any) => z.content_type_allowed === "widget",
                       ).length;
 
                       const videoInputZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "video_input_media",
+                        (z: any) =>
+                          z.content_type_allowed === "video_input_media",
                       ).length;
                       return (
                         <TableRow key={layout.layout_id}>
@@ -3207,6 +3277,12 @@ export default function ScreenLayoutPage() {
                               {videoInputZones > 0 && (
                                 <Badge variant="outline" className="text-xs">
                                   📹 {videoInputZones} Video Input
+                                </Badge>
+                              )}
+                              {(layout.live_streaming === 1 ||
+                                layout.is_live_streaming === true) && (
+                                <Badge className="bg-red-600 text-white">
+                                  🔴 Live Streaming
                                 </Badge>
                               )}
                             </div>

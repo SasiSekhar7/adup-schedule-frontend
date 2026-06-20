@@ -421,9 +421,20 @@ const LAYOUT_SCHEDULES_KEY = "digital_signage_layout_schedules";
 
 //   return data ? JSON.parse(data) : [];
 // }
-export async function getLayouts(): Promise<Layout[]> {
+export async function getLayouts(
+  isLiveContentTemplate?: boolean,
+): Promise<Layout[]> {
   try {
-    const res = await api.get("/layout/templates");
+    const params: any = {};
+
+    if (isLiveContentTemplate !== undefined) {
+      params.is_live_content_template = isLiveContentTemplate
+        ? "true"
+        : "false";
+    }
+    const res = await api.get("/layout/templates", {
+      params,
+    });
 
     console.log("res", res.data);
 
