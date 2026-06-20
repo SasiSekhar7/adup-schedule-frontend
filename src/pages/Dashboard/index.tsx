@@ -791,13 +791,20 @@ const Dashboard = () => {
     <div className="min-h-screen w-full mx-auto md:mx-0 md:max-w-full bg-background">
       <div className="">
         {/* Hero header — mirrors the app's blue gradient "Welcome Back" card */}
-        <div className="app-hero-card p-5 md:p-6 mb-4">
+        {/* <div className="app-hero-card p-5 md:p-6 mb-4">
           <div className="relative z-10 space-y-1">
             <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
             <p className="text-sm md:text-base text-primary-foreground/80">
               System statistics and performance details.
             </p>
           </div>
+        </div> */}
+
+         <div className="space-y-1 mb-4">
+          <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>  
+                  <p className="text-sm md:text-base text-muted-foreground">
+            System statistics and performance details.
+         </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">

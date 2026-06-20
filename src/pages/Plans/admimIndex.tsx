@@ -1,6 +1,10 @@
+
+
+
+
 import api from "@/api";
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Check, X, Trash2, Pencil } from "lucide-react";
 
 function AdminPlans() {
   const [tiers, setTiers] = useState<any[]>([]);
@@ -49,12 +54,12 @@ function AdminPlans() {
 
   const [loading, setLoading] = useState(false);
 
-  //  FETCH TIERS
+  // FETCH TIERS
   const fetchTiers = async () => {
     try {
       setLoading(true);
       const res = await api.get("/tiers_v2/all");
-      setTiers(res.data); //  correct
+      setTiers(res.data);
     } catch (err) {
       console.log("err", err);
     } finally {
@@ -62,22 +67,21 @@ function AdminPlans() {
     }
   };
 
-  //  FETCH FEATURES MASTER
+  // FETCH FEATURES MASTER
   const fetchFeatures = async () => {
     const res = await api.get("/features/all");
-    console.log("Features:", res.data);
     setFeaturesList(res.data);
   };
 
-  //  OPEN CREATE
+  // OPEN CREATE
   const handleOpenCreate = () => {
     const defaultFeatures: any = {};
 
     featuresList.forEach((f) => {
       if (isBooleanFeature(f.key)) {
-        defaultFeatures[f.key] = false; // default toggle OFF
+        defaultFeatures[f.key] = false;
       } else {
-        defaultFeatures[f.key] = ""; // or 0 based on your need
+        defaultFeatures[f.key] = "";
       }
     });
     setEditMode(false);
@@ -88,13 +92,12 @@ function AdminPlans() {
       price: 0,
       billing_cycle: "monthly",
       is_trial: false,
-      // features: {},
       features: defaultFeatures,
     });
     setOpen(true);
   };
 
-  //  EDIT (MAP FEATURES)
+  // EDIT
   const handleEdit = (tier: any) => {
     const featureMap: any = {};
 
@@ -102,7 +105,7 @@ function AdminPlans() {
       const val = f.TierFeature?.value ?? f.value;
 
       if (f.key === "STORAGE_LIMIT") {
-        featureMap[f.key] = bytesToGB(val); // ✅ convert to GB for UI
+        featureMap[f.key] = bytesToGB(val);
       } else {
         featureMap[f.key] = val;
       }
@@ -122,12 +125,11 @@ function AdminPlans() {
     setOpen(true);
   };
 
-  //  BUILD FEATURES PAYLOAD
+  // BUILD FEATURES PAYLOAD
   const buildFeaturesPayload = () => {
     return featuresList.map((feature) => {
       let value = form.features?.[feature.key];
 
-      // fallback if user didn't touch it
       if (value === undefined || value === "") {
         value = isBooleanFeature(feature.key) ? false : "0";
       }
@@ -142,6 +144,7 @@ function AdminPlans() {
       };
     });
   };
+
   const validateForm = () => {
     if (!form.name || form.name.trim() === "") {
       toast.error("Plan name is required");
@@ -160,6 +163,7 @@ function AdminPlans() {
 
     return true;
   };
+
   const validateFeatures = () => {
     for (const feature of featuresList) {
       const key = feature.key;
@@ -176,7 +180,7 @@ function AdminPlans() {
     return true;
   };
 
-  //  CREATE / UPDATE
+  // CREATE / UPDATE
   const handleSubmit = async () => {
     if (!validateForm()) return;
     if (!validateFeatures()) return;
@@ -209,7 +213,7 @@ function AdminPlans() {
     }
   };
 
-  //  DELETE (SOFT)
+  // DELETE
   const handleDelete = async () => {
     if (!selectedTierId) return;
 
@@ -229,7 +233,7 @@ function AdminPlans() {
     }
   };
 
-  //  FORMAT UI
+  // FORMAT UI
   const formatFeatureKey = (key: string) => {
     return key
       .replace(/_/g, " ")
@@ -237,18 +241,6 @@ function AdminPlans() {
       .replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-  const formatFeatureValue = (value: any, key?: string) => {
-    if (value === "true" || value === true) return "Yes";
-    if (value === "false" || value === false) return "No";
-
-    if (key === "STORAGE_LIMIT") {
-      return `${(Number(value) / BYTES_IN_GB).toFixed(0)} GB`;
-    }
-
-    return value;
-  };
-
-  //  BOOLEAN FEATURE DETECTION
   const isBooleanFeature = (key: string) => {
     return [
       "LIVE_STREAMING",
@@ -258,101 +250,146 @@ function AdminPlans() {
     ].includes(key);
   };
 
+  // UI Helpers for features
+  const getFeatureDisplay = (key: string, rawValue: any) => {
+    const isBool = isBooleanFeature(key);
+    const isTruthy = rawValue === "true" || rawValue === true;
+    const isFalsy = rawValue === "false" || rawValue === false || rawValue === "0" || rawValue === 0;
+    
+    let displayValue = "";
+    if (!isBool) {
+      if (key === "STORAGE_LIMIT") {
+        displayValue = `${(Number(rawValue) / BYTES_IN_GB).toFixed(0)} GB`;
+      } else {
+        displayValue = String(rawValue);
+      }
+    }
+
+    return {
+      name: formatFeatureKey(key),
+      hasFeature: !isFalsy,
+      isBool,
+      displayValue,
+    };
+  };
+
   return (
-    <div className="p-4 md:p-8 space-y-8">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">Manage Plans</h1>
-        <Button onClick={handleOpenCreate}>Create Plan</Button>
+    <div className="p-4 space-y-8 md:p-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Manage Plans</h1>
+          <p className="text-muted-foreground mt-1">Configure your subscription tiers and feature limits.</p>
+        </div>
+        <Button onClick={handleOpenCreate} size="lg">Create Plan</Button>
       </div>
 
-      {/*  CARDS */}
-      <div className="grid md:grid-cols-3 gap-6">
+      {/* CARDS */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <div className="flex items-center justify-center h-64 col-span-full">
+          <div className="flex items-center justify-center col-span-full h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <div className="w-8 h-8 mx-auto border-b-2 rounded-full animate-spin border-primary"></div>
               <p className="mt-2 text-muted-foreground">Loading Tiers...</p>
             </div>
           </div>
         ) : (
           tiers.map((tier) => (
-            <Card key={tier.tier_id} className="rounded-2xl shadow-lg">
-              <CardContent className="p-6 space-y-3">
-                <h2 className="text-xl font-semibold">{tier.name}</h2>
-                {/* <p className="text-gray-600">{tier.description}</p> */}
-                <p className="text-2xl font-bold">₹{tier.price}</p>
-
-                {/* STATUS */}
-                <div className="flex justify-between">
-                  <span>Status</span>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      tier.is_active
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-500"
-                    }`}
-                  >
-                    {tier.is_active ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Billing Cycle</span>
-                  <span
-                    className={`text-xs px-2 py-1 rounded "bg-green-100 text-gray-600
-                     
-                  `}
-                  >
-                    {tier.billing_cycle}
-                  </span>
-                </div>
-
-                {/* Trial Badge */}
-                {tier.is_trial && (
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                    Trial
-                  </span>
-                )}
-
-                {/* FEATURES */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {tier.Features?.map((feature: any, i: number) => (
-                    <div
-                      key={i}
-                      className="flex justify-between border p-1 rounded"
+            <Card 
+              key={tier.tier_id} 
+              className="flex flex-col relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold">{tier.name}</h2>
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {tier.billing_cycle} billing
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                        tier.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
                     >
-                      <span>{formatFeatureKey(feature.key)}</span>
-                      <span>
-                        {formatFeatureValue(
-                          feature.TierFeature?.value ?? feature.value,
-                          feature.key,
-                        )}
+                      {tier.is_active ? "Active" : "Inactive"}
+                    </span>
+                    {tier.is_trial && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">
+                        Trial
                       </span>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
+                
+                <div className="mt-4 flex items-baseline text-4xl font-extrabold">
+                  ₹{tier.price}
+                  <span className="ml-1 text-sm font-medium text-muted-foreground">
+                    /{tier.billing_cycle === 'monthly' ? 'mo' : 'yr'}
+                  </span>
+                </div>
+              </CardHeader>
 
-                {/* ACTIONS */}
-                <div className="flex gap-2 mt-3">
-                  <Button onClick={() => handleEdit(tier)} variant="outline">
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setSelectedTierId(tier.tier_id);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    Deactivate
-                  </Button>
-                </div>
+              <div className="h-px bg-border w-full" />
+
+              <CardContent className="flex-1 p-6">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                  Included Features
+                </h4>
+                <ul className="space-y-3">
+                  {tier.Features?.map((feature: any, i: number) => {
+                    const { name, hasFeature, isBool, displayValue } = getFeatureDisplay(
+                      feature.key, 
+                      feature.TierFeature?.value ?? feature.value
+                    );
+
+                    return (
+                      <li key={i} className={`flex items-start gap-3 text-sm ${!hasFeature ? "text-muted-foreground/60" : "text-foreground"}`}>
+                        {hasFeature ? (
+                          <Check className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                        ) : (
+                          <X className="w-4 h-4 mt-0.5 text-muted-foreground/50 shrink-0" />
+                        )}
+                        <span className="flex-1">
+                          {name} {!isBool && hasFeature && <span className="font-semibold">: {displayValue}</span>}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </CardContent>
+
+              <div className="h-px bg-border w-full" />
+
+              <CardFooter className="p-4 bg-muted/20 flex gap-3">
+                <Button 
+                  onClick={() => handleEdit(tier)} 
+                  className="flex-1" 
+                  variant="default"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Plan
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                  onClick={() => {
+                    setSelectedTierId(tier.tier_id);
+                    setDeleteDialogOpen(true);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </CardFooter>
             </Card>
           ))
         )}
       </div>
 
-      {/*  DIALOG */}
+      {/* DIALOGS REMAIN UNCHANGED BELOW */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -369,15 +406,6 @@ function AdminPlans() {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
 
-            {/* <Input
-              placeholder="Description"
-              value={form.description}
-              required
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-            /> */}
-
             <Input
               type="number"
               placeholder="Price"
@@ -391,7 +419,7 @@ function AdminPlans() {
             <div>
               <Label>Billing Cycle</Label>
               <select
-                className="w-full border rounded p-2 mt-1"
+                className="w-full p-2 mt-1 border rounded"
                 value={form.billing_cycle}
                 onChange={(e) =>
                   setForm({ ...form, billing_cycle: e.target.value })
@@ -401,20 +429,20 @@ function AdminPlans() {
                 <option value="yearly">Yearly</option>
               </select>
             </div>
-            <div className="flex items-center justify-between border p-3 rounded">
+            <div className="flex items-center justify-between p-3 border rounded">
               <span>Is Trial Plan</span>
               <Switch
                 checked={form.is_trial === true}
                 onCheckedChange={(val) =>
                   setForm({
                     ...form,
-                    is_trial: val, // ✅ true / false
+                    is_trial: val,
                   })
                 }
               />
             </div>
 
-            {/*  DYNAMIC FEATURES */}
+            {/* DYNAMIC FEATURES */}
             <div>
               <Label>Features</Label>
 
@@ -425,7 +453,7 @@ function AdminPlans() {
                 return (
                   <div
                     key={key}
-                    className="flex justify-between items-center border p-2 rounded mt-2"
+                    className="flex items-center justify-between p-2 mt-2 border rounded"
                   >
                     <span>{formatFeatureKey(key)}</span>
 
@@ -455,7 +483,7 @@ function AdminPlans() {
                                   ...form,
                                   features: {
                                     ...form.features,
-                                    [key]: e.target.value, // still in GB
+                                    [key]: e.target.value,
                                   },
                                 })
                               }

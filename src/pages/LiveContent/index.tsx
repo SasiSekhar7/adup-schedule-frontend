@@ -16,6 +16,7 @@ import {
   Globe,
   Video,
   Monitor,
+  Copy,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -160,6 +161,11 @@ export default function LiveContent() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  const handleCopy = async (url: string) => {
+  await navigator.clipboard.writeText(url);
+  toast.success("URL copied");
+};
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return "Indefinite";
@@ -384,13 +390,28 @@ export default function LiveContent() {
                     </span>
                   </div>
 
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">URL:</p>
-                    {/* <p className="text-xs font-mono bg-muted p-2 rounded truncate"> */}
-                    <p className="text-xs font-mono bg-muted p-2 rounded break-all line-clamp-2">
-                      {content.url}
-                    </p>
-                  </div>
+                 <div className="flex items-start gap-2 bg-muted p-2 rounded">
+  <p
+    className="flex-1 text-xs font-mono overflow-hidden"
+    style={{
+      display: "-webkit-box",
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: "vertical",
+      wordBreak: "break-all",
+    }}
+  >
+    {content.url}
+  </p>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7 shrink-0"
+    onClick={() => handleCopy(content.url)}
+  >
+    <Copy className="h-4 w-4" />
+  </Button>
+</div>
 
                   {(content.start_time || content.end_time) && (
                     <div>

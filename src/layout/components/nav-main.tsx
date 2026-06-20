@@ -223,7 +223,8 @@ export function NavMain({
   }[];
 }) {
   const location = useLocation();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state, setOpen } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   return (
     <SidebarGroup>
@@ -250,6 +251,12 @@ export function NavMain({
                           ? "bg-primary text-white font-semibold hover:bg-primary"
                           : "text-muted-foreground hover:bg-sidebar-hover"
                       }`}
+                       onClick={() => {
+    if (isCollapsed) {
+      setOpen(true);
+      return;
+    }
+  }}
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>

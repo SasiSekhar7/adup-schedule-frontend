@@ -343,9 +343,7 @@ function DeviceGroup() {
           <CardContent className="p-0">
             <div
               className="
-              max-w-[350px]
-              md:max-w-[calc(100vw-20rem)]
-              relative
+             flex-1
             "
             >
               {/* Mobile scroll hint */}

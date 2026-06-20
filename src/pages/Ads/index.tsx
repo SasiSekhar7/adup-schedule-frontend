@@ -539,10 +539,7 @@ function Ads() {
         <Card>
           <CardContent className="sm:p-0 p-4 md:p-6">
             <div
-              className="
-            max-w-[350px]
-            md:max-w-[calc(100vw-20rem)]
-            relative
+              className="flex-1
           "
             >
               {/* Mobile scroll hint */}

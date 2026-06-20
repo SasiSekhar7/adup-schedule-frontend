@@ -84,8 +84,8 @@ function ExportDetails() {
             let message = "";
 
             if (job.status === "FAILED") {
-              barColor = "bg-red-500";
-              borderColor = "border border-red-500";
+              barColor = "";
+              borderColor = "";
               message = job.error_message || "Export failed";
             }
 
@@ -115,9 +115,23 @@ function ExportDetails() {
                     Job ID: {job.job_id.slice(0, 8)}...
                   </p>
 
-                  <p className="text-xs text-muted-foreground">
-                    Status: {job.status}
-                  </p>
+                 <div className="flex items-center justify-between">
+  <p className="text-xs text-muted-foreground">Status</p>
+
+  <span
+    className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+      job.status === "FAILED"
+        ? "bg-red-100 text-red-700"
+        : job.status === "COMPLETED"
+        ? "bg-green-100 text-green-700"
+        : job.status === "QUEUED"
+        ? "bg-yellow-100 text-yellow-700"
+        : "bg-blue-100 text-blue-700"
+    }`}
+  >
+    {job.status}
+  </span>
+</div>
 
                   <p className="text-xs text-muted-foreground">
                     Device: {job.device_id || "All Devices"}

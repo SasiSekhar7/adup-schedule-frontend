@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import * as React from "react";
@@ -40,14 +42,15 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   filters: filter[];
-  maxHeight?: string; // ✅ New prop
-  onPaginationChange?: (page: number, pageSize: number) => void; // ✅ New prop
+  maxHeight?: string;
+  onPaginationChange?: (page: number, pageSize: number) => void;
   onRowSelectionChange?: (selectedRows: any) => void;
-  onRowClick?: (row: TData) => void; // ✅ New prop for row click
-  getRowCanSelect?: (row: TData) => boolean; // ✅ New prop for conditional selection
+  onRowClick?: (row: TData) => void;
+  getRowCanSelect?: (row: TData) => boolean;
   singleSelect?: boolean;
   hideSelectionColumn?: boolean;
 }
+
 type filter = {
   label: string;
   value: string;
@@ -57,20 +60,17 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   filters,
-  onPaginationChange, // ✅ Destructure the callback
-  maxHeight = "80vh", // ✅ Default maxHeight
+  onPaginationChange,
+  maxHeight = "80vh",
   onRowSelectionChange,
-  onRowClick, // ✅ Destructure the row click callback
-  getRowCanSelect, // ✅ Destructure the conditional selection callback
+  onRowClick,
+  getRowCanSelect,
   singleSelect = false,
   hideSelectionColumn = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   React.useEffect(() => {
@@ -86,7 +86,6 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable({
     data,
-    // columns,
     columns: filteredColumns,
     state: { sorting, columnVisibility, rowSelection, columnFilters },
     enableRowSelection: getRowCanSelect
@@ -106,26 +105,12 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col w-full h-full overflow-hidden">
+      
       {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row  overflow-x-auto pb-4 flex-shrink-0">
+      <div className="flex flex-col flex-shrink-0 gap-4 pb-4 overflow-x-auto md:flex-row">
         {filters?.map((filter) => (
-          <div className="flex items-center " key={filter.value}>
-            {/* <Input
-              placeholder={`Filter ${filter.label}...`}
-              type={filter.value === "start_time" ? "date" : "text"}
-              value={
-                (table
-                  .getColumn(`${filter.value}`)
-                  ?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table
-                  .getColumn(`${filter.value}`)
-                  ?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            /> */}
+          <div className="flex items-center" key={filter.value}>
             {filter.value === "type" ? (
               <Select
                 value={
@@ -169,22 +154,25 @@ export function DataTable<TData, TValue>({
         ))}
       </div>
 
-      {/* Table Container - flexible height when maxHeight is "none" */}
+      {/* Table Container */}
       <div
-        className={`flex-1 w-full ${
+        className={`flex-1 w-full min-h-0 flex flex-col relative ${
           maxHeight !== "none" ? "rounded-md border" : ""
-        } min-h-0`}
+        }`}
       >
-        <div className="h-full overflow-auto overflow-y-auto">
-          <Table className="text-sm">
-            <TableHeader>
+        {/* The scrollable area is defined here */}
+        <div className="flex-1 overflow-auto">
+          <Table className="w-full text-sm relative">
+            {/* ✅ Added sticky, top-0, z-10, and bg-background to keep the header fixed */}
+            <TableHeader className="sticky top-0 z-10 shadow-sm bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
-                      className=""
+                      // Ensure the background color covers the text underneath when scrolling
+                      className="bg-background" 
                     >
                       {header.isPlaceholder
                         ? null
@@ -197,6 +185,7 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))}
             </TableHeader>
+            
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
@@ -209,7 +198,7 @@ export function DataTable<TData, TValue>({
                     }
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="">
+                      <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -234,7 +223,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Pagination */}
-      <div className="pt-4 flex-shrink-0 flex-row">
+      <div className="flex-row flex-shrink-0 pt-4">
         <DataTablePagination
           table={table}
           onPaginationChange={onPaginationChange || (() => {})}

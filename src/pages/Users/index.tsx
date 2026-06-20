@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
@@ -38,8 +39,11 @@ function Users() {
   );
 
   return (
-    <div className="sw-full min-w-0 space-y-4 md:space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    // ✅ 1. Added h-full and flex/flex-col to strictly manage height
+    <div className="flex flex-col w-full h-full min-w-0 space-y-4 md:space-y-6">
+      
+      {/* Header Section - shrink-0 ensures this title bar doesn't get crushed */}
+      <div className="flex flex-col flex-shrink-0 gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-2xl font-semibold">Users</p>
           <p className="text-sm text-muted-foreground">List of all users</p>
@@ -50,36 +54,23 @@ function Users() {
         </div>
       </div>
 
-      {/* <Card className="w-full overflow-hidden">
-        <CardContent className="p-0 ">
-          <div className="w-full overflow-x-auto">
-            
-            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-              Scroll →
-            </div>
-            <div className="min-w-[950px]">
-              <DataTable
-                data={data}
-                columns={userColumns}
-                filters={[{ label: "Name", value: "name" }]}
-                maxHeight="none"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card> */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
+        // Loading state - flex-1 centers it in the remaining space
+        <div className="flex items-center justify-center flex-1">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <div className="w-8 h-8 mx-auto border-b-2 rounded-full animate-spin border-primary"></div>
             <p className="mt-2 text-muted-foreground">Loading Users...</p>
           </div>
         </div>
       ) : (
-        <Card className="w-full overflow-hidden">
-          <CardContent className="p-0">
-            {/* Desktop Table */}
-            <div className="hidden md:block">
+        // ✅ 2. Card becomes flex-1 to fill the EXACT remaining space below the header
+        <Card className="flex flex-col flex-1 w-full min-h-0 overflow-hidden">
+          {/* ✅ 3. CardContent also needs to stretch fully */}
+          <CardContent className="flex flex-col flex-1 min-h-0 p-0">
+            
+            {/* Desktop Table Wrapper */}
+            {/* ✅ 4. Changed from hidden md:block to hidden md:flex flex-col flex-1 min-h-0 */}
+            <div className="flex-col flex-1 hidden min-h-0 md:flex">
               <DataTable
                 data={data}
                 columns={userColumns}
@@ -88,15 +79,16 @@ function Users() {
               />
             </div>
 
-            {/* Mobile View */}
-            <div className="md:hidden p-4">
+            {/* Mobile View Wrapper */}
+            {/* ✅ 5. Made the mobile view scrollable independently */}
+            <div className="flex flex-col flex-1 p-4 overflow-y-auto md:hidden">
               {/* Search */}
               <input
                 type="text"
                 placeholder="Search users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full mb-4 rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 mb-4 text-sm border rounded-md shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
               />
 
               {/* Cards */}
@@ -105,11 +97,11 @@ function Users() {
                   filteredUsers.map((user: any) => (
                     <div
                       key={user.id}
-                      className="rounded-lg border p-4 bg-background"
+                      className="p-4 border rounded-lg bg-background"
                     >
                       <div className="font-semibold">{user.name}</div>
 
-                      <div className="text-sm text-muted-foreground mt-1 break-all">
+                      <div className="mt-1 text-sm break-all text-muted-foreground">
                         {user.email}
                       </div>
 
@@ -124,7 +116,7 @@ function Users() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center text-sm text-muted-foreground py-6">
+                  <div className="py-6 text-sm text-center text-muted-foreground">
                     No users found
                   </div>
                 )}
