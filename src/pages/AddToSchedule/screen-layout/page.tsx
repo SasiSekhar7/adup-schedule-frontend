@@ -3310,8 +3310,9 @@ export default function ScreenLayoutPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Client Name</TableHead>
-
+                      {userRole == "Admin" && (
+                        <TableHead>Client Name</TableHead>
+                      )}
                       <TableHead>Resolution</TableHead>
                       <TableHead>Orientation</TableHead>
                       <TableHead>Zones</TableHead>
@@ -3338,9 +3339,11 @@ export default function ScreenLayoutPage() {
                           <TableCell className="font-medium">
                             {layout.name}
                           </TableCell>
-                          <TableCell className="font-medium">
-                            {layout?.Client?.name}
-                          </TableCell>
+                          {userRole == "Admin" && (
+                            <TableCell className="font-medium">
+                              {layout?.Client?.name ?? "-"}
+                            </TableCell>
+                          )}
                           <TableCell>{layout.resolution}</TableCell>
                           <TableCell className="capitalize">
                             {layout.orientation}
