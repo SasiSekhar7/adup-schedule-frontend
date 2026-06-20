@@ -3308,6 +3308,8 @@ export default function ScreenLayoutPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
+                      <TableHead>Client Name</TableHead>
+
                       <TableHead>Resolution</TableHead>
                       <TableHead>Orientation</TableHead>
                       <TableHead>Zones</TableHead>
@@ -3334,13 +3336,16 @@ export default function ScreenLayoutPage() {
                           <TableCell className="font-medium">
                             {layout.name}
                           </TableCell>
+                          <TableCell className="font-medium">
+                            {layout?.Client?.name}
+                          </TableCell>
                           <TableCell>{layout.resolution}</TableCell>
                           <TableCell className="capitalize">
                             {layout.orientation}
                           </TableCell>
                           <TableCell>{layout.zones.length} zones</TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="grid grid-cols-2 gap-2">
                               {mediaZones > 0 && (
                                 <Badge variant="default" className="text-xs">
                                   <Film className="w-3 h-3 mr-1" />
