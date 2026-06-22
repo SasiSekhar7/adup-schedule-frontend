@@ -1,7 +1,7 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
-import { columns } from "./columns";
+import { columns, Group } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Plus, RefreshCcw, Save } from "lucide-react";
@@ -24,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getRole } from "@/helpers";
-import { Device, DevicesResponse } from "../Devices/columns";
 import { useNavigate } from "react-router-dom";
+import MobileGroupCard from "./components/MobileGroupCard";
 
 interface DeviceGroup {
   name: string;
@@ -34,9 +34,13 @@ interface DeviceGroup {
   orientation: "portrait" | "landscape";
 }
 
+interface DeviceGroupsResponse {
+  groups: Group[];
+}
+
 function DeviceGroup() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Device[]>([]);
+  const [data, setData] = useState<Group[]>([]);
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
     reg_code: "",
@@ -52,7 +56,9 @@ function DeviceGroup() {
   const fetchDta = async () => {
     try {
       setLoadingData(true);
-      const response = await api.get<DevicesResponse>("/device/fetch-groups");
+      const response: DeviceGroupsResponse = await api.get(
+        "/device/fetch-groups",
+      );
       setData(response.groups);
     } catch (error: any) {
       setLoadingData(false);
@@ -64,7 +70,7 @@ function DeviceGroup() {
 
   const fetchClients = async () => {
     try {
-      const data = await api.get("/ads/clients"); // Assuming the same endpoint for clients
+      const data: any = await api.get("/ads/clients"); // Assuming the same endpoint for clients
       setClients(data.clients);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
@@ -136,7 +142,7 @@ function DeviceGroup() {
   const [search, setSearch] = useState("");
   const [orientationFilter, setOrientationFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
-  const filteredData = data.filter((item: any) => {
+  const filteredData = data.filter((item: Group) => {
     const matchesSearch =
       item.name?.toLowerCase().includes(search.toLowerCase()) ||
       item.reg_code?.toLowerCase().includes(search.toLowerCase()) ||
@@ -152,6 +158,10 @@ function DeviceGroup() {
 
     return matchesSearch && matchesOrientation && matchesClient;
   });
+
+  const handleRowClick = (row: Group) => {
+    navigate(`/device-groups/${row.group_id}`);
+  };
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -224,7 +234,7 @@ function DeviceGroup() {
 
                   <Select
                     value={deviceGroup.orientation || "landscape"}
-                    onValueChange={(value) =>
+                    onValueChange={(value: "portrait" | "landscape") =>
                       setDeviceGroup({ ...deviceGroup, orientation: value })
                     }
                   >
@@ -346,19 +356,33 @@ function DeviceGroup() {
              flex-1
             "
             >
-              {/* Mobile scroll hint */}
-              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-                Scroll →
+              {/* Desktop */}
+              <div className="hidden md:block">
+                <DataTable
+                  data={filteredData}
+                  columns={columns}
+                  hideSelectionColumn={true}
+                  maxHeight="none"
+                  onRowClick={handleRowClick}
+                />
               </div>
 
-              <DataTable
-                // data={data}
-                data={filteredData}
-                columns={columns}
-                hideSelectionColumn={true}
-                maxHeight="none"
-                onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
-              />
+              {/* Mobile */}
+              <div className="md:hidden p-4">
+                <div className="space-y-4">
+                  {filteredData.length > 0 ? (
+                    filteredData.map((group: Group) => (
+                      <div onClick={() => handleRowClick(group)}>
+                        <MobileGroupCard key={group.group_id} group={group} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No groups found
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

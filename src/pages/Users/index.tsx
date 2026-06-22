@@ -1,10 +1,11 @@
-
 import { useEffect, useState } from "react";
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { userColumns, User } from "./columns";
 import AddUsers from "./components/add";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "lucide-react";
+import MobileUserCard from "./components/mobile-user-card";
 
 function Users() {
   const [data, setData] = useState<User[]>([]);
@@ -35,13 +36,15 @@ function Users() {
 
   const [search, setSearch] = useState("");
   const filteredUsers = data.filter((user) =>
-    user.name?.toLowerCase().includes(search.toLowerCase()),
+    [user.name, user.email, user.client_name]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase()),
   );
 
   return (
     // ✅ 1. Added h-full and flex/flex-col to strictly manage height
     <div className="flex flex-col w-full h-full min-w-0 space-y-4 md:space-y-6">
-      
       {/* Header Section - shrink-0 ensures this title bar doesn't get crushed */}
       <div className="flex flex-col flex-shrink-0 gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
@@ -67,7 +70,6 @@ function Users() {
         <Card className="flex flex-col flex-1 w-full min-h-0 overflow-hidden">
           {/* ✅ 3. CardContent also needs to stretch fully */}
           <CardContent className="flex flex-col flex-1 min-h-0 p-0">
-            
             {/* Desktop Table Wrapper */}
             {/* ✅ 4. Changed from hidden md:block to hidden md:flex flex-col flex-1 min-h-0 */}
             <div className="flex-col flex-1 hidden min-h-0 md:flex">
@@ -80,7 +82,6 @@ function Users() {
             </div>
 
             {/* Mobile View Wrapper */}
-            {/* ✅ 5. Made the mobile view scrollable independently */}
             <div className="flex flex-col flex-1 p-4 overflow-y-auto md:hidden">
               {/* Search */}
               <input
@@ -88,32 +89,17 @@ function Users() {
                 placeholder="Search users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-3 py-2 mb-4 text-sm border rounded-md shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 mb-4 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
 
-              {/* Cards */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user: any) => (
-                    <div
-                      key={user.id}
-                      className="p-4 border rounded-lg bg-background"
-                    >
-                      <div className="font-semibold">{user.name}</div>
-
-                      <div className="mt-1 text-sm break-all text-muted-foreground">
-                        {user.email}
-                      </div>
-
-                      <div className="mt-2 text-sm">
-                        <span className="font-medium">Role:</span> {user.role}
-                      </div>
-
-                      <div className="mt-1 text-sm">
-                        <span className="font-medium">Status:</span>{" "}
-                        {user.status}
-                      </div>
-                    </div>
+                  filteredUsers.map((user: User) => (
+                    <MobileUserCard
+                      key={user.user_id}
+                      user={user}
+                      onRefresh={fetchData}
+                    />
                   ))
                 ) : (
                   <div className="py-6 text-sm text-center text-muted-foreground">

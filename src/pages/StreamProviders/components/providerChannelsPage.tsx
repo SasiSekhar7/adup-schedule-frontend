@@ -97,7 +97,7 @@ export default function ProviderChannelsPage() {
 
   const fetchEligibleClients = async () => {
     try {
-      const res = await api.get("/eligible-streaming-clients");
+      const res: any = await api.get("/eligible-streaming-clients");
       setClients(res.clients || res.data.clients || []);
     } catch (error: any) {
       console.error(error);
@@ -238,7 +238,7 @@ export default function ProviderChannelsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <a
+            {/* <a
               href={provider.website}
               target="_blank"
               rel="noopener noreferrer"
@@ -246,7 +246,7 @@ export default function ProviderChannelsPage() {
             >
               Visit {provider.name}
               <ExternalLink className="size-3" />
-            </a>
+            </a> */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-1.5">

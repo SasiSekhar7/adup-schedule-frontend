@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { Group } from "../columns";
 import api from "@/api";
-import { Edit } from "lucide-react";
+import { Edit, Settings2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,7 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const EditGroup = ({ group }: { group: Group }) => {
+const EditGroup = ({
+  group,
+  mobileView,
+}: {
+  group: Group;
+  mobileView?: boolean;
+}) => {
   const {
     group_id,
     name,
@@ -69,12 +75,27 @@ const EditGroup = ({ group }: { group: Group }) => {
     <div className="flex items-center space-x-2">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <Edit className="h-4 w-4" />
-          </Button>
+          {mobileView ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Edit Group
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Edit Group"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Settings2 className="h-4 w-4 text-green-500" />
+            </Button>
+          )}
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Edit Group Details</DialogTitle>
           </DialogHeader>

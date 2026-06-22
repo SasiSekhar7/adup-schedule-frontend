@@ -12,11 +12,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import MobileDeviceCard from "./components/MobileDeviceCard";
 
 function Home() {
   const navigate = useNavigate();
   const [data, setData] = useState<Device[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchDta = async () => {
     try {
@@ -48,6 +50,13 @@ function Home() {
   ).length;
 
   const canAddDevice = currentDevices < maxDevices;
+
+  const filteredDevices = data.filter((device) =>
+    [device.device_id, device.device_name, device.group_name, device.location]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
 
   return (
     <div className="space-y-4 md:space-y-6 w-full  mx-auto md:mx-0 md:max-w-full">
@@ -101,10 +110,8 @@ function Home() {
               className="flex-1
             "
             >
-              {/* Mobile scroll hint */}
-              {/* <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-                Scroll →
-              </div> */}
+              {/* Desktop */}
+
               <div className="hidden md:block">
                 <DataTable
                   data={data}
@@ -118,6 +125,39 @@ function Home() {
                   ]}
                   maxHeight="none"
                 />
+              </div>
+
+              {/* Mobile */}
+
+              <div className="w-full min-w-0 md:hidden">
+                <input
+                  type="text"
+                  placeholder="Search devices..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full px-3 py-2 mb-4 border rounded-md"
+                />
+
+                <div className="w-full space-y-4 overflow-x-hidden">
+                  {filteredDevices.length > 0 ? (
+                    filteredDevices.map((device) => (
+                      <div
+                        className="flex-1 min-w-0"
+                        onClick={() => handleRowClick(device)}
+                      >
+                        <MobileDeviceCard
+                          key={device.device_id}
+                          device={device}
+                          fetchDta={fetchDta}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      No devices found
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>

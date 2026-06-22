@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"; // Utility function for conditional classes
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CircleX, Eye } from "lucide-react";
+import { CircleX, Copy, Eye } from "lucide-react";
 import api from "@/api";
 import {
   Dialog,
@@ -23,6 +23,12 @@ import {
 import { Input } from "@/components/ui/input";
 import LocationCell from "./components/LocationCell";
 import EditDeviceDialog from "./components/EditDeviceDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 const statusVariants: Record<string, string> = {
   active: "bg-green-100 text-green-700 border border-green-400",
@@ -41,6 +47,8 @@ export interface Device {
   location: string;
   tags: string[];
   status: string;
+  android_id?: string;
+  registration_status?: string;
   last_synced: Date;
   created_at: Date;
   updated_at: Date;
@@ -217,50 +225,85 @@ const DevicePreviewDialog = ({ device }: { device: Device }) => {
 };
 
 export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <div onClick={(e) => e.stopPropagation()}>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    id: "preview",
-    header: "Preview",
-    cell: ({ row }) => {
-      const device = row.original;
-      return (
-        <div onClick={(e) => e.stopPropagation()}>
-          <DevicePreviewDialog device={device} />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <Checkbox
+  //       checked={
+  //         table.getIsAllPageRowsSelected() ||
+  //         (table.getIsSomePageRowsSelected() && "indeterminate")
+  //       }
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //       aria-label="Select all"
+  //     />
+  //   ),
+  //   cell: ({ row }) => (
+  //     <div onClick={(e) => e.stopPropagation()}>
+  //       <Checkbox
+  //         checked={row.getIsSelected()}
+  //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //         aria-label="Select row"
+  //       />
+  //     </div>
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
+  // {
+  //   id: "preview",
+  //   header: "Preview",
+  //   cell: ({ row }) => {
+  //     const device = row.original;
+  //     return (
+  //       <div onClick={(e) => e.stopPropagation()}>
+  //         <DevicePreviewDialog device={device} />
+  //       </div>
+  //     );
+  //   },
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "device_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Device ID" />
     ),
-    cell: ({ row }) => row.getValue("device_id"),
+    cell: ({ row }) => {
+      const value = row.getValue("device_id") as string;
+
+      const handleCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          toast.success("Device ID copied");
+        } catch (error) {
+          toast.error("Failed to copy");
+        }
+      };
+
+      return (
+        <div className="flex items-center gap-2 max-w-[120px]">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="truncate max-w-[80px] inline-block cursor-pointer">
+                {value}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{value}</TooltipContent>
+          </Tooltip>
+
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              await handleCopy();
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Copy Device ID"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },

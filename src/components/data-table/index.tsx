@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import * as React from "react";
@@ -41,7 +39,7 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filters: filter[];
+  filters?: filter[];
   maxHeight?: string;
   onPaginationChange?: (page: number, pageSize: number) => void;
   onRowSelectionChange?: (selectedRows: any) => void;
@@ -69,8 +67,11 @@ export function DataTable<TData, TValue>({
   hideSelectionColumn = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   React.useEffect(() => {
@@ -106,7 +107,6 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden">
-      
       {/* Filters */}
       <div className="flex flex-col flex-shrink-0 gap-4 pb-4 overflow-x-auto md:flex-row">
         {filters?.map((filter) => (
@@ -172,7 +172,7 @@ export function DataTable<TData, TValue>({
                       key={header.id}
                       colSpan={header.colSpan}
                       // Ensure the background color covers the text underneath when scrolling
-                      className="bg-background" 
+                      className="bg-background"
                     >
                       {header.isPlaceholder
                         ? null
@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))}
             </TableHeader>
-            
+
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (

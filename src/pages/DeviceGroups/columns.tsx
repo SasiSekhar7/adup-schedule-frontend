@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getRole } from "@/helpers";
 import EditGroup from "./components/EditGroup";
+import { toast } from "sonner";
 
 // Extend your Group type to include client information.
 export interface Group {
@@ -35,7 +36,7 @@ export interface Group {
 }
 
 // Define columns for your DataTable.
-export const columns: ColumnDef<Group>[] = [
+const allColumns: ColumnDef<Group>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -64,17 +65,39 @@ export const columns: ColumnDef<Group>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => {
-      const value = row.getValue("group_id");
+      const value = row.getValue("group_id") as string;
+
+      const handleCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          toast.success("Group ID copied");
+        } catch (error) {
+          toast.error("Failed to copy");
+        }
+      };
 
       return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="truncate max-w-[80px] inline-block cursor-pointer">
-              {value}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{value}</TooltipContent>
-        </Tooltip>
+        <div className="flex items-center gap-2 max-w-[120px]">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="truncate max-w-[80px] inline-block cursor-pointer">
+                {value}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{value}</TooltipContent>
+          </Tooltip>
+
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              await handleCopy();
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Copy Device ID"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
       );
     },
   },
@@ -95,38 +118,38 @@ export const columns: ColumnDef<Group>[] = [
     },
   },
 
-  {
-    accessorKey: "reg_code",
-    header: "License Key",
-    cell: ({ row }) => {
-      const [copied, setCopied] = useState(false);
-      const value = row.getValue("reg_code");
+  // {
+  //   accessorKey: "reg_code",
+  //   header: "License Key",
+  //   cell: ({ row }) => {
+  //     const [copied, setCopied] = useState(false);
+  //     const value = row.getValue("reg_code");
 
-      const handleCopy = () => {
-        navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500); // Reset icon after 1.5s
-      };
+  //     const handleCopy = () => {
+  //       navigator.clipboard.writeText(value);
+  //       setCopied(true);
+  //       setTimeout(() => setCopied(false), 1500); // Reset icon after 1.5s
+  //     };
 
-      return (
-        <div className="flex items-center gap-2">
-          <span>{value}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopy}
-            className="p-1"
-          >
-            {copied ? (
-              <Check size={16} className="text-green-500" />
-            ) : (
-              <Copy size={16} />
-            )}
-          </Button>
-        </div>
-      );
-    },
-  },
+  //     return (
+  //       <div className="flex items-center gap-2">
+  //         <span>{value}</span>
+  //         <Button
+  //           variant="ghost"
+  //           size="icon"
+  //           onClick={handleCopy}
+  //           className="p-1"
+  //         >
+  //           {copied ? (
+  //             <Check size={16} className="text-green-500" />
+  //           ) : (
+  //             <Copy size={16} />
+  //           )}
+  //         </Button>
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: "device_count",
     header: "Device Count",
@@ -200,8 +223,14 @@ export const columns: ColumnDef<Group>[] = [
       </div>
     ),
   },
-].filter((column) => {
+];
+
+export const columns = allColumns.filter((column) => {
   // Filter out admin-only columns if the user is not an admin
   const role = getRole();
-  return column.meta?.isAdminOnly ? role === "Admin" : true;
+  const meta = column.meta as {
+    isAdminOnly?: boolean;
+  };
+
+  return meta?.isAdminOnly ? role === "Admin" : true;
 });
