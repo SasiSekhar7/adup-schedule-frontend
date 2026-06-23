@@ -2896,7 +2896,7 @@ export default function ScreenLayoutPage() {
   const fetchClients = async () => {
     try {
       setLoadingClients(true);
-      const res: any: any = await api.get("/ads/clients");
+      const res: any = await api.get("/ads/clients");
       setClients(res.clients || []);
     } catch (err: any) {
       console.error(err);
@@ -3434,9 +3434,9 @@ export default function ScreenLayoutPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
-                      {userRole == "Admin" && (
-                        <TableHead>Client Name</TableHead>
-                      )}
+                        {userRole == "Admin" && (
+                          <TableHead>Client Name</TableHead>
+                        )}
                         <TableHead>Resolution</TableHead>
                         <TableHead>Orientation</TableHead>
                         <TableHead>Zones</TableHead>
@@ -3456,18 +3456,18 @@ export default function ScreenLayoutPage() {
 
                         const videoInputZones = layout.zones.filter(
                           (z: any) =>
-                          z.content_type_allowed === "video_input_media",
+                            z.content_type_allowed === "video_input_media",
                         ).length;
                         return (
                           <TableRow key={layout.layout_id}>
                             <TableCell className="font-medium">
                               {layout.name}
                             </TableCell>
-                          {userRole == "Admin" && (
-                            <TableCell className="font-medium">
-                              {layout?.Client?.name ?? "-"}
-                            </TableCell>
-                          )}
+                            {userRole == "Admin" && (
+                              <TableCell className="font-medium">
+                                {layout?.Client?.name ?? "-"}
+                              </TableCell>
+                            )}
                             <TableCell>{layout.resolution}</TableCell>
                             <TableCell className="capitalize">
                               {layout.orientation}
@@ -3507,10 +3507,10 @@ export default function ScreenLayoutPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                            {!(
-                              userRole === "Client" &&
-                              layout?.is_live_content_template === true
-                            ) && (
+                              {!(
+                                userRole === "Client" &&
+                                layout?.is_live_content_template === true
+                              ) && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon">
@@ -3537,7 +3537,7 @@ export default function ScreenLayoutPage() {
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
-                            )}
+                              )}
                             </TableCell>
                           </TableRow>
                         );
