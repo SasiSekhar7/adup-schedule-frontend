@@ -495,8 +495,9 @@ export default function ProviderChannelsPage() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="live">Live</SelectItem>
-
                 <SelectItem value="idle">Idle</SelectItem>
+                <SelectItem value="stopped">Stopped</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
               </SelectContent>
             </Select>
             {/* <Select value={typeFilter} onValueChange={setTypeFilter}>

@@ -342,6 +342,7 @@ export default function ClientChannelDetailPage() {
                   size="sm"
                   variant="outline"
                   className="gap-1.5"
+                  disabled={channel.status === "live"}
                   onClick={() => {
                     setShowWebcamModal(true);
                     startWebcamPreview();

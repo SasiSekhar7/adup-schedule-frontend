@@ -287,12 +287,13 @@ function AddToSchedule() {
     );
   };
 
-  const { has } = useFeature();
+  const { has, limit } = useFeature();
   const featureAccess = {
     ad: true, // usually always allowed
     carousel: true,
     live_content: has("LIVE_STREAMING"),
-    screen_layouts: true,
+
+    screen_layouts: limit("MAX_LAYOUTS") > 0,
   };
 
   const isAllowed = featureAccess[contentType];
@@ -326,11 +327,18 @@ function AddToSchedule() {
             <SelectContent>
               <SelectItem value="ad">Advertisements</SelectItem>
               <SelectItem value="carousel">Carousels</SelectItem>
-              <SelectItem value="live_content">
+              {/* <SelectItem value="live_content">
                 Live Content{" "}
                 {!featureAccess.live_content && "(Upgrade Required)"}
               </SelectItem>
-              <SelectItem value="screen_layouts">Screen Layouts</SelectItem>
+              <SelectItem value="screen_layouts">Screen Layouts</SelectItem> */}
+              {has("LIVE_STREAMING") && (
+                <SelectItem value="live_content">Live Content</SelectItem>
+              )}
+
+              {limit("MAX_LAYOUTS") > 0 && (
+                <SelectItem value="screen_layouts">Screen Layouts</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </CardContent>
