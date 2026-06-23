@@ -33,9 +33,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 
 function Ads() {
   const [data, setData] = useState<Ad[]>([]);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
 
   const navigate = useNavigate();
   // Export dialog state
@@ -69,6 +78,18 @@ function Ads() {
   function onIsOpenChange() {
     fetchDta();
   }
+
+  // Mobile search filter logic
+  const filteredMobileData = data.filter((ad) => {
+    if (!mobileSearchQuery) return true; // If search is empty, show all
+
+    const query = mobileSearchQuery.toLowerCase();
+    return (
+      ad.name?.toLowerCase().includes(query) ||
+      ad.ad_id?.toLowerCase().includes(query) ||
+      ad.client_name?.toLowerCase().includes(query)
+    );
+  });
 
   // Handle export functionality
   // const handleExport = async () => {
@@ -320,7 +341,7 @@ function Ads() {
   //   );
   // }
   return (
-    <div className="space-y-4 md:space-y-6 w-full mx-auto md:mx-0 md:max-w-full">
+    <div className="space-y-4 md:space-y-6 mx-auto md:mx-0 flex-1 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
           <p className="text-lg md:text-xl font-semibold">Ads</p>
@@ -538,58 +559,181 @@ function Ads() {
       ) : (
         <Card>
           <CardContent className="sm:p-0 p-4 md:p-6">
-            <div
-              className="flex-1
-          "
-            >
-              {/* Mobile scroll hint */}
-              <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-                Scroll →
-              </div>
-              {/* <DataTable
-              data={data}
-              columns={columns}
-              filters={[
-                { label: "Ad Name", value: "name" },
-                { label: "ad_id", value: "ad_id" },
-              ]}
-              maxHeight="none"
-              getRowCanSelect={(row) => {
-                const ad = row as Ad;
-                return ad.status !== "pending" && ad.status !== "processing";
-              }}
-            /> */}
-
+            <div className="flex-1">
               {selectedAdId && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-4">
                   Selected Ad ID: {selectedAdId}
                 </p>
               )}
 
-              <DataTable
-                data={data}
-                columns={columns}
-                hideSelectionColumn={true}
-                onRowClick={handleRowClick}
-                filters={[
-                  { label: "Ad Name", value: "name" },
-                  { label: "ad_id", value: "ad_id" },
-                  { label: "Type", value: "type" },
-                ]}
-                maxHeight="none"
-                onRowSelectionChange={(rows) => {
-                  if (rows.length > 0) {
-                    const ad = rows[0] as Ad;
-                    setSelectedAdId(ad.ad_id);
-                  } else {
-                    setSelectedAdId(null);
-                  }
-                }}
-                getRowCanSelect={(row) => {
-                  const ad = row as Ad;
-                  return ad.status !== "pending" && ad.status !== "processing";
-                }}
-              />
+              {/* MOBILE VIEW: Card Layout (Visible only on screens smaller than 'md') */}
+              <div className="flex flex-col gap-4 md:hidden mb-6">
+                {/* Mobile Search Input */}
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-2 -mx-2 px-2">
+                  <Input
+                    placeholder="Search by name, ID, or client..."
+                    value={mobileSearchQuery}
+                    onChange={(e) => setMobileSearchQuery(e.target.value)}
+                    className="w-full bg-background"
+                  />
+                </div>
+
+                {filteredMobileData.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground border rounded-lg bg-muted/20">
+                    {data.length === 0
+                      ? "No ads found."
+                      : "No ads match your search."}
+                  </div>
+                ) : (
+                  filteredMobileData.map((ad) => {
+                    const url = ad.url?.toLowerCase() || "";
+                    const isVideo =
+                      url.includes(".mp4") ||
+                      url.includes(".mov") ||
+                      url.includes(".webm");
+                    const isImage =
+                      url.includes(".jpg") ||
+                      url.includes(".jpeg") ||
+                      url.includes(".png") ||
+                      url.includes(".gif");
+                    const adType = isVideo
+                      ? "Video"
+                      : isImage
+                        ? "Image"
+                        : "Unknown";
+
+                    const statusColors: Record<string, string> = {
+                      pending:
+                        "bg-yellow-100 text-yellow-800 border-yellow-200",
+                      processing: "bg-blue-100 text-blue-800 border-blue-200",
+                      completed: "bg-green-100 text-green-800 border-green-200",
+                      failed: "bg-red-100 text-red-800 border-red-200",
+                    };
+                    const badgeClass =
+                      statusColors[ad.status] ||
+                      "bg-gray-100 text-gray-800 border-gray-200";
+
+                    return (
+                      <Card
+                        key={ad.ad_id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleRowClick(ad)}
+                      >
+                        <CardContent className="p-4 space-y-3">
+                          {/* Header: Name, Type Badge, and Actions */}
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="font-semibold text-base break-words line-clamp-2 flex-1">
+                              {ad.name}
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              <span
+                                className={`text-xs px-2.5 py-1 border rounded-full font-medium whitespace-nowrap ${
+                                  adType === "Video"
+                                    ? "bg-blue-100 text-blue-800 border-blue-200"
+                                    : adType === "Image"
+                                      ? "bg-green-100 text-green-800 border-green-200"
+                                      : "bg-gray-100 text-gray-800 border-gray-200"
+                                }`}
+                              >
+                                {adType}
+                              </span>
+
+                              {/* Actions Dropdown */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-[160px]"
+                                >
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/ads/${ad.ad_id}`);
+                                    }}
+                                  >
+                                    View
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/ads/${ad.ad_id}/edit`);
+                                    }}
+                                  >
+                                    Edit / Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          {/* Body: ID, Client, Duration, Status */}
+                          <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">Client:</span>
+                              <span className="truncate ml-2 text-foreground">
+                                {ad.client_name}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">Duration:</span>
+                              <span>{ad.duration}s</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-1 border-t mt-1">
+                              <span className="font-medium">Status:</span>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeClass}`}
+                              >
+                                {ad.status}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* DESKTOP VIEW: Data Table (Hidden on small screens, visible on 'md' and up) */}
+              <div className="hidden md:block">
+                <DataTable
+                  data={data}
+                  columns={columns}
+                  hideSelectionColumn={true}
+                  onRowClick={handleRowClick}
+                  filters={[
+                    { label: "Ad Name", value: "name" },
+                    { label: "ad_id", value: "ad_id" },
+                    { label: "Type", value: "type" },
+                  ]}
+                  maxHeight="none"
+                  onRowSelectionChange={(rows) => {
+                    if (rows.length > 0) {
+                      const ad = rows[0] as Ad;
+                      setSelectedAdId(ad.ad_id);
+                    } else {
+                      setSelectedAdId(null);
+                    }
+                  }}
+                  getRowCanSelect={(row) => {
+                    const ad = row as Ad;
+                    return (
+                      ad.status !== "pending" && ad.status !== "processing"
+                    );
+                  }}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
