@@ -110,9 +110,11 @@ function App() {
             <Route
               path="/screen-layout"
               element={
-                <Suspense fallback={<Loading />}>
-                  <ScreenLayoutPage />
-                </Suspense>
+                <ProtectedRoute feature="MAX_LAYOUTS" type="limit">
+                  <Suspense fallback={<Loading />}>
+                    <ScreenLayoutPage />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
 

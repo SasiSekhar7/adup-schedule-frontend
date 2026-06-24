@@ -11,8 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { Group } from "../columns";
 import api from "@/api";
-import { CirclePlus, Edit, Trash } from "lucide-react";
-const MessageCell = ({ group }: { group: Group }) => {
+import { CirclePlus, Edit, SquarePen, Trash } from "lucide-react";
+const MessageCell = ({
+  group,
+  mobileView = false,
+}: {
+  group: Group;
+  mobileView?: boolean;
+}) => {
   const { message, group_id } = group;
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,23 +57,37 @@ const MessageCell = ({ group }: { group: Group }) => {
     <div className="flex items-center space-x-2">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          {message ? (
+          {mobileView ? (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {message ? "Edit Message" : "Add Message"}
+            </Button>
+          ) : message ? (
             <div className="max-w-[20vw] flex items-center space-x-2">
               <span className="truncate overflow-hidden whitespace-nowrap text-ellipsis pr-4">
                 {message}
               </span>
-              <Button variant="ghost" size="sm">
-                <Edit className="text-sm" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                title="Edit Message"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <SquarePen className="h-4 w-4 text-blue-500" />
               </Button>
             </div>
           ) : (
-            <Button variant="ghost">
+            <Button variant="ghost" onClick={(e) => e.stopPropagation()}>
               <CirclePlus size="sm" />
             </Button>
           )}
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Add Scrolling Message</DialogTitle>
           </DialogHeader>
@@ -76,7 +96,7 @@ const MessageCell = ({ group }: { group: Group }) => {
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Enter message here..."
           />
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             {message && (
               <Button onClick={handleDelete} disabled={loading}>
                 Delete

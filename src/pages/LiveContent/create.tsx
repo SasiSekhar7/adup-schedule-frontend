@@ -498,7 +498,7 @@ export default function CreateLiveContent() {
           </Card>
 
           {/* Configuration */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Playback Configuration</CardTitle>
             </CardHeader>
@@ -548,7 +548,7 @@ export default function CreateLiveContent() {
                 />
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Sidebar */}

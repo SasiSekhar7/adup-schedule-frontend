@@ -4,7 +4,7 @@ import { Features } from "../types/subscription";
 import { getRole } from "@/helpers";
 
 export const useFeature = () => {
-  const { subscription } = useSubscription();
+  const { subscription, loading } = useSubscription();
   const role = getRole();
 
   const isAdmin = role === "Admin";
@@ -26,5 +26,6 @@ export const useFeature = () => {
     expired: isExpired(subscription),
 
     subscription,
+    loading,
   };
 };

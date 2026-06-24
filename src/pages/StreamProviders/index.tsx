@@ -47,6 +47,7 @@ export default function StreamProvidersPage() {
   const [providerType, setProviderType] = useState("");
   const [apiBaseUrl, setApiBaseUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingdata, setLoadingdata] = useState(false);
 
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -63,12 +64,15 @@ export default function StreamProvidersPage() {
 
   const fetchProviders = async () => {
     try {
+      setLoadingdata(true);
       const res = await api.get("/streaming/provider");
       console.log("Providers:", res.data);
 
       setProviders(res.data);
     } catch (err: any) {
       console.error(err);
+    } finally {
+      setLoadingdata(false);
     }
   };
 
@@ -101,7 +105,7 @@ export default function StreamProvidersPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex-1 p-6">
+      <div className="flex-1">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
@@ -269,7 +273,14 @@ export default function StreamProvidersPage() {
             );
           })}
         </div>*/}
-        {providers.length === 0 ? (
+        {loadingdata ? (
+          <div className="flex items-center justify-center h-64 col-span-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading Providers...</p>
+            </div>
+          </div>
+        ) : providers.length === 0 ? (
           <p className="text-muted-foreground">No providers available.</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

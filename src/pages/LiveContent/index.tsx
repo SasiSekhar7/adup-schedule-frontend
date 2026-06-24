@@ -16,6 +16,7 @@ import {
   Globe,
   Video,
   Monitor,
+  Copy,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -161,6 +162,11 @@ export default function LiveContent() {
     }
   };
 
+  const handleCopy = async (url: string) => {
+  await navigator.clipboard.writeText(url);
+  toast.success("URL copied");
+};
+
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return "Indefinite";
     const hours = Math.floor(seconds / 3600);
@@ -233,7 +239,8 @@ export default function LiveContent() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* <div className="flex flex-col sm:flex-row gap-4"> */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -259,6 +266,7 @@ export default function LiveContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="provider">Provider</SelectItem>
             <SelectItem value="streaming">Streaming</SelectItem>
             <SelectItem value="website">Website</SelectItem>
             <SelectItem value="iframe">iFrame</SelectItem>
@@ -383,12 +391,28 @@ export default function LiveContent() {
                     </span>
                   </div>
 
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">URL:</p>
-                    <p className="text-xs font-mono bg-muted p-2 rounded truncate">
-                      {content.url}
-                    </p>
-                  </div>
+                 <div className="flex items-start gap-2 bg-muted p-2 rounded">
+  <p
+    className="flex-1 text-xs font-mono overflow-hidden"
+    style={{
+      display: "-webkit-box",
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: "vertical",
+      wordBreak: "break-all",
+    }}
+  >
+    {content.url}
+  </p>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7 shrink-0"
+    onClick={() => handleCopy(content.url)}
+  >
+    <Copy className="h-4 w-4" />
+  </Button>
+</div>
 
                   {(content.start_time || content.end_time) && (
                     <div>

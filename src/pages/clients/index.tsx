@@ -71,6 +71,7 @@ function Clients() {
     phoneNumber: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [loadingdata, setLoadingData] = useState(false);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -93,8 +94,16 @@ function Clients() {
   // };
 
   const fetchDta = async () => {
-    const response = await api.get<ClientsResponse>("/ads/clients");
-    setData(response?.clients);
+    try {
+      setLoadingData(true);
+      const response: any = await api.get<ClientsResponse>("/ads/clients");
+      setData(response?.clients);
+    } catch (error: any) {
+      console.error("Failed to fetch clients", error);
+      setLoadingData(false);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   useEffect(() => {
@@ -185,7 +194,7 @@ function Clients() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
+    <div className="space-y-4 md:space-y-6 w-full  mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
         <div className="">
           <p className="text-lg md:text-xl font-semibold">Clients</p>
@@ -286,131 +295,140 @@ function Clients() {
             </CardContent>
           </Card>
         ))} */}
-        {data.map((client, index) => {
-          const usedBytes = Number(client.used_storage_bytes || 0);
-          const limitBytes = Number(
-            client?.Subscriptions?.[0]?.features_cache?.STORAGE_LIMIT || 0,
-          );
+        {loadingdata ? (
+          <div className="flex items-center justify-center h-64 col-span-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading Clients...</p>
+            </div>
+          </div>
+        ) : (
+          data.map((client, index) => {
+            const usedBytes = Number(client.used_storage_bytes || 0);
+            const limitBytes = Number(
+              client?.Subscriptions?.[0]?.features_cache?.STORAGE_LIMIT || 0,
+            );
 
-          const totalGB = (limitBytes / 1073741824).toFixed(2);
+            const totalGB = (limitBytes / 1073741824).toFixed(2);
 
-          // const usagePercent =
-          //   limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;
+            // const usagePercent =
+            //   limitBytes > 0 ? ((usedBytes / limitBytes) * 100).toFixed(1) : 0;
 
-          // const usagePercent =
-          //   limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+            // const usagePercent =
+            //   limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
 
-          const usagePercentRaw =
-            limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
-          const usagePercent = Math.min(usagePercentRaw, 100);
-          const remainingPercent = 100 - usagePercent;
+            const usagePercentRaw =
+              limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+            const usagePercent = Math.min(usagePercentRaw, 100);
+            const remainingPercent = 100 - usagePercent;
 
-          let barColor = "bg-blue-500";
-          let borderColor = "";
-          let errorMessage = "";
+            let barColor = "bg-blue-500";
+            let borderColor = "";
+            let errorMessage = "";
 
-          if (usagePercentRaw >= 100) {
-            barColor = "bg-red-500";
-            borderColor = "border border-red-500";
-            errorMessage = "Storage limit exceeded";
-          } else if (remainingPercent <= 5) {
-            barColor = "bg-red-500";
-            borderColor = "border border-red-500";
-            errorMessage = "Storage almost full";
-          } else if (usagePercent >= 75) {
-            barColor = "bg-orange-500";
-          }
+            if (usagePercentRaw >= 100) {
+              barColor = "bg-red-500";
+              borderColor = "border border-red-500";
+              errorMessage = "Storage limit exceeded";
+            } else if (remainingPercent <= 5) {
+              barColor = "bg-red-500";
+              borderColor = "border border-red-500";
+              errorMessage = "Storage almost full";
+            } else if (usagePercent >= 75) {
+              barColor = "bg-orange-500";
+            }
 
-          return (
-            <Card
-              key={index}
-              className={`col-span-1 bg-gray-100 ${borderColor}`}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {client.name}
-                </CardTitle>
-                <div className="flex items-center gap-2 cursor-pointer">
-                  {/* <BadgeDollarSign className="h-4 w-4 text-muted-foreground" /> */}
+            return (
+              <Card
+                key={index}
+                className={`col-span-1 bg-gray-100 ${borderColor}`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {client.name}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    {/* <BadgeDollarSign className="h-4 w-4 text-muted-foreground" /> */}
 
-                  <Layers className="h-4 w-4  text-muted-foreground" />
+                    <Layers className="h-4 w-4  text-muted-foreground" />
 
-                  <Pencil
-                    onClick={() => handleEditClient(client)}
-                    className="h-4 w-4 ml-2"
-                  />
-                </div>
-              </CardHeader>
+                    <Pencil
+                      onClick={() => handleEditClient(client)}
+                      className="h-4 w-4 ml-2"
+                    />
+                  </div>
+                </CardHeader>
 
-              <CardContent className="space-y-2">
-                {/* Plan Name */}
-                <p className="text-sm font-semibold">
-                  Plan: {client?.Subscriptions?.[0]?.Tier?.name || "No Plan"}
-                </p>
-
-                {/* Ads Count */}
-                <div className="text-xl font-bold">{client.adsCount}</div>
-                <p className="text-xs text-muted-foreground">Total Ads</p>
-
-                {limitBytes > 0 && (
-                  <TooltipProvider>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2 flex overflow-hidden">
-                      {/* Used */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`${barColor} h-2 cursor-pointer transition-all`}
-                            style={{ width: `${usagePercent}%` }}
-                          />
-                        </TooltipTrigger>
-
-                        <TooltipContent
-                          side="top"
-                          className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
-                        >
-                          Used: {formatBytes(usedBytes)}
-                          <TooltipArrow className="fill-neutral-900" />
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Remaining */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="bg-gray-200 h-2 cursor-pointer"
-                            style={{ width: `${100 - usagePercent}%` }}
-                          />
-                        </TooltipTrigger>
-
-                        <TooltipContent
-                          side="top"
-                          className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
-                        >
-                          Remaining: {formatBytes(limitBytes - usedBytes)}
-                          <TooltipArrow className="fill-neutral-900" />
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </TooltipProvider>
-                )}
-
-                <div className="space-y-1 flex align-center justify-between mt-2">
-                  <p className="text-xs text-muted-foreground">
-                    {usagePercent.toFixed(1)}% Storage Used
+                <CardContent className="space-y-2">
+                  {/* Plan Name */}
+                  <p className="text-sm font-semibold">
+                    Plan: {client?.Subscriptions?.[0]?.Tier?.name || "No Plan"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Total: {totalGB} GB
-                  </p>
-                </div>
-                {errorMessage && (
-                  <p className="text-xs text-red-500 font-medium mt-1 flex items-center">
-                    <AlertTriangle className="mr-2 h-4 w-4" /> {errorMessage}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+
+                  {/* Ads Count */}
+                  <div className="text-xl font-bold">{client.adsCount}</div>
+                  <p className="text-xs text-muted-foreground">Total Ads</p>
+
+                  {limitBytes > 0 && (
+                    <TooltipProvider>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2 flex overflow-hidden">
+                        {/* Used */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={`${barColor} h-2 cursor-pointer transition-all`}
+                              style={{ width: `${usagePercent}%` }}
+                            />
+                          </TooltipTrigger>
+
+                          <TooltipContent
+                            side="top"
+                            className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
+                          >
+                            Used: {formatBytes(usedBytes)}
+                            <TooltipArrow className="fill-neutral-900" />
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {/* Remaining */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="bg-gray-200 h-2 cursor-pointer"
+                              style={{ width: `${100 - usagePercent}%` }}
+                            />
+                          </TooltipTrigger>
+
+                          <TooltipContent
+                            side="top"
+                            className="bg-neutral-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg"
+                          >
+                            Remaining: {formatBytes(limitBytes - usedBytes)}
+                            <TooltipArrow className="fill-neutral-900" />
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+                  )}
+
+                  <div className="space-y-1 flex align-center justify-between mt-2">
+                    <p className="text-xs text-muted-foreground">
+                      {usagePercent.toFixed(1)}% Storage Used
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Total: {totalGB} GB
+                    </p>
+                  </div>
+                  {errorMessage && (
+                    <p className="text-xs text-red-500 font-medium mt-1 flex items-center">
+                      <AlertTriangle className="mr-2 h-4 w-4" /> {errorMessage}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">

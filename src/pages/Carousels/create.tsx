@@ -347,7 +347,8 @@ function SortableCarouselItem({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          // <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-medium">
@@ -627,9 +628,10 @@ export default function CreateCarousel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      {/* <div className="flex items-center gap-4"> */}
+      <div className="flex  sm:items-center gap-3 sm:gap-4">
         <Button
           variant="ghost"
           size="sm"
@@ -638,7 +640,8 @@ export default function CreateCarousel() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold">
+          {/* <h1 className="text-2xl font-semibold"> */}
+          <h1 className="text-xl sm:text-2xl font-semibold">
             {isEdit ? "Edit Carousel" : "Create Carousel"}
           </h1>
           <p className="text-muted-foreground">
@@ -649,7 +652,8 @@ export default function CreateCarousel() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* <div className="grid gap-6 lg:grid-cols-3"> */}
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
@@ -675,7 +679,8 @@ export default function CreateCarousel() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Carousel Items</CardTitle>
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2"> */}
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Select
                     value={selectedValue}
                     onValueChange={(value) => {
@@ -684,11 +689,13 @@ export default function CreateCarousel() {
                       setSearch(""); // ✅ clear search
                     }}
                   >
-                    <SelectTrigger className="w-[220px]">
+                    {/* <SelectTrigger className="w-[220px]"> */}
+                    <SelectTrigger className="w-full sm:w-[220px]">
                       <SelectValue placeholder="Add existing ad" />
                     </SelectTrigger>
 
-                    <SelectContent className="w-[220px]">
+                    {/* <SelectContent className="w-[220px]"> */}
+                    <SelectContent className="w-full sm:w-[220px]">
                       <div
                         className="p-2"
                         onKeyDown={(e) => e.stopPropagation()}

@@ -1,7 +1,7 @@
 import api from "@/api";
 import { DataTable } from "@/components/data-table";
 import { useCallback, useEffect, useState } from "react";
-import { columns } from "./columns";
+import { columns, Group } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Plus, RefreshCcw, Save } from "lucide-react";
@@ -24,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getRole } from "@/helpers";
-import { Device, DevicesResponse } from "../Devices/columns";
 import { useNavigate } from "react-router-dom";
+import MobileGroupCard from "./components/MobileGroupCard";
 
 interface DeviceGroup {
   name: string;
@@ -34,9 +34,13 @@ interface DeviceGroup {
   orientation: "portrait" | "landscape";
 }
 
+interface DeviceGroupsResponse {
+  groups: Group[];
+}
+
 function DeviceGroup() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Device[]>([]);
+  const [data, setData] = useState<Group[]>([]);
   const [deviceGroup, setDeviceGroup] = useState<DeviceGroup>({
     name: "",
     reg_code: "",
@@ -48,15 +52,25 @@ function DeviceGroup() {
   const [clients, setClients] =
     useState<{ client_id: string; name: string }[]>();
   const [userRole, setUserRole] = useState<string | null>(null);
-
+  const [loadingdata, setLoadingData] = useState(false);
   const fetchDta = async () => {
-    const response = await api.get<DevicesResponse>("/device/fetch-groups");
-    setData(response.groups);
+    try {
+      setLoadingData(true);
+      const response: DeviceGroupsResponse = await api.get(
+        "/device/fetch-groups",
+      );
+      setData(response.groups);
+    } catch (error: any) {
+      setLoadingData(false);
+      console.error("Error fetching devices:", error);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const fetchClients = async () => {
     try {
-      const data = await api.get("/ads/clients"); // Assuming the same endpoint for clients
+      const data: any = await api.get("/ads/clients"); // Assuming the same endpoint for clients
       setClients(data.clients);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
@@ -128,7 +142,7 @@ function DeviceGroup() {
   const [search, setSearch] = useState("");
   const [orientationFilter, setOrientationFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
-  const filteredData = data.filter((item: any) => {
+  const filteredData = data.filter((item: Group) => {
     const matchesSearch =
       item.name?.toLowerCase().includes(search.toLowerCase()) ||
       item.reg_code?.toLowerCase().includes(search.toLowerCase()) ||
@@ -144,6 +158,10 @@ function DeviceGroup() {
 
     return matchesSearch && matchesOrientation && matchesClient;
   });
+
+  const handleRowClick = (row: Group) => {
+    navigate(`/device-groups/${row.group_id}`);
+  };
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -216,7 +234,7 @@ function DeviceGroup() {
 
                   <Select
                     value={deviceGroup.orientation || "landscape"}
-                    onValueChange={(value) =>
+                    onValueChange={(value: "portrait" | "landscape") =>
                       setDeviceGroup({ ...deviceGroup, orientation: value })
                     }
                   >
@@ -267,88 +285,108 @@ function DeviceGroup() {
           </Dialog>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              {/* Search */}
-              <Input
-                placeholder="Search group, client or key..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full sm:w-[260px]"
-              />
-
-              {/* Orientation Filter */}
-              <Select
-                value={orientationFilter}
-                onValueChange={setOrientationFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Orientation" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="all">All Orientation</SelectItem>
-                  <SelectItem value="portrait">Portrait</SelectItem>
-                  <SelectItem value="landscape">Landscape</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Client Filter */}
-              <Select value={clientFilter} onValueChange={setClientFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Client" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
-
-                  {[
-                    ...new Set(
-                      data
-                        ?.map((item: any) => item.Client?.name)
-                        .filter(Boolean),
-                    ),
-                  ].map((clientName) => (
-                    <SelectItem key={clientName} value={clientName}>
-                      {clientName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="text-sm text-muted-foreground whitespace-nowrap">
-              Total Groups: {filteredData.length}
-            </div>
+      {loadingdata ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Loading Devices...</p>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div
-            className="
-              max-w-[350px]
-              md:max-w-[calc(100vw-20rem)]
-              relative
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                {/* Search */}
+                <Input
+                  placeholder="Search group, client or key..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full sm:w-[260px]"
+                />
+
+                {/* Orientation Filter */}
+                <Select
+                  value={orientationFilter}
+                  onValueChange={setOrientationFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Orientation" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">All Orientation</SelectItem>
+                    <SelectItem value="portrait">Portrait</SelectItem>
+                    <SelectItem value="landscape">Landscape</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Client Filter */}
+                <Select value={clientFilter} onValueChange={setClientFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Client" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="all">All Clients</SelectItem>
+
+                    {[
+                      ...new Set(
+                        data
+                          ?.map((item: any) => item.Client?.name)
+                          .filter(Boolean),
+                      ),
+                    ].map((clientName) => (
+                      <SelectItem key={clientName} value={clientName}>
+                        {clientName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="text-sm text-muted-foreground whitespace-nowrap">
+                Total Groups: {filteredData.length}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div
+              className="
+             flex-1
             "
-          >
-            {/* Mobile scroll hint */}
-            <div className="md:hidden absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground border">
-              Scroll →
-            </div>
+            >
+              {/* Desktop */}
+              <div className="hidden md:block">
+                <DataTable
+                  data={filteredData}
+                  columns={columns}
+                  hideSelectionColumn={true}
+                  maxHeight="none"
+                  onRowClick={handleRowClick}
+                />
+              </div>
 
-            <DataTable
-              // data={data}
-              data={filteredData}
-              columns={columns}
-              hideSelectionColumn={true}
-              maxHeight="none"
-              onRowClick={(row) => navigate(`/device-groups/${row.group_id}`)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+              {/* Mobile */}
+              <div className="md:hidden p-4">
+                <div className="space-y-4">
+                  {filteredData.length > 0 ? (
+                    filteredData.map((group: Group) => (
+                      <div onClick={() => handleRowClick(group)}>
+                        <MobileGroupCard key={group.group_id} group={group} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No groups found
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

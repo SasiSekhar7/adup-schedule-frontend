@@ -35,9 +35,11 @@ interface DeviceGroup {
 const EditDeviceDialog = ({
   device,
   fetchDta,
+  mobileView = false,
 }: {
   device: Device;
   fetchDta: () => void;
+  mobileView?: boolean;
 }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -213,11 +215,24 @@ const EditDeviceDialog = ({
       modal={false}
     >
       <DialogTrigger asChild>
-        <Button variant="ghost">
-          <Edit />
-        </Button>
+        {mobileView ? (
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Edit Device
+          </Button>
+        ) : (
+          <Button variant="ghost" onClick={(e) => e.stopPropagation()}>
+            <Edit />
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="w-[100vw] h-[90vh] overflow-x-auto">
+      <DialogContent
+        className="w-[100vw] h-[90vh] overflow-x-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle>Edit Device</DialogTitle>
         </DialogHeader>

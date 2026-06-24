@@ -96,13 +96,24 @@ export default function ManageSubscriptionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10; // you can change (5, 10, 20)
 
+  const [loading, setLoading] = useState(false);
+
+  const [activeDetailTab, setActiveDetailTab] = useState<"current" | "history">(
+    "current",
+  );
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [subscriptionHistory, setSubscriptionHistory] = useState<any[]>([]);
+
   const fetchClients = async () => {
     try {
+      setLoading(true);
       const response = await api.get("/subscribe/get-by-client");
       console.log("response of clients:-", response);
       setClients((response as any).data);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,10 +209,48 @@ export default function ManageSubscriptionsPage() {
     }
   };
 
-  const handleViewDetails = (subscription: null) => {
+  const handleViewDetails = (subscription: SubscriptionRow) => {
     setSelectedSubscription(subscription);
+    setActiveDetailTab("current");
+    setSubscriptionHistory([]);
     setIsDetailOpen(true);
   };
+
+  const fetchSubscriptionHistory = async () => {
+    try {
+      if (!selectedSubscription?.id) return;
+      setHistoryLoading(true);
+
+      const response: any = await api.get(
+        `/subscription/history?client_id=${selectedSubscription.id}`,
+      );
+
+      setSubscriptionHistory(response.data || []);
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to fetch subscription history");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      isDetailOpen &&
+      activeDetailTab === "history" &&
+      subscriptionHistory.length === 0
+    ) {
+      fetchSubscriptionHistory();
+    }
+  }, [activeDetailTab, isDetailOpen]);
+
+  useEffect(() => {
+    if (!isDetailOpen) {
+      setSubscriptionHistory([]);
+      setActiveDetailTab("current");
+    }
+  }, [isDetailOpen]);
 
   const handleCreateSubscription = async () => {
     try {
@@ -334,8 +383,8 @@ export default function ManageSubscriptionsPage() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Main Content */}
-      <div className="flex-1">
-        <div className="p-6 md:p-8">
+      <div className="flex-1 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
+        <div className="">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">
@@ -506,158 +555,111 @@ export default function ManageSubscriptionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedData.map((subscription) => (
-                      <TableRow
-                        key={subscription.id}
-                        className={`border-slate-200 ${subscription.status === "expired" ? "bg-red-50" : ""}`}
-                      >
-                        <TableCell
-                          className={`font-medium ${subscription.status === "expired" ? "text-red-900" : "text-slate-900"}`}
+                    {loading ? (
+                      <div className="flex items-center justify-center h-64 col-span-full">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-muted-foreground">
+                            Loading Subscriptions...
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      paginatedData.map((subscription) => (
+                        <TableRow
+                          key={subscription.id}
+                          className={`border-slate-200 ${subscription.status === "expired" ? "bg-red-50" : ""}`}
                         >
-                          {subscription.clientName}
-                          {subscription.status === "expired" && (
-                            <span className="ml-2 text-xs bg-red-200 text-red-800 px-2 py-1 rounded">
-                              EXPIRED
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          className={
-                            subscription.status === "expired"
-                              ? "text-red-800"
-                              : "text-slate-600"
-                          }
-                        >
-                          {subscription.email}
-                        </TableCell>
-                        <TableCell
-                          className={
-                            subscription.status === "expired"
-                              ? "text-red-800"
-                              : "text-slate-600"
-                          }
-                        >
-                          {subscription.hasSubscription ? (
-                            subscription.plan
-                          ) : (
-                            <span className="text-gray-500 italic">
-                              No Plan
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          className={`font-medium ${subscription.status === "expired" ? "text-red-900" : "text-slate-900"}`}
-                        >
-                          {subscription.currency}
-                          {subscription.amount.toLocaleString()}
-                        </TableCell>
-                        <TableCell
-                          className={
-                            subscription.status === "expired"
-                              ? "text-red-800"
-                              : "text-slate-600"
-                          }
-                        >
-                          {subscription.startDate}
-                        </TableCell>
-                        <TableCell
-                          className={
-                            subscription.status === "expired"
-                              ? "text-red-800 font-semibold"
-                              : "text-slate-600"
-                          }
-                        >
-                          {subscription.renewalDate}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`rounded-full ${getStatusColor(subscription.status)}`}
+                          <TableCell
+                            className={`font-medium ${subscription.status === "expired" ? "text-red-900" : "text-slate-900"}`}
                           >
-                            {subscription.status.charAt(0).toUpperCase() +
-                              subscription.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {/* VIEW (only if subscription exists) */}
-                              {subscription.hasSubscription && (
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleViewDetails(subscription as any)
-                                  }
+                            {subscription.clientName}
+                            {subscription.status === "expired" && (
+                              <span className="ml-2 text-xs bg-red-200 text-red-800 px-2 py-1 rounded">
+                                EXPIRED
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell
+                            className={
+                              subscription.status === "expired"
+                                ? "text-red-800"
+                                : "text-slate-600"
+                            }
+                          >
+                            {subscription.email}
+                          </TableCell>
+                          <TableCell
+                            className={
+                              subscription.status === "expired"
+                                ? "text-red-800"
+                                : "text-slate-600"
+                            }
+                          >
+                            {subscription.hasSubscription ? (
+                              subscription.plan
+                            ) : (
+                              <span className="text-gray-500 italic">
+                                No Plan
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell
+                            className={`font-medium ${subscription.status === "expired" ? "text-red-900" : "text-slate-900"}`}
+                          >
+                            {subscription.currency}
+                            {subscription.amount.toLocaleString()}
+                          </TableCell>
+                          <TableCell
+                            className={
+                              subscription.status === "expired"
+                                ? "text-red-800"
+                                : "text-slate-600"
+                            }
+                          >
+                            {subscription.startDate}
+                          </TableCell>
+                          <TableCell
+                            className={
+                              subscription.status === "expired"
+                                ? "text-red-800 font-semibold"
+                                : "text-slate-600"
+                            }
+                          >
+                            {subscription.renewalDate}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={`rounded-full ${getStatusColor(subscription.status)}`}
+                            >
+                              {subscription.status.charAt(0).toUpperCase() +
+                                subscription.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="rounded"
                                 >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                              )}
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {/* VIEW (only if subscription exists) */}
+                                {subscription.hasSubscription && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleViewDetails(subscription as any)
+                                    }
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                )}
 
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedSubscription(subscription);
-
-                                  const client = clients.find(
-                                    (c: any) => c.client_id === subscription.id,
-                                  );
-
-                                  const sub = client?.currentSubscription;
-
-                                  if (!subscription.hasSubscription) {
-                                    const filteredTiers = tiers.filter(
-                                      (tier) =>
-                                        tier.billing_cycle === billingType,
-                                    );
-
-                                    const defaultTier = filteredTiers[0];
-
-                                    setEditFormData({
-                                      plan: defaultTier?.tier_id || "",
-                                      status: "active",
-                                      renewalPeriod: "1-month",
-                                    });
-
-                                    setBillingType("monthly");
-                                    setDuration(1);
-
-                                    setIsCreateOpen(true);
-                                  } else {
-                                    // 👉 EDIT FLOW CORRECT DATA
-                                    setEditFormData({
-                                      plan: sub?.tier_id || "", // USE tier_id
-                                      status: sub?.status || "active",
-                                      renewalPeriod: "1-month",
-                                    });
-
-                                    setBillingType(
-                                      sub?.billing_cycle || "monthly",
-                                    ); // correct
-                                    setDuration(sub?.no_of_months || 1); // correct
-
-                                    setIsEditOpen(true);
-                                    setButtonType("edit");
-                                  }
-                                }}
-                              >
-                                <Edit2 className="h-4 w-4 mr-2" />
-                                {subscription.hasSubscription
-                                  ? // subscription.status === "expired"
-                                    //   ? "Renew Subscription"
-                                    "Edit Subscription"
-                                  : "Subscribe"}
-                              </DropdownMenuItem>
-
-                              {/* RENEW (only if expired) */}
-                              {subscription.hasSubscription && (
-                                // subscription.status === "expired" &&
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedSubscription(subscription);
@@ -666,55 +668,115 @@ export default function ManageSubscriptionsPage() {
                                       (c: any) =>
                                         c.client_id === subscription.id,
                                     );
+
                                     const sub = client?.currentSubscription;
 
-                                    setBillingType(
-                                      sub?.billing_cycle || "monthly",
-                                    );
+                                    if (!subscription.hasSubscription) {
+                                      const filteredTiers = tiers.filter(
+                                        (tier) =>
+                                          tier.billing_cycle === billingType,
+                                      );
 
-                                    setEditFormData({
-                                      plan: sub?.tier_id || "",
-                                      status: "active",
-                                      renewalPeriod: "1-month",
-                                    });
+                                      const defaultTier = filteredTiers[0];
 
-                                    // convert months → proper duration
-                                    const durationValue =
-                                      sub?.billing_cycle === "yearly"
-                                        ? (sub?.no_of_months || 12) / 12
-                                        : sub?.no_of_months || 1;
+                                      setEditFormData({
+                                        plan: defaultTier?.tier_id || "",
+                                        status: "active",
+                                        renewalPeriod: "1-month",
+                                      });
 
-                                    setDuration(durationValue);
+                                      setBillingType("monthly");
+                                      setDuration(1);
 
-                                    setIsEditOpen(true); // reuse same modal
-                                    setButtonType("renew");
+                                      setIsCreateOpen(true);
+                                    } else {
+                                      // 👉 EDIT FLOW CORRECT DATA
+                                      setEditFormData({
+                                        plan: sub?.tier_id || "", // USE tier_id
+                                        status: sub?.status || "active",
+                                        renewalPeriod: "1-month",
+                                      });
+
+                                      setBillingType(
+                                        sub?.billing_cycle || "monthly",
+                                      ); // correct
+                                      setDuration(sub?.no_of_months || 1); // correct
+
+                                      setIsEditOpen(true);
+                                      setButtonType("edit");
+                                    }
                                   }}
                                 >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Renew Subscription
+                                  <Edit2 className="h-4 w-4 mr-2" />
+                                  {subscription.hasSubscription
+                                    ? // subscription.status === "expired"
+                                      //   ? "Renew Subscription"
+                                      "Edit Subscription"
+                                    : "Subscribe"}
                                 </DropdownMenuItem>
-                              )}
-                              {/*  CANCEL (only if subscription exists) */}
-                              {subscription.hasSubscription && (
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={() => {
-                                    setSelectedSubscription(subscription);
-                                    setIsCancelConfirmOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Cancel Subscription
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+
+                                {/* RENEW (only if expired) */}
+                                {subscription.hasSubscription && (
+                                  // subscription.status === "expired" &&
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedSubscription(subscription);
+
+                                      const client = clients.find(
+                                        (c: any) =>
+                                          c.client_id === subscription.id,
+                                      );
+                                      const sub = client?.currentSubscription;
+
+                                      setBillingType(
+                                        sub?.billing_cycle || "monthly",
+                                      );
+
+                                      setEditFormData({
+                                        plan: sub?.tier_id || "",
+                                        status: "active",
+                                        renewalPeriod: "1-month",
+                                      });
+
+                                      // convert months → proper duration
+                                      const durationValue =
+                                        sub?.billing_cycle === "yearly"
+                                          ? (sub?.no_of_months || 12) / 12
+                                          : sub?.no_of_months || 1;
+
+                                      setDuration(durationValue);
+
+                                      setIsEditOpen(true); // reuse same modal
+                                      setButtonType("renew");
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Renew Subscription
+                                  </DropdownMenuItem>
+                                )}
+                                {/*  CANCEL (only if subscription exists) */}
+                                {subscription.hasSubscription && (
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => {
+                                      setSelectedSubscription(subscription);
+                                      setIsCancelConfirmOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Cancel Subscription
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
-                <div className="flex items-center justify-between mt-4">
+                {/* <div className="flex items-center justify-between mt-4"> */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
                   {/* Left info */}
                   <p className="text-sm text-gray-500">
                     Showing {(currentPage - 1) * rowsPerPage + 1} -{" "}
@@ -726,7 +788,8 @@ export default function ManageSubscriptionsPage() {
                   </p>
 
                   {/* Buttons */}
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2"> */}
+                  <div className="flex justify-center sm:justify-end gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -758,7 +821,7 @@ export default function ManageSubscriptionsPage() {
 
       {/* View Details Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-md rounded-lg">
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden rounded-lg">
           <DialogHeader>
             <DialogTitle>Subscription Details</DialogTitle>
             <DialogDescription>
@@ -766,89 +829,203 @@ export default function ManageSubscriptionsPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedSubscription && (
-            <div className="space-y-4">
-              {selectedSubscription.status === "expired" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-red-800">
-                    ⚠️ This subscription has expired on{" "}
-                    {selectedSubscription.renewalDate}
-                  </p>
-                  <p className="text-xs text-red-700 mt-1">
-                    Action required: Please renew or contact the client to
-                    reactivate.
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">
-                  Client Name
-                </p>
-                <p className="text-lg font-semibold text-slate-900">
-                  {selectedSubscription.clientName}
-                </p>
+            <div className="flex flex-col min-h-0">
+              <div className="flex overflow-x-auto border-b mb-4">
+                <button
+                  onClick={() => setActiveDetailTab("current")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    activeDetailTab === "current"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent"
+                  }`}
+                >
+                  Current Subscription
+                </button>
+
+                <button
+                  onClick={() => setActiveDetailTab("history")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    activeDetailTab === "history"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent"
+                  }`}
+                >
+                  Subscription History
+                </button>
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Email</p>
-                <p className="text-slate-900">{selectedSubscription.email}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">
-                    Plan
-                  </p>
-                  <p className="text-slate-900 font-semibold">
-                    {selectedSubscription.plan}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">
-                    Status
-                  </p>
-                  <Badge
-                    className={`rounded-full w-fit ${getStatusColor(selectedSubscription.status)}`}
+
+              <div className="flex flex-col min-h-0">
+                {selectedSubscription.status === "expired" && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-red-800">
+                      ⚠️ This subscription has expired on{" "}
+                      {selectedSubscription.renewalDate}
+                    </p>
+                    <p className="text-xs text-red-700 mt-1">
+                      Action required: Please renew or contact the client to
+                      reactivate.
+                    </p>
+                  </div>
+                )}
+
+                {activeDetailTab === "current" && (
+                  <div className="overflow-y-auto pr-2 pb-12 max-h-[60vh] space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-600 mb-1">
+                        Client Name
+                      </p>
+                      <p className="text-lg font-semibold text-slate-900">
+                        {selectedSubscription.clientName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-600 mb-1">
+                        Email
+                      </p>
+                      <p className="text-slate-900">
+                        {selectedSubscription.email}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Plan
+                        </p>
+                        <p className="text-slate-900 font-semibold">
+                          {selectedSubscription.plan}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Status
+                        </p>
+                        <Badge
+                          className={`rounded-full w-fit ${getStatusColor(selectedSubscription.status)}`}
+                        >
+                          {selectedSubscription.status.charAt(0).toUpperCase() +
+                            selectedSubscription.status.slice(1)}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Amount
+                        </p>
+                        <p className="text-lg font-semibold text-slate-900">
+                          {selectedSubscription.currency}
+                          {selectedSubscription.amount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">
+                          Start Date
+                        </p>
+                        <p className="text-slate-900">
+                          {selectedSubscription.startDate}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-600 mb-1">
+                        Renewal Date
+                      </p>
+                      <p
+                        className={`font-semibold ${selectedSubscription.status === "expired" ? "text-red-700" : "text-slate-900"}`}
+                      >
+                        {selectedSubscription.renewalDate}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {activeDetailTab === "history" && (
+                  <div className="overflow-y-auto max-h-[60vh] pr-2 pb-12 space-y-4">
+                    {historyLoading ? (
+                      <div className="flex justify-center py-10">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                      </div>
+                    ) : subscriptionHistory.length === 0 ? (
+                      <div className="text-center py-10 text-muted-foreground">
+                        No subscription history found
+                      </div>
+                    ) : (
+                      subscriptionHistory.map((item) => (
+                        <Card
+                          key={item.subscription_id}
+                          className="p-4 overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-semibold">{item.Tier?.name}</h3>
+
+                            <Badge className={getStatusColor(item.status)}>
+                              {item.status}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-muted-foreground">
+                                Billing Cycle
+                              </p>
+
+                              <p>{item.billing_cycle}</p>
+                            </div>
+
+                            <div>
+                              <p className="text-muted-foreground">Duration</p>
+
+                              <p>
+                                {item.no_of_months} Month
+                                {item.no_of_months > 1 ? "s" : ""}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-muted-foreground">
+                                Start Date
+                              </p>
+
+                              <p>
+                                {new Date(item.start_date).toLocaleDateString()}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-muted-foreground">End Date</p>
+
+                              <p>
+                                {new Date(item.end_date).toLocaleDateString()}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-muted-foreground">Price</p>
+
+                              <p>₹{item.Tier?.price}</p>
+                            </div>
+
+                            <div>
+                              <p className="text-muted-foreground">Trial</p>
+
+                              <p>{item.is_trial ? "Yes" : "No"}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                <div className="sticky bottom-0 bg-background pt-4 mt-4 border-t">
+                  <Button
+                    onClick={() => setIsDetailOpen(false)}
+                    variant="outline"
+                    className="w-full"
                   >
-                    {selectedSubscription.status.charAt(0).toUpperCase() +
-                      selectedSubscription.status.slice(1)}
-                  </Badge>
+                    Close
+                  </Button>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">
-                    Amount
-                  </p>
-                  <p className="text-lg font-semibold text-slate-900">
-                    {selectedSubscription.currency}
-                    {selectedSubscription.amount.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">
-                    Start Date
-                  </p>
-                  <p className="text-slate-900">
-                    {selectedSubscription.startDate}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">
-                  Renewal Date
-                </p>
-                <p
-                  className={`font-semibold ${selectedSubscription.status === "expired" ? "text-red-700" : "text-slate-900"}`}
-                >
-                  {selectedSubscription.renewalDate}
-                </p>
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={() => setIsDetailOpen(false)}
-                  variant="outline"
-                  className="flex-1 rounded-lg"
-                >
-                  Close
-                </Button>
               </div>
             </div>
           )}

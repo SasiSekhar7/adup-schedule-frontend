@@ -25,7 +25,7 @@ function ExportDetails() {
 
   const fetchExports = async () => {
     try {
-      const response = await api.get("/exports");
+      const response: any = await api.get("/exports");
 
       const sorted = response.sort(
         (a: ExportJob, b: ExportJob) =>
@@ -52,13 +52,13 @@ function ExportDetails() {
     window.open(url, "_blank");
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        Loading exports...
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="p-6 text-sm text-muted-foreground">
+  //       Loading exports...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -68,91 +68,114 @@ function ExportDetails() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {exports.map((job, index) => {
-          const progress = job.progress_percent || 0;
+        {loading ? (
+          <div className="flex items-center justify-center h-64 col-span-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading Tiers...</p>
+            </div>
+          </div>
+        ) : (
+          exports.map((job, index) => {
+            const progress = job.progress_percent || 0;
 
-          let barColor = "bg-blue-500";
-          let borderColor = "";
-          let message = "";
+            let barColor = "bg-blue-500";
+            let borderColor = "";
+            let message = "";
 
-          if (job.status === "FAILED") {
-            barColor = "bg-red-500";
-            borderColor = "border border-red-500";
-            message = job.error_message || "Export failed";
-          }
+            if (job.status === "FAILED") {
+              barColor = "";
+              borderColor = "";
+              message = job.error_message || "Export failed";
+            }
 
-          if (job.status === "QUEUED") {
-            barColor = "bg-yellow-500";
-          }
+            if (job.status === "QUEUED") {
+              barColor = "bg-yellow-500";
+            }
 
-          if (job.status === "COMPLETED") {
-            barColor = "bg-green-500";
-          }
+            if (job.status === "COMPLETED") {
+              barColor = "bg-green-500";
+            }
 
-          return (
-            <Card
-              key={index}
-              className={`col-span-1 bg-gray-100 ${borderColor}`}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {job.job_type}
-                </CardTitle>
+            return (
+              <Card
+                key={index}
+                className={`col-span-1 bg-gray-100 ${borderColor}`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {job.job_type}
+                  </CardTitle>
 
-                <Layers className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
 
-              <CardContent className="space-y-3">
-                <p className="text-sm font-semibold">
-                  Job ID: {job.job_id.slice(0, 8)}...
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Status: {job.status}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Device: {job.device_id || "All Devices"}
-                </p>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`${barColor} h-2 transition-all`}
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <p>{progress}% Completed</p>
-
-                  <p>
-                    {new Date(job.start_date).toLocaleDateString()} -{" "}
-                    {new Date(job.end_date).toLocaleDateString()}
+                <CardContent className="space-y-3">
+                  <p className="text-sm font-semibold">
+                    Job ID: {job.job_id.slice(0, 8)}...
                   </p>
-                </div>
 
-                {/* Download Button */}
-                {progress === 100 && job.download_url && (
-                  <Button
-                    className="w-full"
-                    onClick={() => handleDownload(job.download_url!)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Ready to Download
-                  </Button>
-                )}
+                 <div className="flex items-center justify-between">
+  <p className="text-xs text-muted-foreground">Status</p>
 
-                {message && (
-                  <p className="text-xs text-red-500 font-medium mt-1 flex items-center">
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    {message}
+  <span
+    className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+      job.status === "FAILED"
+        ? "bg-red-100 text-red-700"
+        : job.status === "COMPLETED"
+        ? "bg-green-100 text-green-700"
+        : job.status === "QUEUED"
+        ? "bg-yellow-100 text-yellow-700"
+        : "bg-blue-100 text-blue-700"
+    }`}
+  >
+    {job.status}
+  </span>
+</div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Device: {job.device_id || "All Devices"}
                   </p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`${barColor} h-2 transition-all`}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <p>{progress}% Completed</p>
+
+                    <p>
+                      {new Date(job.start_date).toLocaleDateString()} -{" "}
+                      {new Date(job.end_date).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  {/* Download Button */}
+                  {progress === 100 && job.download_url && (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleDownload(job.download_url!)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Ready to Download
+                    </Button>
+                  )}
+
+                  {message && (
+                    <p className="text-xs text-red-500 font-medium mt-1 flex items-center">
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      {message}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );

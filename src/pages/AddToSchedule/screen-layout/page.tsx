@@ -1803,6 +1803,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { set } from "date-fns";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertDialogOverlay } from "../components/ui/alert-dialog";
 
 // ============================================================================
 // INTERNAL COMPONENTS (PREVIEW PLAYERS)
@@ -2062,22 +2075,57 @@ const ZonePlayer = ({ zone, scheduleData, zoneWidth, zoneHeight }: any) => {
 interface BuilderProps {
   initialLayout?: any;
   schedule?: any;
+  is_live_content_template?: boolean;
   onChange: (layout: any) => void;
+  onZonesChange?: (zones: any[]) => void;
 }
 
-const generateZoneColor = (index) => {
+const generateZoneColor = (index = 0) => {
   // Golden angle for evenly distributed colors
   const hue = (index * 137.508) % 360;
 
   return `hsl(${hue}, 70%, 55%)`;
 };
-function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
+function LayoutBuilder({
+  initialLayout,
+  schedule,
+  is_live_content_template,
+  onChange,
+  onZonesChange,
+}: BuilderProps) {
   const [name, setName] = useState(initialLayout?.name || "New Layout");
   const [zones, setZones] = useState<any[]>(initialLayout?.zones || []);
+  useEffect(() => {
+    onZonesChange?.(zones);
+  }, [zones]);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [orientation, setOrientation] = useState(
     initialLayout?.orientation || "landscape",
   );
+
+  useEffect(() => {
+    if (!is_live_content_template) return;
+
+    const videoZones = zones.filter(
+      (z) => z.content_type_allowed === "video_input_media",
+    );
+
+    if (videoZones.length <= 1) return;
+
+    const keepZoneId = videoZones[0].zone_id;
+
+    setZones((prev) =>
+      prev.map((zone) =>
+        zone.content_type_allowed === "video_input_media" &&
+        zone.zone_id !== keepZoneId
+          ? {
+              ...zone,
+              content_type_allowed: "media",
+            }
+          : zone,
+      ),
+    );
+  }, [is_live_content_template]);
 
   // MAIN LAYOUT LEVEL: background_color
   const [canvasBg, setCanvasBg] = useState(
@@ -2638,15 +2686,42 @@ function LayoutBuilder({ initialLayout, schedule, onChange }: BuilderProps) {
                         const value = e.target.value;
 
                         // prevent selecting more than allowed
-                        if (
-                          value === "video_input_media" &&
-                          zone.content_type_allowed !== "video_input_media" &&
-                          selectedVideoInputZones >= maxMultiVideosInLayout
-                        ) {
-                          toast.error(
-                            `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
-                          );
-                          return;
+                        // if (
+                        //   value === "video_input_media" &&
+                        //   zone.content_type_allowed !== "video_input_media" &&
+                        //   selectedVideoInputZones >= maxMultiVideosInLayout
+                        // ) {
+                        //   toast.error(
+                        //     `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                        //   );
+                        //   return;
+                        // }
+                        if (value === "video_input_media") {
+                          // Extra validation ONLY for Live Streaming
+                          if (is_live_content_template) {
+                            const alreadyExists = zones.some(
+                              (z) =>
+                                z.zone_id !== zone.zone_id &&
+                                z.content_type_allowed === "video_input_media",
+                            );
+
+                            if (alreadyExists) {
+                              toast.error(
+                                "Live Streaming layout allows only one Video Input Media zone",
+                              );
+                              return;
+                            }
+                          }
+                          // Existing subscription validation
+                          if (
+                            zone.content_type_allowed !== "video_input_media" &&
+                            selectedVideoInputZones >= maxMultiVideosInLayout
+                          ) {
+                            toast.error(
+                              `Only ${maxMultiVideosInLayout} Video Input Media zone allowed in your plan`,
+                            );
+                            return;
+                          }
                         }
                         setZones(
                           zones.map((z) =>
@@ -2816,11 +2891,12 @@ export default function ScreenLayoutPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [loadingClients, setLoadingClients] = useState(false);
-
+  const [is_live_content_template, setis_live_content_template] =
+    useState(false);
   const fetchClients = async () => {
     try {
       setLoadingClients(true);
-      const res = await api.get("/ads/clients");
+      const res: any = await api.get("/ads/clients");
       setClients(res.clients || []);
     } catch (err: any) {
       console.error(err);
@@ -2839,18 +2915,36 @@ export default function ScreenLayoutPage() {
     setUserRole(role || "");
   }, []);
 
+  const [loadingLayouts, setLoadingLayouts] = useState(false);
+
+  const [filter, setFilter] = useState<"all" | "true" | "false">("all");
+  const [builderZones, setBuilderZones] = useState<any[]>([]);
+
+  const [showVideoZoneDialog, setShowVideoZoneDialog] = useState(false);
+  const [pendingLiveTemplate, setPendingLiveTemplate] = useState(false);
   const loadData = async () => {
     try {
-      const data = await getLayouts();
+      setLoadingLayouts(true);
+      const data = await getLayouts(filter);
       setLayouts(data);
     } catch (error: any) {
       toast.error("Failed to load layouts");
+    } finally {
+      setLoadingLayouts(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, [filter]);
 
   const handleStartEdit = async (layout: any) => {
     setEditingLayout(layout);
     setIsCreating(false);
+    setis_live_content_template(
+      layout?.is_live_content_template === true ||
+        layout?.is_live_content_template === 1,
+    );
 
     // try {
     //     const res = await api.get(`/layout/shedule/get/${layout.layout_id}`);
@@ -2891,10 +2985,12 @@ export default function ScreenLayoutPage() {
         payload = {
           ...currentBuilderState,
           client_id: selectedClient,
+          is_live_content_template,
         };
       } else {
         payload = {
           ...currentBuilderState,
+          is_live_content_template,
         };
       }
 
@@ -2954,12 +3050,14 @@ export default function ScreenLayoutPage() {
 
   const canAddLayout = currentLayouts < maxLayouts;
 
+  const canCreateLayout = limit("MAX_LAYOUTS") > 0;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <main className="flex-1 overflow-auto">
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
+        {/* <div className="w-full flex items-center justify-between mb-6">
+          <div className="w-full flex items-center gap-2">
             <LayoutIcon className="w-5 h-5" />
             <h1 className="text-2xl font-semibold">Screen Layout</h1>
           </div>
@@ -3023,14 +3121,23 @@ export default function ScreenLayoutPage() {
                       <SelectContent>
                         {clients.map((client: any) => {
                           const tierName =
-                            client?.Subscriptions?.[0]?.Tier?.name || "No Tier";
+                            client?.currentSubscription?.Tier?.name ||
+                            "No Subscription";
+                          const subscriptionStatus =
+                            client?.currentSubscription?.status;
+
+                          // Build the label conditionally
+                          const statusLabel = subscriptionStatus
+                            ? ` (${tierName}-${subscriptionStatus})`
+                            : ` (${tierName})`;
 
                           return (
                             <SelectItem
                               key={client.client_id}
                               value={client.client_id}
                             >
-                              {client.client_name || client.name} ({tierName})
+                              {client.client_name || client.name} ({statusLabel}
+                              )
                             </SelectItem>
                           );
                         })}
@@ -3063,8 +3170,116 @@ export default function ScreenLayoutPage() {
               </DialogContent>
             </Dialog>
           </>
-        </div>
+        </div> */}
 
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          {/* Title */}
+          <div className="flex items-center gap-2">
+            <LayoutIcon className="w-5 h-5 shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-semibold">Screen Layout</h1>
+          </div>
+
+          {/* New Layout Button */}
+          {!isCreating && !editingLayout && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full sm:w-auto">
+                    {userRole === "Admin" ? (
+                      <Button
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          setClientDialogOpen(true);
+                          fetchClients();
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Layout
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full sm:w-auto"
+                        disabled={!canAddLayout}
+                        onClick={handleCreateNew}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Layout
+                      </Button>
+                    )}
+                  </div>
+                </TooltipTrigger>
+
+                {!canAddLayout && (
+                  <TooltipContent>
+                    <p>
+                      You reached your layout limit ({maxLayouts}). Upgrade to
+                      add more.
+                    </p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Client Selection Dialog */}
+          <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Select Client</DialogTitle>
+              </DialogHeader>
+
+              <div className="py-4 space-y-4">
+                {loadingClients ? (
+                  <p className="text-sm text-gray-500">Loading clients...</p>
+                ) : (
+                  <Select onValueChange={(value) => setSelectedClient(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a client" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {clients.map((client: any) => {
+                        const tierName =
+                          client?.Subscriptions?.[0]?.Tier?.name || "No Tier";
+
+                        return (
+                          <SelectItem
+                            key={client.client_id}
+                            value={client.client_id}
+                          >
+                            {client.client_name || client.name} ({tierName})
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setClientDialogOpen(false);
+                    setSelectedClient(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  disabled={!selectedClient}
+                  onClick={() => {
+                    handleCreateNew();
+                    setClientDialogOpen(false);
+                  }}
+                >
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
         {isCreating || editingLayout ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -3078,6 +3293,36 @@ export default function ScreenLayoutPage() {
                 >
                   Back to List
                 </Button>
+                {/* Live Streaming Toggle */}
+                {userRole === "Admin" && (
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      checked={is_live_content_template}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+
+                        if (checked) {
+                          const videoZones = builderZones.filter(
+                            (z) =>
+                              z.content_type_allowed === "video_input_media",
+                          );
+
+                          if (videoZones.length > 1) {
+                            setPendingLiveTemplate(true);
+                            setShowVideoZoneDialog(true);
+                            return;
+                          }
+                        }
+
+                        setis_live_content_template(checked);
+                      }}
+                      className="h-4 w-4"
+                    />
+                    Is Live Content Template
+                  </label>
+                )}
+
                 {groupWiseData.length > 0 && (
                   <select
                     className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm outline-none"
@@ -3107,7 +3352,9 @@ export default function ScreenLayoutPage() {
             <LayoutBuilder
               initialLayout={editingLayout || undefined}
               schedule={schedule}
+              is_live_content_template={is_live_content_template}
               onChange={setCurrentBuilderState}
+              onZonesChange={setBuilderZones}
             />
 
             {/* RESTORED JSON CONSOLE */}
@@ -3153,65 +3400,230 @@ export default function ScreenLayoutPage() {
             )} */}
           </div>
         ) : (
-          <div className="space-y-6">
-            {layouts.length > 0 ? (
-              <div className="rounded-md border bg-white mb-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Resolution</TableHead>
-                      <TableHead>Orientation</TableHead>
-                      <TableHead>Zones</TableHead>
-                      <TableHead>Zone Types</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-12">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {layouts.map((layout) => {
-                      const mediaZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "media",
-                      ).length;
-                      const widgetZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "widget",
-                      ).length;
+          <div className="space-y-6 ">
+            <div className="mb-4 w-64">
+              <label className="block text-sm font-medium mb-2">
+                Filter Layouts
+              </label>
 
-                      const videoInputZones = layout.zones.filter(
-                        (z) => z.content_type_allowed === "video_input_media",
-                      ).length;
-                      return (
-                        <TableRow key={layout.layout_id}>
-                          <TableCell className="font-medium">
-                            {layout.name}
-                          </TableCell>
-                          <TableCell>{layout.resolution}</TableCell>
-                          <TableCell className="capitalize">
-                            {layout.orientation}
-                          </TableCell>
-                          <TableCell>{layout.zones.length} zones</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              {mediaZones > 0 && (
-                                <Badge variant="default" className="text-xs">
-                                  <Film className="w-3 h-3 mr-1" />
-                                  {mediaZones} Media
-                                </Badge>
+              <select
+                value={filter}
+                onChange={(e) =>
+                  setFilter(e.target.value as "all" | "true" | "false")
+                }
+                className="w-full border rounded-md px-3 py-2"
+              >
+                <option value="all">All</option>
+                <option value="true">Live Content Template</option>
+                <option value="false">Not Live Content Template</option>
+              </select>
+            </div>
+            {loadingLayouts ? (
+              <div className="flex items-center justify-center h-64 col-span-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-2 text-muted-foreground">
+                    Loading Layouts...
+                  </p>
+                </div>
+              </div>
+            ) : layouts.length > 0 ? (
+              <>
+                <div className="hidden md:block rounded-md border bg-white mb-6 ">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        {userRole == "Admin" && (
+                          <TableHead>Client Name</TableHead>
+                        )}
+                        <TableHead>Resolution</TableHead>
+                        <TableHead>Orientation</TableHead>
+                        <TableHead>Zones</TableHead>
+                        <TableHead>Zone Types</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-12">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {layouts.map((layout) => {
+                        const mediaZones = layout.zones.filter(
+                          (z: any) => z.content_type_allowed === "media",
+                        ).length;
+                        const widgetZones = layout.zones.filter(
+                          (z: any) => z.content_type_allowed === "widget",
+                        ).length;
+
+                        const videoInputZones = layout.zones.filter(
+                          (z: any) =>
+                            z.content_type_allowed === "video_input_media",
+                        ).length;
+                        return (
+                          <TableRow key={layout.layout_id}>
+                            <TableCell className="font-medium">
+                              {layout.name}
+                            </TableCell>
+                            {userRole == "Admin" && (
+                              <TableCell className="font-medium">
+                                {layout?.Client?.name ?? "-"}
+                              </TableCell>
+                            )}
+                            <TableCell>{layout.resolution}</TableCell>
+                            <TableCell className="capitalize">
+                              {layout.orientation}
+                            </TableCell>
+                            <TableCell>{layout.zones.length} zones</TableCell>
+                            <TableCell>
+                              <div className="grid grid-cols-2 gap-2">
+                                {mediaZones > 0 && (
+                                  <Badge variant="default" className="text-xs">
+                                    <Film className="w-3 h-3 mr-1" />
+                                    {mediaZones} Media
+                                  </Badge>
+                                )}
+                                {widgetZones > 0 && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    <LayoutGrid className="w-3 h-3 mr-1" />
+                                    {widgetZones} Widget
+                                  </Badge>
+                                )}
+                                {videoInputZones > 0 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    📹 {videoInputZones} Video Input
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  layout.is_active ? "default" : "secondary"
+                                }
+                              >
+                                {layout.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {!(
+                                userRole === "Client" &&
+                                layout?.is_live_content_template === true
+                              ) && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => handleStartEdit(layout)}
+                                    >
+                                      <Pencil className="w-4 h-4 mr-2" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      // onClick={() =>
+                                      //   handleDeleteLayout(layout.layout_id)
+                                      // }
+                                      onClick={() => {
+                                        setLayoutToDelete(layout.layout_id);
+                                        setDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               )}
-                              {widgetZones > 0 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  <LayoutGrid className="w-3 h-3 mr-1" />
-                                  {widgetZones} Widget
-                                </Badge>
-                              )}
-                              {videoInputZones > 0 && (
-                                <Badge variant="outline" className="text-xs">
-                                  📹 {videoInputZones} Video Input
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="md:hidden space-y-4 mb-6">
+                  {layouts.map((layout) => {
+                    const mediaZones = layout.zones.filter(
+                      (z) => z.content_type_allowed === "media",
+                    ).length;
+
+                    const widgetZones = layout.zones.filter(
+                      (z) => z.content_type_allowed === "widget",
+                    ).length;
+
+                    const videoInputZones = layout.zones.filter(
+                      (z) => z.content_type_allowed === "video_input_media",
+                    ).length;
+
+                    return (
+                      <div
+                        key={layout.layout_id}
+                        className="border rounded-lg p-4 bg-white shadow-sm"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-base">
+                              {layout.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {layout.resolution}
+                            </p>
+                          </div>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleStartEdit(layout)}
+                              >
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => {
+                                  setLayoutToDelete(layout.layout_id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="mt-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Orientation
+                            </span>
+                            <span className="capitalize">
+                              {layout.orientation}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Zones</span>
+                            <span>{layout.zones.length} zones</span>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">
+                              Status
+                            </span>
+
                             <Badge
                               variant={
                                 layout.is_active ? "default" : "secondary"
@@ -3219,49 +3631,52 @@ export default function ScreenLayoutPage() {
                             >
                               {layout.is_active ? "Active" : "Inactive"}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleStartEdit(layout)}
-                                >
-                                  <Pencil className="w-4 h-4 mr-2" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  // onClick={() =>
-                                  //   handleDeleteLayout(layout.layout_id)
-                                  // }
-                                  onClick={() => {
-                                    setLayoutToDelete(layout.layout_id);
-                                    setDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {mediaZones > 0 && (
+                            <Badge variant="default" className="text-xs">
+                              <Film className="w-3 h-3 mr-1" />
+                              {mediaZones} Media
+                            </Badge>
+                          )}
+
+                          {widgetZones > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              <LayoutGrid className="w-3 h-3 mr-1" />
+                              {widgetZones} Widget
+                            </Badge>
+                          )}
+
+                          {videoInputZones > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              📹 {videoInputZones} Video Input
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <div className="text-center py-12 border rounded-md mb-6 bg-white">
                 <LayoutIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+
                 <h3 className="text-lg font-medium mb-2">No Layouts Yet</h3>
-                <p className="text-muted-foreground mb-4">
+                {/* <p className="text-muted-foreground mb-4">
                   Create your first screen layout to get started.
+                </p> */}
+                <p className="text-muted-foreground mb-4">
+                  {canCreateLayout
+                    ? "Create your first screen layout to get started."
+                    : "Your current plan does not support Screen Layouts."}
                 </p>
-                <Button onClick={() => setIsCreating(true)}>
+                <Button
+                  onClick={() => setIsCreating(true)}
+                  disabled={!canCreateLayout}
+                >
                   <Plus className="w-4 h-4 mr-2" /> Create Layout
                 </Button>
               </div>
@@ -3299,6 +3714,74 @@ export default function ScreenLayoutPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={showVideoZoneDialog}
+        onOpenChange={setShowVideoZoneDialog}
+      >
+        <AlertDialogOverlay className="fixed inset-0 bg-black/50 z-[9998]" />
+
+        <AlertDialogContent className="fixed left-1/2 top-1/2 z-[9999] -translate-x-1/2 -translate-y-1/2">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Multiple Video Input Zones Found
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Live Content Template allows only one Video Input Media zone.
+              <br />
+              <br />
+              Do you want to keep the first selected Video Input Media zone and
+              convert all remaining Video Input Media zones to Media zones?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingLiveTemplate(false);
+                setShowVideoZoneDialog(false);
+
+                toast.error(
+                  "Live Content Template requires only one Video Input Media zone.",
+                );
+              }}
+            >
+              No
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() => {
+                const videoZones = builderZones.filter(
+                  (z) => z.content_type_allowed === "video_input_media",
+                );
+
+                const firstZoneId = videoZones[0]?.zone_id;
+
+                setBuilderZones((prev) =>
+                  prev.map((zone) =>
+                    zone.content_type_allowed === "video_input_media" &&
+                    zone.zone_id !== firstZoneId
+                      ? {
+                          ...zone,
+                          content_type_allowed: "media",
+                        }
+                      : zone,
+                  ),
+                );
+
+                setis_live_content_template(true);
+
+                toast.success(
+                  "Only first Video Input Media zone retained. Remaining zones converted to Media.",
+                );
+              }}
+            >
+              Yes, Convert Zones
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

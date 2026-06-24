@@ -39,7 +39,7 @@ const AdPage = ({ edit }: { edit: boolean }) => {
   };
 
   return (
-    <div>
+    <div className="flex-1">
       {ad ? (
         <AdManager isEditing={edit ? edit : false} initialData={ad} />
       ) : (

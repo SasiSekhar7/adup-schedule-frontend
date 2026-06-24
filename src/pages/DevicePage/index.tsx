@@ -771,9 +771,9 @@ function DevicePage() {
   }
 
   return (
-    <div className="">
+    <div className="flex-1">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-6">
         <Button
           variant="ghost"
           onClick={() => navigate("/devices")}
@@ -783,8 +783,166 @@ function DevicePage() {
           <span className="hidden sm:inline">Back to Devices</span>
           <span className="sm:hidden">Back</span>
         </Button>
-        <div className="flex items-center gap-3">
-          {/*  Notification Icon */}
+        <div className="flex justify-stretch items-center gap-3 flex-1">
+         
+         {/* Global Export Button */}
+          <div className="flex-1 sm:w-auto justify-center mt-4 sm:mt-0">
+            <Dialog
+              open={fullDeviceExportDialogOpen}
+              onOpenChange={setFullDeviceExportDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  variant="default"
+                  className="w-full sm:w-auto bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">
+                    Export Device Details
+                  </span>
+                  <span className="sm:hidden">Export Details</span>
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-[450px] max-h-[90vh] p-0 overflow-hidden border-slate-200">
+                {/* Header Section */}
+                <div className="p-6 pb-4 border-b border-slate-100 bg-white">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold text-slate-900">
+                      Export Device Details
+                    </DialogTitle>
+                    <div className="text-sm text-slate-500 mt-1">
+                      Exporting comprehensive data for:{" "}
+                      <span className="font-medium text-slate-800">
+                        {device?.device_name || "Unknown Device"}
+                      </span>
+                    </div>
+                  </DialogHeader>
+                </div>
+
+                {/* Form Body Section */}
+                <div className="p-6 space-y-5 bg-slate-50/50 overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Export Type
+                    </Label>
+                    <Select
+                      value={fullDeviceJobType}
+                      onValueChange={setFullDeviceJobType}
+                    >
+                      <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+                        <SelectValue placeholder="Select export type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PROOF_OF_PLAY">
+                          Proof of Play
+                        </SelectItem>
+                        <SelectItem value="DEVICE_EVENTS">
+                          Device Events
+                        </SelectItem>
+                        <SelectItem value="DEVICE_TELEMETRY">
+                          Device Telemetry
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Time Range
+                    </Label>
+                    <Select
+                      value={fullDeviceExportFilter}
+                      onValueChange={setFullDeviceExportFilter}
+                    >
+                      <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+                        <SelectValue placeholder="Select filter type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today's Data</SelectItem>
+                        <SelectItem value="yesterday">Yesterday's Data</SelectItem>
+                        <SelectItem value="week">This Week</SelectItem>
+                        <SelectItem value="month">This Month</SelectItem>
+                        <SelectItem value="year">This Year</SelectItem>
+                        <SelectItem value="all">All Historical Data</SelectItem>
+                        <SelectItem value="date_range">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Custom Date Range - Stacks on mobile, side-by-side on desktop */}
+                  {fullDeviceExportFilter === "date_range" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60 mt-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-slate-600">
+                          Start Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={fullDeviceExportStartDate}
+                          onChange={(e) =>
+                            setFullDeviceExportStartDate(e.target.value)
+                          }
+                          className="bg-white border-slate-200 shadow-sm text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-slate-600">
+                          End Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={fullDeviceExportEndDate}
+                          onChange={(e) =>
+                            setFullDeviceExportEndDate(e.target.value)
+                          }
+                          className="bg-white border-slate-200 shadow-sm text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Section */}
+                <div className="p-4 sm:p-6 border-t border-slate-100 bg-white">
+                  <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setFullDeviceExportDialogOpen(false)}
+                      className="w-full sm:w-auto border-slate-200 text-slate-700"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleFullDeviceExport}
+                      disabled={
+                        isFullDeviceExporting ||
+                        (fullDeviceExportFilter === "date_range" &&
+                          (!fullDeviceExportStartDate ||
+                            !fullDeviceExportEndDate))
+                      }
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                    >
+                      {isFullDeviceExporting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25" />
+                            <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          </svg>
+                          Exporting...
+                        </span>
+                      ) : (
+                        "Export Data"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+           {/*  Notification Icon */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -864,135 +1022,6 @@ function DevicePage() {
               </div>
             )}
           </div>
-          {/* Global Export Button */}
-          <Dialog
-            open={fullDeviceExportDialogOpen}
-            onOpenChange={setFullDeviceExportDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button
-                variant="default"
-                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">
-                  Export Full Device Details
-                </span>
-                <span className="sm:hidden">Export Details</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Export Full Device Details</DialogTitle>
-                <div className="text-sm text-muted-foreground mt-2">
-                  Exporting comprehensive data for:{" "}
-                  <span className="font-medium text-foreground">
-                    {device?.device_name || "Unknown Device"}
-                  </span>
-                </div>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="jobType">Export Type</Label>
-                  <Select
-                    value={fullDeviceJobType}
-                    onValueChange={setFullDeviceJobType}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select export type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PROOF_OF_PLAY">
-                        Proof of Play
-                      </SelectItem>
-                      <SelectItem value="DEVICE_EVENTS">
-                        Device Events
-                      </SelectItem>
-                      <SelectItem value="DEVICE_TELEMETRY">
-                        Device Telemetry
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fullDeviceFilter">Export Filter</Label>
-                  <Select
-                    value={fullDeviceExportFilter}
-                    onValueChange={setFullDeviceExportFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select filter type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="today">Today's Data</SelectItem>
-                      <SelectItem value="yesterday">
-                        Yesterday's Data
-                      </SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
-                      <SelectItem value="all">All Historical Data</SelectItem>
-                      <SelectItem value="date_range">
-                        Custom Date Range
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {fullDeviceExportFilter === "date_range" && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-medium">
-                      Date Range Selection
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="fullDeviceStartDate">Start Date</Label>
-                        <Input
-                          id="fullDeviceStartDate"
-                          type="date"
-                          value={fullDeviceExportStartDate}
-                          onChange={(e) =>
-                            setFullDeviceExportStartDate(e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="fullDeviceEndDate">End Date</Label>
-                        <Input
-                          id="fullDeviceEndDate"
-                          type="date"
-                          value={fullDeviceExportEndDate}
-                          onChange={(e) =>
-                            setFullDeviceExportEndDate(e.target.value)
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFullDeviceExportDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleFullDeviceExport}
-                  disabled={
-                    isFullDeviceExporting ||
-                    (fullDeviceExportFilter === "date_range" &&
-                      (!fullDeviceExportStartDate || !fullDeviceExportEndDate))
-                  }
-                >
-                  {isFullDeviceExporting ? "Exporting..." : "Export"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 

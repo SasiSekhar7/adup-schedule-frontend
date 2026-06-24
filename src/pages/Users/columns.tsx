@@ -29,29 +29,29 @@ export interface User {
 }
 
 export const userColumns: ColumnDef<User>[] = [
-  {
-    id: "select",
+  // {
+  //   id: "select",
 
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  //   header: ({ table }) => (
+  //     <Checkbox
+  //       checked={
+  //         table.getIsAllPageRowsSelected() ||
+  //         (table.getIsSomePageRowsSelected() && "indeterminate")
+  //       }
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //       aria-label="Select all"
+  //     />
+  //   ),
+  //   cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //       aria-label="Select row"
+  //     />
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -74,20 +74,20 @@ export const userColumns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const role = row.getValue("role") as string;
       return (
-        <Badge className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-300">
+        <Badge className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 hover:text-white text-blue-700 border border-blue-300">
           {role}
         </Badge>
       );
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
-  {
-    accessorKey: "phone_number",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Phone Number" />
-    ),
-    cell: ({ row }) => row.getValue("phone_number"),
-  },
+  // {
+  //   accessorKey: "phone_number",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Phone Number" />
+  //   ),
+  //   cell: ({ row }) => row.getValue("phone_number"),
+  // },
   {
     accessorKey: "client_name",
     header: ({ column }) => (
