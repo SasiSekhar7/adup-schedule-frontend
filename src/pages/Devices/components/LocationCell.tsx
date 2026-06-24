@@ -12,7 +12,13 @@ async function getAddressFromCoordinates(lat: number, lon: number) {
   }
 }
 
-const LocationCell = ({ cords }: { cords: string }) => {
+const LocationCell = ({
+  cords,
+  onAddressChange,
+}: {
+  cords: any;
+  onAddressChange?: (address: string) => void;
+}) => {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +27,10 @@ const LocationCell = ({ cords }: { cords: string }) => {
       const [lat, lon] = cords.split(",").map(Number);
       const result = await getAddressFromCoordinates(lat, lon);
       setLocation(result);
+      // optional callback
+      if (onAddressChange) {
+        onAddressChange(result);
+      }
       setLoading(false);
     };
 

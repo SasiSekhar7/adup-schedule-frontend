@@ -175,7 +175,7 @@ function App() {
               }
             />
             <Route
-              path="/user/all"
+              path="/users/all"
               element={
                 <Suspense fallback={<Loading />}>
                   <Users />
@@ -200,7 +200,7 @@ function App() {
               }
             />
             <Route
-              path="/ads/clients"
+              path="/users/clients"
               element={
                 <Suspense fallback={<Loading />}>
                   <Clients />

@@ -1040,37 +1040,36 @@ function TelemetryInsights({
     Record<string, string>
   >({});
 
-  async function getAddressFromCoordinates(lat: number, lon: number) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      return data.display_name || "Unknown Location";
-    } catch (error: any) {
-      return "Unknown Location";
-    }
-  }
+  // async function getAddressFromCoordinates(lat , lon) {
+  //   try {
+  //     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+  //     const response = await fetch(url);
+  //     const data = await response.json();
+  //     return data.display_name || "Unknown Location";
+  //   } catch (error) {
+  //     return "Unknown Location";
+  //   }
+  // }
 
-  useEffect(() => {
-    async function resolveAddresses() {
-      const updates: Record<string, string> = {};
+  // useEffect(() => {
+  //   async function resolveAddresses() {
+  //     const updates: Record<string, string> = {};
 
-      for (const outlier of performanceOutliers) {
-        if (!resolvedLocations[outlier.location]) {
-          const { lat, lon } = parseLatLon(outlier.location);
-          const address = await getAddressFromCoordinates(lat, lon);
-          updates[outlier.location] = address;
-        }
-      }
+  //     for (const outlier of performanceOutliers) {
+  //       if (!resolvedLocations[outlier.location]) {
+  //         const { lat, lon } = parseLatLon(outlier.location);
+  //         const address = await getAddressFromCoordinates(lat, lon);
+  //         updates[outlier.location] = address;
+  //       }
+  //     }
 
-      setResolvedLocations((prev) => ({ ...prev, ...updates }));
-    }
+  //     setResolvedLocations((prev) => ({ ...prev, ...updates }));
+  //   }
 
-    if (performanceOutliers.length > 0) {
-      resolveAddresses();
-    }
-  }, [performanceOutliers]);
-
+  //   if (performanceOutliers.length > 0) {
+  //     resolveAddresses();
+  //   }
+  // }, [performanceOutliers]);
   function formatTimeAgo(date: string) {
     return formatDistanceToNow(new Date(date), { addSuffix: true });
   }
@@ -1128,9 +1127,12 @@ function TelemetryInsights({
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">
+                    {/* <p className="font-semibold text-slate-900">
                       {resolvedLocations[outlier.location] ||
                         "Resolving location..."}
+                    </p> */}
+                    <p className="font-semibold text-slate-900">
+                      {outlier?.address}
                     </p>
                     <p className="text-muted-foreground text-xs mt-1">
                       {outlier.metric}
@@ -1173,9 +1175,8 @@ function TelemetryInsights({
                     {formatTimeAgo(error.timestamp)}
                   </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {error.device} •{" "}
-                  {resolvedLocations[error.location] || "Resolving location..."}
+                <p className="text-xs text-slate-600 mt-1">
+                  {error.device} • {error?.address}
                 </p>
               </div>
             </div>

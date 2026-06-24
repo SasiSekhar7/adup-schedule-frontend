@@ -55,6 +55,7 @@ export interface Device {
   createdAt: Date;
   updatedAt: Date;
   group_name: string;
+  address: string;
   device_name: string;
   device_orientation: string;
   DeviceGroup: DeviceGroup;
@@ -326,14 +327,15 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
     enableHiding: false,
   },
   {
-    accessorKey: "location",
+    accessorKey: "address",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Location" />
     ),
-    cell: ({ row }) => {
-      const cords = row.getValue("location");
-      return <LocationCell cords={cords} />;
-    },
+    // cell: ({ row }) => {
+    //   const cords = row.getValue("location");
+    //   return <LocationCell cords={cords} />;
+    // },
+    cell: ({ row }) => row.getValue("address"),
   },
   {
     accessorKey: "status",

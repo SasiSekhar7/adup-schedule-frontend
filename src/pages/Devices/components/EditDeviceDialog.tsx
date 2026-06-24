@@ -176,8 +176,10 @@ const EditDeviceDialog = ({
     try {
       let payload = {
         ...deviceData,
+        address: deviceData.location.address,
         overwrite_group_orientation: overwriteOrientation,
       };
+
       await api.post(`/device/update/metadata/${deviceData.deviceId}`, payload);
       toast.success("Device saved successfully!");
       fetchDta();
@@ -361,7 +363,8 @@ const EditDeviceDialog = ({
               onLocationSelect={(location) => {
                 setDeviceData({
                   ...deviceData,
-                  location: { ...location, address: "" },
+                  // location: { ...location, address: "" },
+                  location,
                 });
               }}
               initialPosition={deviceData.location}
