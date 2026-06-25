@@ -173,7 +173,7 @@ export default function ScheduleAddPage() {
   // }, []);
   useEffect(() => {
     const fetchLayouts = async () => {
-      const data = await getLayouts('false');
+      const data = await getLayouts("false");
       console.log("data", data);
       setLayouts(data);
     };
@@ -1850,14 +1850,15 @@ export default function ScheduleAddPage() {
                             Live Content
                           </div>
                         </SelectItem> */}
-                        {canShowLiveContent && (
-                          <SelectItem value="live_content">
-                            <div className="flex items-center gap-2">
-                              <Radio className="w-4 h-4" />
-                              Live Content
-                            </div>
-                          </SelectItem>
-                        )}
+                        {canShowLiveContent &&
+                          activeZone?.content_type_allowed !== "media" && (
+                            <SelectItem value="live_content">
+                              <div className="flex items-center gap-2">
+                                <Radio className="w-4 h-4" />
+                                Live Content
+                              </div>
+                            </SelectItem>
+                          )}
                       </SelectContent>
                     </Select>
                   </div>
