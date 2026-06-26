@@ -19,9 +19,14 @@ export const hasFeature = (
 export const getLimit = (
   subscription: Subscription | null,
   key: keyof Subscription["features_cache"],
-): number => {
+): number | "unlimited" => {
   if (!subscription || isExpired(subscription)) return 0;
 
   const value = subscription.features_cache?.[key];
+
+  if (value === "unlimited") {
+    return "unlimited";
+  }
+
   return typeof value === "number" ? value : 0;
 };

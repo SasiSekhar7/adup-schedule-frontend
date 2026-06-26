@@ -411,7 +411,8 @@ export default function CreateCarousel() {
 
   const usedStorage = Number(subscription?.Client?.used_storage_bytes || 0);
 
-  const canAddNewAd = usedStorage < storageLimit;
+  const canAddNewAd =
+    storageLimit === "unlimited" ? true : usedStorage < storageLimit;
 
   const formatStorage = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -441,7 +442,7 @@ export default function CreateCarousel() {
   const fetchAvailableAds = async () => {
     try {
       setLoadingAds(true);
-      const response = await api.get<AdsResponse>("/ads/all");
+      const response: AdsResponse = await api.get("/ads/all");
       setAvailableAds(
         response?.ads?.filter((ad: Ad) => ad.status === "completed") ||
           (response as any).ads?.filter(
@@ -747,7 +748,11 @@ export default function CreateCarousel() {
                         <TooltipContent>
                           <p>
                             Storage limit reached ({formatStorage(usedStorage)}{" "}
-                            / {formatStorage(storageLimit)}). Upgrade your plan.
+                            /{" "}
+                            {storageLimit === "unlimited"
+                              ? "Unlimited"
+                              : formatStorage(storageLimit)}
+                            ). Upgrade your plan.
                           </p>
                         </TooltipContent>
                       )}

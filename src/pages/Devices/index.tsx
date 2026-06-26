@@ -49,7 +49,8 @@ function Home() {
     (device: any) => device.registration_status !== "pairing",
   ).length;
 
-  const canAddDevice = currentDevices < maxDevices;
+  const canAddDevice =
+    maxDevices === "unlimited" ? true : currentDevices < maxDevices;
 
   const filteredDevices = data.filter((device) =>
     [device.device_id, device.device_name, device.group_name, device.location]
@@ -86,8 +87,9 @@ function Home() {
               {!canAddDevice && (
                 <TooltipContent>
                   <p>
-                    You reached your device limit ({maxDevices}). Upgrade to add
-                    more.
+                    You reached your device limit (
+                    {maxDevices === "unlimited" ? "Unlimited" : maxDevices}).
+                    Upgrade to add more.
                   </p>
                 </TooltipContent>
               )}

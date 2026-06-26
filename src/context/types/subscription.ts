@@ -5,11 +5,12 @@ export type Features = {
   LIVE_STREAMING: boolean;
   PROOF_OF_PLAY: boolean;
   MULTI_VIDEO_IN_LAYOUT: boolean;
+  CAROUSELD: boolean;
 
   MAX_MULTI_VIDEOS_IN_LAYOUT: number;
-  MAX_DEVICES: number;
-  MAX_LAYOUTS: number;
-  STORAGE_LIMIT: number;
+  MAX_DEVICES: number | "unlimited";
+  MAX_LAYOUTS: number | "unlimited";
+  STORAGE_LIMIT: number | "unlimited";
 };
 
 export type Tier = {
@@ -18,6 +19,7 @@ export type Tier = {
   description: string | null;
   price: number;
   billing_cycle: string;
+  features_visible_to_client: boolean;
 };
 
 export type Client = {

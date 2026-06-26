@@ -26,7 +26,8 @@ const ProtectedRoute = ({ feature, type = "boolean", children }: Props) => {
     return <PlanAccessRequired type="upgrade" />;
   }
 
-  if (type === "limit" && limit(feature) <= 0) {
+  const featureLimit = limit(feature);
+  if (type === "limit" && featureLimit !== "unlimited" && featureLimit <= 0) {
     return <PlanAccessRequired type="upgrade" />;
   }
 
