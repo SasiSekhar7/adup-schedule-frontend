@@ -361,9 +361,11 @@ function App() {
             <Route
               path="/live-content/add"
               element={
-                <Suspense fallback={<Loading />}>
-                  <CreateLiveContent />
-                </Suspense>
+                <ProtectedRoute feature="LIVE_STREAMING">
+                  <Suspense fallback={<Loading />}>
+                    <CreateLiveContent />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -382,51 +384,53 @@ function App() {
                 </Suspense>
               }
             />
+
+            <Route
+              path="/stream-providers"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <StreamProvidersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/stream-providers/:slug"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ProviderChannelsPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/stream-channels"
+              element={
+                <ProtectedRoute feature="LIVE_STREAMING">
+                  <Suspense fallback={<Loading />}>
+                    <ClientChannelsPage />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/stream-providers/:slug/:channelId"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ChannelDetailPage />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/channel-details/:channelId"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ClientChannelDetailPage />
+                </Suspense>
+              }
+            />
           </Route>
-
-          <Route
-            path="/stream-providers"
-            element={
-              <Suspense fallback={<Loading />}>
-                <StreamProvidersPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/stream-providers/:slug"
-            element={
-              <Suspense fallback={<Loading />}>
-                <ProviderChannelsPage />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/stream-channels"
-            element={
-              <Suspense fallback={<Loading />}>
-                <ClientChannelsPage />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/stream-providers/:slug/:channelId"
-            element={
-              <Suspense fallback={<Loading />}>
-                <ChannelDetailPage />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="/channel-details/:channelId"
-            element={
-              <Suspense fallback={<Loading />}>
-                <ClientChannelDetailPage />
-              </Suspense>
-            }
-          />
 
           <Route
             path="/forbidden"

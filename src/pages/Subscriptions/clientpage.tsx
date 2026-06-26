@@ -41,6 +41,7 @@ type SubscriptionHistoryItem = {
   Tier?: {
     name: string;
     price: number;
+    features_visible_to_client?: boolean;
   };
 };
 
@@ -608,6 +609,15 @@ export default function ClientSubscriptionPage() {
                         {/* Price */}
                         <p className="text-sm font-medium text-slate-800">
                           ₹{item.Tier?.price ?? 0}
+                        </p>
+
+                        <p className="text-xs text-slate-500 mt-1">
+                          Advance Features :{" "}
+                          <span className="font-medium">
+                            {item.Tier?.features_visible_to_client
+                              ? "Yes"
+                              : "No"}
+                          </span>
                         </p>
 
                         <Badge

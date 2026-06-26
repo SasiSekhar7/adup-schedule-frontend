@@ -1,10 +1,11 @@
-
-
-
-
 import api from "@/api";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +33,7 @@ function AdminPlans() {
     price: 0,
     billing_cycle: "monthly",
     is_trial: false,
+    features_visible_to_client: true,
     features: {},
   });
 
@@ -92,6 +94,7 @@ function AdminPlans() {
       price: 0,
       billing_cycle: "monthly",
       is_trial: false,
+      features_visible_to_client: true,
       features: defaultFeatures,
     });
     setOpen(true);
@@ -118,6 +121,7 @@ function AdminPlans() {
       price: tier.price,
       billing_cycle: tier.billing_cycle,
       is_trial: tier.is_trial,
+      features_visible_to_client: tier.features_visible_to_client ?? true,
       features: featureMap,
     });
 
@@ -190,6 +194,7 @@ function AdminPlans() {
         price: form.price,
         billing_cycle: form.billing_cycle,
         is_trial: form.is_trial,
+        features_visible_to_client: form.features_visible_to_client,
         features: buildFeaturesPayload(),
       };
 
@@ -254,8 +259,12 @@ function AdminPlans() {
   const getFeatureDisplay = (key: string, rawValue: any) => {
     const isBool = isBooleanFeature(key);
     const isTruthy = rawValue === "true" || rawValue === true;
-    const isFalsy = rawValue === "false" || rawValue === false || rawValue === "0" || rawValue === 0;
-    
+    const isFalsy =
+      rawValue === "false" ||
+      rawValue === false ||
+      rawValue === "0" ||
+      rawValue === 0;
+
     let displayValue = "";
     if (!isBool) {
       if (key === "STORAGE_LIMIT") {
@@ -278,9 +287,13 @@ function AdminPlans() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Manage Plans</h1>
-          <p className="text-muted-foreground mt-1">Configure your subscription tiers and feature limits.</p>
+          <p className="text-muted-foreground mt-1">
+            Configure your subscription tiers and feature limits.
+          </p>
         </div>
-        <Button onClick={handleOpenCreate} size="lg">Create Plan</Button>
+        <Button onClick={handleOpenCreate} size="lg">
+          Create Plan
+        </Button>
       </div>
 
       {/* CARDS */}
@@ -294,8 +307,8 @@ function AdminPlans() {
           </div>
         ) : (
           tiers.map((tier) => (
-            <Card 
-              key={tier.tier_id} 
+            <Card
+              key={tier.tier_id}
               className="flex flex-col relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
             >
               <CardHeader className="pb-4">
@@ -321,13 +334,22 @@ function AdminPlans() {
                         Trial
                       </span>
                     )}
+
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                        !tier.features_visible_to_client &&
+                        "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {!tier.features_visible_to_client && "Features Hidden"}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 flex items-baseline text-4xl font-extrabold">
                   ₹{tier.price}
                   <span className="ml-1 text-sm font-medium text-muted-foreground">
-                    /{tier.billing_cycle === 'monthly' ? 'mo' : 'yr'}
+                    /{tier.billing_cycle === "monthly" ? "mo" : "yr"}
                   </span>
                 </div>
               </CardHeader>
@@ -340,20 +362,29 @@ function AdminPlans() {
                 </h4>
                 <ul className="space-y-3">
                   {tier.Features?.map((feature: any, i: number) => {
-                    const { name, hasFeature, isBool, displayValue } = getFeatureDisplay(
-                      feature.key, 
-                      feature.TierFeature?.value ?? feature.value
-                    );
+                    const { name, hasFeature, isBool, displayValue } =
+                      getFeatureDisplay(
+                        feature.key,
+                        feature.TierFeature?.value ?? feature.value,
+                      );
 
                     return (
-                      <li key={i} className={`flex items-start gap-3 text-sm ${!hasFeature ? "text-muted-foreground/60" : "text-foreground"}`}>
+                      <li
+                        key={i}
+                        className={`flex items-start gap-3 text-sm ${!hasFeature ? "text-muted-foreground/60" : "text-foreground"}`}
+                      >
                         {hasFeature ? (
                           <Check className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                         ) : (
                           <X className="w-4 h-4 mt-0.5 text-muted-foreground/50 shrink-0" />
                         )}
                         <span className="flex-1">
-                          {name} {!isBool && hasFeature && <span className="font-semibold">: {displayValue}</span>}
+                          {name}{" "}
+                          {!isBool && hasFeature && (
+                            <span className="font-semibold">
+                              : {displayValue}
+                            </span>
+                          )}
                         </span>
                       </li>
                     );
@@ -364,9 +395,9 @@ function AdminPlans() {
               <div className="h-px bg-border w-full" />
 
               <CardFooter className="p-4 bg-muted/20 flex gap-3">
-                <Button 
-                  onClick={() => handleEdit(tier)} 
-                  className="flex-1" 
+                <Button
+                  onClick={() => handleEdit(tier)}
+                  className="flex-1"
                   variant="default"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -437,6 +468,19 @@ function AdminPlans() {
                   setForm({
                     ...form,
                     is_trial: val,
+                  })
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded">
+              <span>Features Visible To Client</span>
+
+              <Switch
+                checked={form.features_visible_to_client === true}
+                onCheckedChange={(val) =>
+                  setForm({
+                    ...form,
+                    features_visible_to_client: val,
                   })
                 }
               />
