@@ -3048,9 +3048,10 @@ export default function ScreenLayoutPage() {
   const maxLayouts = limit("MAX_LAYOUTS");
   const currentLayouts = layouts.length;
 
-  const canAddLayout = currentLayouts < maxLayouts;
+  const canAddLayout =
+    maxLayouts === "unlimited" ? true : currentLayouts < maxLayouts;
 
-  const canCreateLayout = limit("MAX_LAYOUTS") > 0;
+  const canCreateLayout = maxLayouts === "unlimited" ? true : maxLayouts > 0;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -3212,8 +3213,9 @@ export default function ScreenLayoutPage() {
                 {!canAddLayout && (
                   <TooltipContent>
                     <p>
-                      You reached your layout limit ({maxLayouts}). Upgrade to
-                      add more.
+                      You reached your layout limit (
+                      {maxLayouts === "unlimited" ? "Unlimited" : maxLayouts}).
+                      Upgrade to add more.
                     </p>
                   </TooltipContent>
                 )}

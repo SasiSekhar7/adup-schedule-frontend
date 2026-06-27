@@ -207,7 +207,7 @@ export const columns: ColumnDef<Ad>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Uploaded" />
     ),
-    cell: ({ row }) => new Date(row.getValue("updated_at")).toLocaleString(),
+    cell: ({ row }) => new Date(row.getValue("created_at")).toLocaleString(),
   },
   {
     accessorKey: "ad_id",

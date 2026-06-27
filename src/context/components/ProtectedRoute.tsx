@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { ReactNode } from "react";
 import { useFeature } from "../hooks/useFeature";
+import PlanAccessRequired from "@/pages/PlanAccess";
 
 type Props = {
   feature: keyof import("../types/subscription").Features;
@@ -18,15 +19,16 @@ const ProtectedRoute = ({ feature, type = "boolean", children }: Props) => {
   }
 
   if (expired) {
-    return <Navigate to="/" replace />;
+    return <PlanAccessRequired type="expired" />;
   }
 
   if (type === "boolean" && !has(feature)) {
-    return <Navigate to="/" replace />;
+    return <PlanAccessRequired type="upgrade" />;
   }
 
-  if (type === "limit" && limit(feature) <= 0) {
-    return <Navigate to="/" replace />;
+  const featureLimit = limit(feature);
+  if (type === "limit" && featureLimit !== "unlimited" && featureLimit <= 0) {
+    return <PlanAccessRequired type="upgrade" />;
   }
 
   return <>{children}</>;

@@ -33,6 +33,13 @@ import {
 import api from "@/api";
 import AdDetailPage from "./Page";
 import { toast } from "sonner";
+import { useFeature } from "@/context/hooks/useFeature";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Helper function to format bytes
 const formatBytes = (bytes: number, decimals = 2): string => {
@@ -214,6 +221,10 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
   const [exportEndDate, setExportEndDate] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [fullDeviceJobType, setFullDeviceJobType] = useState("PROOF_OF_PLAY");
+  const { has, subscription } = useFeature();
+
+  const hasFeaturesAccess = subscription?.Tier?.features_visible_to_client;
+  const canExport = has("PROOF_OF_PLAY");
 
   const handleExport = async () => {
     try {
@@ -436,142 +447,189 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
     }
   };
   return (
-    // <div className="flex flex-col lg:flex-row min-h-screen ">
     <>
-     {!isEditing && (
-  <div className="flex w-full sm:w-auto justify-end mt-4 sm:mt-0">
-    <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          className="w-full sm:w-auto bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Export Data
-        </Button>
-      </DialogTrigger>
-      
-      {/* Added p-0 and overflow-hidden to control the internal layout perfectly */}
-      <DialogContent className="sm:max-w-[450px] max-h-[90vh] p-0 overflow-hidden border-slate-200">
-        
-        {/* Header Section */}
-        <div className="p-6 pb-4 border-b border-slate-100 bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-slate-900">
-              Export Proof of Play
-            </DialogTitle>
-            <p className="text-sm text-slate-500 mt-1">
-              Download metrics and play logs for this ad.
-            </p>
-          </DialogHeader>
-        </div>
+      {!isEditing && hasFeaturesAccess && (
+        <div className="flex w-full sm:w-auto justify-end mt-4 sm:mt-0">
+          <Dialog
+            open={exportDialogOpen}
+            onOpenChange={(open) => {
+              if (!canExport) return;
+              setExportDialogOpen(open);
+            }}
+          >
+            <DialogTrigger asChild>
+              <div className="inline-block">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-block">
+                        <Button
+                          variant="default"
+                          disabled={!canExport}
+                          className="w-full sm:w-auto bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all disabled:opacity-50"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Export Data
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
 
-        {/* Form Body Section */}
-        <div className="p-6 space-y-5 bg-slate-50/50 overflow-y-auto">
-          
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Export Type
-            </Label>
-            <Select
-              value={fullDeviceJobType}
-              onValueChange={setFullDeviceJobType}
-            >
-              <SelectTrigger className="bg-white border-slate-200 shadow-sm">
-                <SelectValue placeholder="Select export type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PROOF_OF_PLAY">Proof of Play</SelectItem>
-                <SelectItem value="DEVICE_EVENTS">Device Events</SelectItem>
-                <SelectItem value="DEVICE_TELEMETRY">Device Telemetry</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Time Range
-            </Label>
-            <Select value={exportFilter} onValueChange={setExportFilter}>
-              <SelectTrigger className="bg-white border-slate-200 shadow-sm">
-                <SelectValue placeholder="Select filter type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today's Data</SelectItem>
-                <SelectItem value="yesterday">Yesterday's Data</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-                <SelectItem value="all">All Data</SelectItem>
-                <SelectItem value="date_range">Custom Range</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Custom Date Range - Stacks on mobile, side-by-side on desktop */}
-          {exportFilter === "date_range" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60 mt-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-slate-600">Start Date</Label>
-                <Input
-                  type="date"
-                  value={exportStartDate}
-                  onChange={(e) => setExportStartDate(e.target.value)}
-                  className="bg-white border-slate-200 shadow-sm text-sm"
-                />
+                    {!canExport && (
+                      <TooltipContent side="top">
+                        Upgrade your plan to enable Proof of Play export
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-slate-600">End Date</Label>
-                <Input
-                  type="date"
-                  value={exportEndDate}
-                  onChange={(e) => setExportEndDate(e.target.value)}
-                  className="bg-white border-slate-200 shadow-sm text-sm"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            </DialogTrigger>
 
-        {/* Footer Section - Buttons stretch on mobile */}
-        <div className="p-4 sm:p-6 border-t border-slate-100 bg-white">
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setExportDialogOpen(false)}
-              className="w-full sm:w-auto border-slate-200 text-slate-700"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleExport}
-              disabled={
-                isExporting ||
-                (exportFilter === "date_range" &&
-                  (!exportStartDate || !exportEndDate))
-              }
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-            >
-              {isExporting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25" />
-                    <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  </svg>
-                  Exporting...
-                </span>
-              ) : (
-                "Export Data"
-              )}
-            </Button>
-          </DialogFooter>
+            {/* Added p-0 and overflow-hidden to control the internal layout perfectly */}
+            <DialogContent className="sm:max-w-[450px] max-h-[90vh] p-0 overflow-hidden border-slate-200">
+              {/* Header Section */}
+              <div className="p-6 pb-4 border-b border-slate-100 bg-white">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-semibold text-slate-900">
+                    Export Proof of Play
+                  </DialogTitle>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Download metrics and play logs for this ad.
+                  </p>
+                </DialogHeader>
+              </div>
+
+              {/* Form Body Section */}
+              <div className="p-6 space-y-5 bg-slate-50/50 overflow-y-auto">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Export Type
+                  </Label>
+                  <Select
+                    value={fullDeviceJobType}
+                    onValueChange={setFullDeviceJobType}
+                  >
+                    <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+                      <SelectValue placeholder="Select export type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PROOF_OF_PLAY">
+                        Proof of Play
+                      </SelectItem>
+                      <SelectItem value="DEVICE_EVENTS">
+                        Device Events
+                      </SelectItem>
+                      <SelectItem value="DEVICE_TELEMETRY">
+                        Device Telemetry
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Time Range
+                  </Label>
+                  <Select value={exportFilter} onValueChange={setExportFilter}>
+                    <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+                      <SelectValue placeholder="Select filter type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today's Data</SelectItem>
+                      <SelectItem value="yesterday">
+                        Yesterday's Data
+                      </SelectItem>
+                      <SelectItem value="week">This Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
+                      <SelectItem value="all">All Data</SelectItem>
+                      <SelectItem value="date_range">Custom Range</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Custom Date Range - Stacks on mobile, side-by-side on desktop */}
+                {exportFilter === "date_range" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60 mt-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-slate-600">
+                        Start Date
+                      </Label>
+                      <Input
+                        type="date"
+                        value={exportStartDate}
+                        onChange={(e) => setExportStartDate(e.target.value)}
+                        className="bg-white border-slate-200 shadow-sm text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium text-slate-600">
+                        End Date
+                      </Label>
+                      <Input
+                        type="date"
+                        value={exportEndDate}
+                        onChange={(e) => setExportEndDate(e.target.value)}
+                        className="bg-white border-slate-200 shadow-sm text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Section - Buttons stretch on mobile */}
+              <div className="p-4 sm:p-6 border-t border-slate-100 bg-white">
+                <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setExportDialogOpen(false)}
+                    className="w-full sm:w-auto border-slate-200 text-slate-700"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleExport}
+                    disabled={
+                      isExporting ||
+                      (exportFilter === "date_range" &&
+                        (!exportStartDate || !exportEndDate))
+                    }
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                  >
+                    {isExporting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                            opacity="0.25"
+                          />
+                          <path
+                            d="M22 12a10 10 0 00-10-10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                        </svg>
+                        Exporting...
+                      </span>
+                    ) : (
+                      "Export Data"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-        
-      </DialogContent>
-    </Dialog>
-  </div>
-)}
+      )}
       <div className="flex flex-1 flex-col lg:flex-row min-h-screen gap-4 lg:gap-0 ">
         {/* <div className="w-full lg:w-2/3 p-4 md:p-6 overflow-auto"> */}
         {isEditing && (

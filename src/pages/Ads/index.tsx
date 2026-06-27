@@ -304,6 +304,7 @@ function Ads() {
   };
 
   const { has, limit, subscription } = useFeature();
+  const hasFeaturesAccess = subscription?.Tier?.features_visible_to_client;
   const canExport = has("PROOF_OF_PLAY");
 
   // const maxAds = limit("MAX_ADS");
@@ -314,7 +315,8 @@ function Ads() {
 
   const usedStorage = Number(subscription?.Client?.used_storage_bytes || 0);
 
-  const canAddAd = usedStorage < storageLimit;
+  const canAddAd =
+    storageLimit === "unlimited" ? true : usedStorage < storageLimit;
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -352,53 +354,54 @@ function Ads() {
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Export Button */}
-          <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-            {/* <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Download className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Export Proof of Play</span>
-                <span className="sm:hidden">Export</span>
-              </Button>
-            </DialogTrigger> */}
-
-            <DialogTrigger asChild>
-              <div className="inline-block">
+          {hasFeaturesAccess && (
+            <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+              {canExport ? (
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    <Download className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">
+                      Export Proof of Play
+                    </span>
+                    <span className="sm:hidden">Export</span>
+                  </Button>
+                </DialogTrigger>
+              ) : (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        disabled={!canExport}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">
-                          Export Proof of Play
-                        </span>
-                        <span className="sm:hidden">Export</span>
-                      </Button>
+                      <span className="inline-block">
+                        <Button
+                          variant="outline"
+                          disabled
+                          className="w-full sm:w-auto pointer-events-none"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          <span className="hidden sm:inline">
+                            Export Proof of Play
+                          </span>
+                          <span className="sm:hidden">Export</span>
+                        </Button>
+                      </span>
                     </TooltipTrigger>
 
-                    {!canExport && (
-                      <TooltipContent>
-                        <p>Upgrade your plan to enable Proof of Play export</p>
-                      </TooltipContent>
-                    )}
+                    <TooltipContent side="top">
+                      Upgrade your plan to enable Proof of Play export.
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-base md:text-lg">
-                  Export Ads Proof of Play Data
-                </DialogTitle>
-                <div className="text-sm text-muted-foreground mt-2">
-                  Export proof of play data for selected ads
-                </div>
-              </DialogHeader>
-              <div className="space-y-4 md:space-y-6 py-4">
-                {/* <div className="space-y-2">
+              )}
+              <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-base md:text-lg">
+                    Export Ads Proof of Play Data
+                  </DialogTitle>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    Export proof of play data for selected ads
+                  </div>
+                </DialogHeader>
+                <div className="space-y-4 md:space-y-6 py-4">
+                  {/* <div className="space-y-2">
                   <Label htmlFor="adSelection">Ad Selection</Label>
                   <Select
                     value={selectedAdIds}
@@ -418,106 +421,110 @@ function Ads() {
                   </Select>
                 </div> */}
 
-                <div className="space-y-2">
-                  <Label htmlFor="adSelection">Ad Selection</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="adSelection">Ad Selection</Label>
 
-                  <Select
-                    value={selectedAdId ?? "all"}
-                    onValueChange={(value) =>
-                      setSelectedAdId(value === "all" ? null : value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select ad to export" />
-                    </SelectTrigger>
+                    <Select
+                      value={selectedAdId ?? "all"}
+                      onValueChange={(value) =>
+                        setSelectedAdId(value === "all" ? null : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select ad to export" />
+                      </SelectTrigger>
 
-                    <SelectContent>
-                      {/* <SelectItem value="all">All Ads</SelectItem> */}
+                      <SelectContent>
+                        {/* <SelectItem value="all">All Ads</SelectItem> */}
 
-                      {data.map((ad) => (
-                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
-                          {ad.name}
-                          {/* {ad.ad_id} */}
+                        {data.map((ad) => (
+                          <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                            {ad.name}
+                            {/* {ad.ad_id} */}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="exportFilter">Export Filter</Label>
+                    <Select
+                      value={exportFilter}
+                      onValueChange={setExportFilter}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select filter type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today's Data</SelectItem>
+                        <SelectItem value="yesterday">
+                          Yesterday's Data
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        <SelectItem value="week">This Week</SelectItem>
+                        <SelectItem value="month">This Month</SelectItem>
+                        <SelectItem value="year">This Year</SelectItem>
+                        <SelectItem value="all">All Historical Data</SelectItem>
+                        <SelectItem value="date_range">
+                          Custom Date Range
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="exportFilter">Export Filter</Label>
-                  <Select value={exportFilter} onValueChange={setExportFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select filter type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="today">Today's Data</SelectItem>
-                      <SelectItem value="yesterday">
-                        Yesterday's Data
-                      </SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
-                      <SelectItem value="all">All Historical Data</SelectItem>
-                      <SelectItem value="date_range">
-                        Custom Date Range
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {exportFilter === "date_range" && (
-                  <div className="space-y-4 p-3 md:p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-sm font-medium">
-                      Date Range Selection
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="exportStartDate">Start Date</Label>
-                        <Input
-                          id="exportStartDate"
-                          type="date"
-                          value={exportStartDate}
-                          onChange={(e) => setExportStartDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="exportEndDate">End Date</Label>
-                        <Input
-                          id="exportEndDate"
-                          type="date"
-                          value={exportEndDate}
-                          onChange={(e) => setExportEndDate(e.target.value)}
-                        />
+                  {exportFilter === "date_range" && (
+                    <div className="space-y-4 p-3 md:p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium">
+                        Date Range Selection
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="exportStartDate">Start Date</Label>
+                          <Input
+                            id="exportStartDate"
+                            type="date"
+                            value={exportStartDate}
+                            onChange={(e) => setExportStartDate(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="exportEndDate">End Date</Label>
+                          <Input
+                            id="exportEndDate"
+                            type="date"
+                            value={exportEndDate}
+                            onChange={(e) => setExportEndDate(e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-              <DialogFooter className="flex-col sm:flex-row gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setExportDialogOpen(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleExport}
-                  disabled={
-                    isExporting ||
-                    (exportFilter === "date_range" &&
-                      (!exportStartDate || !exportEndDate))
-                  }
-                  className="w-full sm:w-auto"
-                >
-                  {isExporting ? "Exporting..." : "Export"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  )}
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setExportDialogOpen(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleExport}
+                    disabled={
+                      isExporting ||
+                      (exportFilter === "date_range" &&
+                        (!exportStartDate || !exportEndDate))
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    {isExporting ? "Exporting..." : "Export"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
           {/* <AddAdComponent onIsOpenChange={onIsOpenChange} /> */}
           <TooltipProvider>
@@ -541,7 +548,10 @@ function Ads() {
                   </p> */}
                   <p>
                     Storage limit reached ({formatBytes(usedStorage)} /{" "}
-                    {formatBytes(storageLimit)}). Upgrade your plan.
+                    {storageLimit === "unlimited"
+                      ? "Unlimited"
+                      : formatBytes(storageLimit)}
+                    ). Upgrade your plan.
                   </p>
                 </TooltipContent>
               )}

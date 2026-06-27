@@ -1,10 +1,11 @@
-
-
-
-
 import api from "@/api";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Check, X, Trash2, Pencil } from "lucide-react";
+import { Check, X, Trash2, Pencil, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function AdminPlans() {
   const [tiers, setTiers] = useState<any[]>([]);
@@ -32,6 +39,7 @@ function AdminPlans() {
     price: 0,
     billing_cycle: "monthly",
     is_trial: false,
+    features_visible_to_client: true,
     features: {},
   });
 
@@ -44,11 +52,20 @@ function AdminPlans() {
 
   const bytesToGB = (bytes: any) => {
     if (!bytes) return "";
+
+    if (bytes === "unlimited") {
+      return "unlimited";
+    }
+
     return (Number(bytes) / BYTES_IN_GB).toFixed(0);
   };
 
   const gbToBytes = (gb: any) => {
     if (!gb) return "0";
+    if (gb === "unlimited") {
+      return "unlimited";
+    }
+
     return String(Number(gb) * BYTES_IN_GB);
   };
 
@@ -78,10 +95,16 @@ function AdminPlans() {
     const defaultFeatures: any = {};
 
     featuresList.forEach((f) => {
-      if (isBooleanFeature(f.key)) {
+      if (isBooleanFeature(f)) {
         defaultFeatures[f.key] = false;
       } else {
-        defaultFeatures[f.key] = "";
+        if (isUnlimitedFeature(f)) {
+          defaultFeatures[f.key] = "0";
+        } else if (isNumberFeature(f)) {
+          defaultFeatures[f.key] = "0";
+        } else {
+          defaultFeatures[f.key] = false;
+        }
       }
     });
     setEditMode(false);
@@ -92,6 +115,7 @@ function AdminPlans() {
       price: 0,
       billing_cycle: "monthly",
       is_trial: false,
+      features_visible_to_client: true,
       features: defaultFeatures,
     });
     setOpen(true);
@@ -105,7 +129,11 @@ function AdminPlans() {
       const val = f.TierFeature?.value ?? f.value;
 
       if (f.key === "STORAGE_LIMIT") {
-        featureMap[f.key] = bytesToGB(val);
+        if (val === "unlimited") {
+          featureMap[f.key] = "unlimited";
+        } else {
+          featureMap[f.key] = bytesToGB(val);
+        }
       } else {
         featureMap[f.key] = val;
       }
@@ -118,6 +146,7 @@ function AdminPlans() {
       price: tier.price,
       billing_cycle: tier.billing_cycle,
       is_trial: tier.is_trial,
+      features_visible_to_client: tier.features_visible_to_client ?? true,
       features: featureMap,
     });
 
@@ -131,7 +160,11 @@ function AdminPlans() {
       let value = form.features?.[feature.key];
 
       if (value === undefined || value === "") {
-        value = isBooleanFeature(feature.key) ? false : "0";
+        if (feature.type === "BOOLEAN") {
+          value = false;
+        } else {
+          value = "0";
+        }
       }
 
       if (feature.key === "STORAGE_LIMIT") {
@@ -169,10 +202,16 @@ function AdminPlans() {
       const key = feature.key;
       const value = form.features?.[key];
 
-      if (isBooleanFeature(key)) continue;
+      if (feature.type === "BOOLEAN") continue;
 
-      if (!value || Number(value) < 0) {
-        toast.error(`${formatFeatureKey(key)} must be greater than 0`);
+      if (feature.type === "UNLIMITED_NUMBER") {
+        if (value === "unlimited") {
+          continue;
+        }
+      }
+
+      if (value === "" || isNaN(Number(value)) || Number(value) < 0) {
+        toast.error(`${formatFeatureKey(key)} is invalid`);
         return false;
       }
     }
@@ -190,6 +229,7 @@ function AdminPlans() {
         price: form.price,
         billing_cycle: form.billing_cycle,
         is_trial: form.is_trial,
+        features_visible_to_client: form.features_visible_to_client,
         features: buildFeaturesPayload(),
       };
 
@@ -241,25 +281,37 @@ function AdminPlans() {
       .replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
-  const isBooleanFeature = (key: string) => {
-    return [
-      "LIVE_STREAMING",
-      "PROOF_OF_PLAY",
-      "LIVE_IN_LAYOUT",
-      "MULTI_VIDEO_IN_LAYOUT",
-    ].includes(key);
-  };
+  const isBooleanFeature = (feature: any) => feature.type === "BOOLEAN";
+
+  const isNumberFeature = (feature: any) => feature.type === "NUMBER";
+
+  const isUnlimitedFeature = (feature: any) =>
+    feature.type === "UNLIMITED_NUMBER";
 
   // UI Helpers for features
   const getFeatureDisplay = (key: string, rawValue: any) => {
-    const isBool = isBooleanFeature(key);
+    const feature = featuresList.find((f) => f.key === key);
+
+    const isBool = feature?.type === "BOOLEAN";
+
     const isTruthy = rawValue === "true" || rawValue === true;
-    const isFalsy = rawValue === "false" || rawValue === false || rawValue === "0" || rawValue === 0;
-    
+    const isFalsy =
+      rawValue === "false" ||
+      rawValue === false ||
+      rawValue === "0" ||
+      rawValue === 0;
+
     let displayValue = "";
+
     if (!isBool) {
       if (key === "STORAGE_LIMIT") {
-        displayValue = `${(Number(rawValue) / BYTES_IN_GB).toFixed(0)} GB`;
+        if (rawValue === "unlimited") {
+          displayValue = "Unlimited";
+        } else {
+          displayValue = `${bytesToGB(rawValue)} GB`;
+        }
+      } else if (rawValue === "unlimited") {
+        displayValue = "Unlimited";
       } else {
         displayValue = String(rawValue);
       }
@@ -278,9 +330,13 @@ function AdminPlans() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Manage Plans</h1>
-          <p className="text-muted-foreground mt-1">Configure your subscription tiers and feature limits.</p>
+          <p className="text-muted-foreground mt-1">
+            Configure your subscription tiers and feature limits.
+          </p>
         </div>
-        <Button onClick={handleOpenCreate} size="lg">Create Plan</Button>
+        <Button onClick={handleOpenCreate} size="lg">
+          Create Plan
+        </Button>
       </div>
 
       {/* CARDS */}
@@ -294,8 +350,8 @@ function AdminPlans() {
           </div>
         ) : (
           tiers.map((tier) => (
-            <Card 
-              key={tier.tier_id} 
+            <Card
+              key={tier.tier_id}
               className="flex flex-col relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
             >
               <CardHeader className="pb-4">
@@ -321,13 +377,22 @@ function AdminPlans() {
                         Trial
                       </span>
                     )}
+
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                        !tier.features_visible_to_client &&
+                        "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {!tier.features_visible_to_client && "Features Hidden"}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 flex items-baseline text-4xl font-extrabold">
                   ₹{tier.price}
                   <span className="ml-1 text-sm font-medium text-muted-foreground">
-                    /{tier.billing_cycle === 'monthly' ? 'mo' : 'yr'}
+                    /{tier.billing_cycle === "monthly" ? "mo" : "yr"}
                   </span>
                 </div>
               </CardHeader>
@@ -340,20 +405,29 @@ function AdminPlans() {
                 </h4>
                 <ul className="space-y-3">
                   {tier.Features?.map((feature: any, i: number) => {
-                    const { name, hasFeature, isBool, displayValue } = getFeatureDisplay(
-                      feature.key, 
-                      feature.TierFeature?.value ?? feature.value
-                    );
+                    const { name, hasFeature, isBool, displayValue } =
+                      getFeatureDisplay(
+                        feature.key,
+                        feature.TierFeature?.value ?? feature.value,
+                      );
 
                     return (
-                      <li key={i} className={`flex items-start gap-3 text-sm ${!hasFeature ? "text-muted-foreground/60" : "text-foreground"}`}>
+                      <li
+                        key={i}
+                        className={`flex items-start gap-3 text-sm ${!hasFeature ? "text-muted-foreground/60" : "text-foreground"}`}
+                      >
                         {hasFeature ? (
                           <Check className="w-4 h-4 mt-0.5 text-primary shrink-0" />
                         ) : (
                           <X className="w-4 h-4 mt-0.5 text-muted-foreground/50 shrink-0" />
                         )}
                         <span className="flex-1">
-                          {name} {!isBool && hasFeature && <span className="font-semibold">: {displayValue}</span>}
+                          {name}{" "}
+                          {!isBool && hasFeature && (
+                            <span className="font-semibold">
+                              : {displayValue}
+                            </span>
+                          )}
                         </span>
                       </li>
                     );
@@ -364,9 +438,9 @@ function AdminPlans() {
               <div className="h-px bg-border w-full" />
 
               <CardFooter className="p-4 bg-muted/20 flex gap-3">
-                <Button 
-                  onClick={() => handleEdit(tier)} 
-                  className="flex-1" 
+                <Button
+                  onClick={() => handleEdit(tier)}
+                  className="flex-1"
                   variant="default"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
@@ -441,6 +515,45 @@ function AdminPlans() {
                 }
               />
             </div>
+            <div className="flex items-center justify-between p-3 border rounded">
+              <div className="flex items-center gap-2">
+                <span>Features Visible To Client</span>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Info className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+
+                    <TooltipContent className="max-w-xs">
+                      <p>
+                        <strong>Disbaled:</strong> Customers can only access
+                        features included in their current plan.
+                        <br />
+                        <strong>Enabled (Visible to Client):</strong> All
+                        features are shown in the sidebar. Features not included
+                        in the customer's plan will display an Upgrade page.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <Switch
+                checked={form.features_visible_to_client === true}
+                onCheckedChange={(val) =>
+                  setForm({
+                    ...form,
+                    features_visible_to_client: val,
+                  })
+                }
+              />
+            </div>
 
             {/* DYNAMIC FEATURES */}
             <div>
@@ -457,7 +570,7 @@ function AdminPlans() {
                   >
                     <span>{formatFeatureKey(key)}</span>
 
-                    {isBooleanFeature(key) ? (
+                    {feature.type === "BOOLEAN" ? (
                       <Switch
                         checked={value === true || value === "true"}
                         onCheckedChange={(val) =>
@@ -472,7 +585,67 @@ function AdminPlans() {
                       />
                     ) : (
                       <>
-                        {key === "STORAGE_LIMIT" ? (
+                        {feature.type === "UNLIMITED_NUMBER" ? (
+                          <div className="flex items-center gap-3">
+                            <Input
+                              disabled={value === "unlimited"}
+                              type="number"
+                              className="w-24"
+                              value={value === "unlimited" ? "" : value}
+                              onChange={(e) =>
+                                setForm({
+                                  ...form,
+                                  features: {
+                                    ...form.features,
+                                    [key]: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+
+                            {key === "STORAGE_LIMIT" &&
+                              value !== "unlimited" && (
+                                <span className="text-sm text-gray-500">
+                                  GB
+                                </span>
+                              )}
+
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={value === "unlimited"}
+                                onChange={(e) =>
+                                  setForm({
+                                    ...form,
+                                    features: {
+                                      ...form.features,
+                                      [key]: e.target.checked
+                                        ? "unlimited"
+                                        : "0",
+                                    },
+                                  })
+                                }
+                              />
+                              Unlimited
+                            </label>
+                          </div>
+                        ) : (
+                          <Input
+                            type="number"
+                            className="w-24"
+                            value={value || ""}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                features: {
+                                  ...form.features,
+                                  [key]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                        {/* {key === "STORAGE_LIMIT" ? (
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
@@ -505,7 +678,7 @@ function AdminPlans() {
                               })
                             }
                           />
-                        )}
+                        )} */}
                       </>
                     )}
                   </div>

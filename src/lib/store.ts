@@ -30,9 +30,11 @@ export interface Layout {
   orientation: "portrait" | "landscape";
   zones: Zone[];
   is_active: boolean;
+  is_live_content_template: boolean;
   created_at: string;
   updated_at: string;
   background_color?: string;
+  Client?: any;
 }
 
 export interface Ad {
@@ -187,226 +189,226 @@ export interface LayoutSchedule {
 }
 
 // Default Widgets
-export const defaultWidgets: Widget[] = [
-  {
-    widget_id: "widget-clock",
-    name: "Digital Clock",
-    type: "clock",
-    description: "Display current time in digital format",
-    icon: "Clock",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-weather",
-    name: "Weather",
-    type: "weather",
-    description: "Show current weather conditions",
-    icon: "Cloud",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-news",
-    name: "News Ticker",
-    type: "news_ticker",
-    description: "Scrolling news headlines",
-    icon: "Newspaper",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-date",
-    name: "Date Display",
-    type: "date",
-    description: "Show current date",
-    icon: "Calendar",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-logo",
-    name: "Company Logo",
-    type: "logo",
-    description: "Display company branding",
-    icon: "Image",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-qr",
-    name: "QR Code",
-    type: "qr_code",
-    description: "Display scannable QR code",
-    icon: "QrCode",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-social",
-    name: "Social Feed",
-    type: "social_feed",
-    description: "Show social media updates",
-    icon: "Share2",
-    configurable: true,
-  },
-  {
-    widget_id: "widget-countdown",
-    name: "Countdown Timer",
-    type: "countdown",
-    description: "Countdown to specific event",
-    icon: "Timer",
-    configurable: true,
-  },
-];
+// export const defaultWidgets: Widget[] = [
+//   {
+//     widget_id: "widget-clock",
+//     name: "Digital Clock",
+//     type: "clock",
+//     description: "Display current time in digital format",
+//     icon: "Clock",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-weather",
+//     name: "Weather",
+//     type: "weather",
+//     description: "Show current weather conditions",
+//     icon: "Cloud",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-news",
+//     name: "News Ticker",
+//     type: "news_ticker",
+//     description: "Scrolling news headlines",
+//     icon: "Newspaper",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-date",
+//     name: "Date Display",
+//     type: "date",
+//     description: "Show current date",
+//     icon: "Calendar",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-logo",
+//     name: "Company Logo",
+//     type: "logo",
+//     description: "Display company branding",
+//     icon: "Image",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-qr",
+//     name: "QR Code",
+//     type: "qr_code",
+//     description: "Display scannable QR code",
+//     icon: "QrCode",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-social",
+//     name: "Social Feed",
+//     type: "social_feed",
+//     description: "Show social media updates",
+//     icon: "Share2",
+//     configurable: true,
+//   },
+//   {
+//     widget_id: "widget-countdown",
+//     name: "Countdown Timer",
+//     type: "countdown",
+//     description: "Countdown to specific event",
+//     icon: "Timer",
+//     configurable: true,
+//   },
+// ];
 
 // Sample Data
-export const sampleAds: Ad[] = [
-  {
-    ad_id: "ad-001",
-    name: "ad96-promofull",
-    client_name: "Aparna",
-    status: "completed",
-    url: "dd243a8e-7de4-4a90-8c99-514fdeee7825-best-1080x1920.mp4",
-    duration: 82,
-    updated_at: "10/19/2025, 12:27:59 PM",
-  },
-  {
-    ad_id: "ad-002",
-    name: "gggg",
-    client_name: "LOTUS",
-    status: "completed",
-    url: "3469691f-a333-4971-a2a9-c7cfc3c33f17-best-1080x1920.mp4",
-    duration: 80,
-    updated_at: "7/2/2025, 7:53:06 PM",
-  },
-  {
-    ad_id: "ad-003",
-    name: "DDApplicationKit",
-    client_name: "ADUP",
-    status: "completed",
-    url: "82173ad4-b112-4cb2-acac-8faaaa029955-best-2160x3840.mp4",
-    duration: 21,
-    updated_at: "6/15/2025, 10:27:10 AM",
-  },
-  {
-    ad_id: "ad-004",
-    name: "prime vertical",
-    client_name: "ADUP",
-    status: "completed",
-    url: "dbc05563-0489-4ed8-b2e2-b55651df3e2a-best-2160x2880.mp4",
-    duration: 30,
-    updated_at: "6/14/2025, 11:57:03 PM",
-  },
-  {
-    ad_id: "ad-005",
-    name: "Test2",
-    client_name: "Demo",
-    status: "completed",
-    url: "2ad247e9-af60-4285-baa8-dd73ef1508b0-best-1600x1000.jpeg",
-    duration: 29,
-    updated_at: "6/19/2025, 4:08:15 AM",
-  },
-  {
-    ad_id: "ad-006",
-    name: "detailing",
-    client_name: "ADUP",
-    status: "completed",
-    url: "0e10b356-8977-4451-838a-126ac762f7f3-best-480x848.mp4",
-    duration: 28,
-    updated_at: "7/10/2025, 7:00:32 PM",
-  },
-];
+// export const sampleAds: Ad[] = [
+//   {
+//     ad_id: "ad-001",
+//     name: "ad96-promofull",
+//     client_name: "Aparna",
+//     status: "completed",
+//     url: "dd243a8e-7de4-4a90-8c99-514fdeee7825-best-1080x1920.mp4",
+//     duration: 82,
+//     updated_at: "10/19/2025, 12:27:59 PM",
+//   },
+//   {
+//     ad_id: "ad-002",
+//     name: "gggg",
+//     client_name: "LOTUS",
+//     status: "completed",
+//     url: "3469691f-a333-4971-a2a9-c7cfc3c33f17-best-1080x1920.mp4",
+//     duration: 80,
+//     updated_at: "7/2/2025, 7:53:06 PM",
+//   },
+//   {
+//     ad_id: "ad-003",
+//     name: "DDApplicationKit",
+//     client_name: "ADUP",
+//     status: "completed",
+//     url: "82173ad4-b112-4cb2-acac-8faaaa029955-best-2160x3840.mp4",
+//     duration: 21,
+//     updated_at: "6/15/2025, 10:27:10 AM",
+//   },
+//   {
+//     ad_id: "ad-004",
+//     name: "prime vertical",
+//     client_name: "ADUP",
+//     status: "completed",
+//     url: "dbc05563-0489-4ed8-b2e2-b55651df3e2a-best-2160x2880.mp4",
+//     duration: 30,
+//     updated_at: "6/14/2025, 11:57:03 PM",
+//   },
+//   {
+//     ad_id: "ad-005",
+//     name: "Test2",
+//     client_name: "Demo",
+//     status: "completed",
+//     url: "2ad247e9-af60-4285-baa8-dd73ef1508b0-best-1600x1000.jpeg",
+//     duration: 29,
+//     updated_at: "6/19/2025, 4:08:15 AM",
+//   },
+//   {
+//     ad_id: "ad-006",
+//     name: "detailing",
+//     client_name: "ADUP",
+//     status: "completed",
+//     url: "0e10b356-8977-4451-838a-126ac762f7f3-best-480x848.mp4",
+//     duration: 28,
+//     updated_at: "7/10/2025, 7:00:32 PM",
+//   },
+// ];
 
-export const sampleCarousels: Carousel[] = [
-  {
-    carousel_id: "car-001",
-    name: "Summer Sale Banner",
-    client_name: "RetailMax",
-    slides: 5,
-    duration: 45,
-    status: "completed",
-  },
-  {
-    carousel_id: "car-002",
-    name: "Product Showcase",
-    client_name: "TechStore",
-    slides: 8,
-    duration: 60,
-    status: "completed",
-  },
-  {
-    carousel_id: "car-003",
-    name: "Restaurant Menu",
-    client_name: "FoodHub",
-    slides: 10,
-    duration: 90,
-    status: "completed",
-  },
-];
+// export const sampleCarousels: Carousel[] = [
+//   {
+//     carousel_id: "car-001",
+//     name: "Summer Sale Banner",
+//     client_name: "RetailMax",
+//     slides: 5,
+//     duration: 45,
+//     status: "completed",
+//   },
+//   {
+//     carousel_id: "car-002",
+//     name: "Product Showcase",
+//     client_name: "TechStore",
+//     slides: 8,
+//     duration: 60,
+//     status: "completed",
+//   },
+//   {
+//     carousel_id: "car-003",
+//     name: "Restaurant Menu",
+//     client_name: "FoodHub",
+//     slides: 10,
+//     duration: 90,
+//     status: "completed",
+//   },
+// ];
 
-export const sampleLiveContent: LiveContent[] = [
-  {
-    live_id: "live-001",
-    name: "News Channel Stream",
-    stream_url: "https://stream.example.com/news",
-    status: "active",
-    type: "hls",
-  },
-  {
-    live_id: "live-002",
-    name: "Sports Live",
-    stream_url: "https://youtube.com/watch?v=sports123",
-    status: "active",
-    type: "youtube",
-  },
-  {
-    live_id: "live-003",
-    name: "Corporate Channel",
-    stream_url: "rtsp://192.168.1.100/stream",
-    status: "inactive",
-    type: "rtsp",
-  },
-];
+// export const sampleLiveContent: LiveContent[] = [
+//   {
+//     live_id: "live-001",
+//     name: "News Channel Stream",
+//     stream_url: "https://stream.example.com/news",
+//     status: "active",
+//     type: "hls",
+//   },
+//   {
+//     live_id: "live-002",
+//     name: "Sports Live",
+//     stream_url: "https://youtube.com/watch?v=sports123",
+//     status: "active",
+//     type: "youtube",
+//   },
+//   {
+//     live_id: "live-003",
+//     name: "Corporate Channel",
+//     stream_url: "rtsp://192.168.1.100/stream",
+//     status: "inactive",
+//     type: "rtsp",
+//   },
+// ];
 
-export const sampleGroups: DeviceGroup[] = [
-  {
-    group_id: "grp-001",
-    name: "TRISHUL-B2",
-    device_count: 1,
-    capacity: 85,
-    orientation: "landscape",
-  },
-  {
-    group_id: "grp-002",
-    name: "Ramaswamy horizontal",
-    device_count: 2,
-    capacity: 72,
-    orientation: "landscape",
-  },
-  {
-    group_id: "grp-003",
-    name: "Vivera WGL",
-    device_count: 2,
-    capacity: 65,
-    orientation: "landscape",
-  },
-  {
-    group_id: "grp-004",
-    name: "Reception",
-    device_count: 1,
-    capacity: 90,
-    orientation: "portrait",
-  },
-  {
-    group_id: "grp-005",
-    name: "Mall Kiosk",
-    device_count: 3,
-    capacity: 55,
-    orientation: "portrait",
-  },
-  {
-    group_id: "grp-006",
-    name: "LEPL",
-    device_count: 0,
-    capacity: 0,
-    orientation: "landscape",
-  },
-];
+// export const sampleGroups: DeviceGroup[] = [
+//   {
+//     group_id: "grp-001",
+//     name: "TRISHUL-B2",
+//     device_count: 1,
+//     capacity: 85,
+//     orientation: "landscape",
+//   },
+//   {
+//     group_id: "grp-002",
+//     name: "Ramaswamy horizontal",
+//     device_count: 2,
+//     capacity: 72,
+//     orientation: "landscape",
+//   },
+//   {
+//     group_id: "grp-003",
+//     name: "Vivera WGL",
+//     device_count: 2,
+//     capacity: 65,
+//     orientation: "landscape",
+//   },
+//   {
+//     group_id: "grp-004",
+//     name: "Reception",
+//     device_count: 1,
+//     capacity: 90,
+//     orientation: "portrait",
+//   },
+//   {
+//     group_id: "grp-005",
+//     name: "Mall Kiosk",
+//     device_count: 3,
+//     capacity: 55,
+//     orientation: "portrait",
+//   },
+//   {
+//     group_id: "grp-006",
+//     name: "LEPL",
+//     device_count: 0,
+//     capacity: 0,
+//     orientation: "landscape",
+//   },
+// ];
 
 // Storage functions
 const LAYOUTS_KEY = "digital_signage_layouts";
