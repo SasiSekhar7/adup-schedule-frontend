@@ -147,7 +147,10 @@ export default function ClientSubscriptionPage() {
       if (key === "STORAGE_LIMIT") {
         return {
           label: "Storage",
-          value: `${Math.round(toNumber(value) / GB)} GB`,
+          value:
+            value === "unlimited"
+              ? "Unlimited"
+              : `${Math.round(toNumber(value) / GB)} GB`,
         };
       }
 
@@ -162,7 +165,7 @@ export default function ClientSubscriptionPage() {
       // NUMBER FEATURES
       return {
         label: formatKey(key),
-        value: `${toNumber(value)}`,
+        value: value === "unlimited" ? "Unlimited" : String(toNumber(value)),
       };
     });
   };

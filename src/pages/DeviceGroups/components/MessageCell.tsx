@@ -56,8 +56,8 @@ const MessageCell = ({
   return (
     <div className="flex items-center space-x-2">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {mobileView ? (
+        {mobileView ? (
+          <DialogTrigger asChild>
             <Button
               variant="outline"
               className="w-full"
@@ -65,12 +65,14 @@ const MessageCell = ({
             >
               {message ? "Edit Message" : "Add Message"}
             </Button>
-          ) : message ? (
-            <div className="max-w-[20vw] flex items-center space-x-2">
-              <span className="truncate overflow-hidden whitespace-nowrap text-ellipsis pr-4">
-                {message}
-              </span>
+          </DialogTrigger>
+        ) : message ? (
+          <div className="max-w-[20vw] flex items-center space-x-2">
+            <span className="truncate overflow-hidden whitespace-nowrap text-ellipsis pr-4">
+              {message}
+            </span>
 
+            <DialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
@@ -79,13 +81,15 @@ const MessageCell = ({
               >
                 <SquarePen className="h-4 w-4 text-blue-500" />
               </Button>
-            </div>
-          ) : (
+            </DialogTrigger>
+          </div>
+        ) : (
+          <DialogTrigger asChild>
             <Button variant="ghost" onClick={(e) => e.stopPropagation()}>
               <CirclePlus size="sm" />
             </Button>
-          )}
-        </DialogTrigger>
+          </DialogTrigger>
+        )}
 
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
