@@ -584,7 +584,8 @@ function AddAdComponent({
 
       setUploadStatus("Upload complete!");
 
-      if (ad.client_id) {
+      try {
+         if (ad.client_id) {
         await api.post(`/storage/increment?client_id=${ad.client_id}`, {
           fileSizeBytes: file.size,
         });
@@ -593,6 +594,16 @@ function AddAdComponent({
           fileSizeBytes: file.size,
         });
       }
+        
+      } catch (error: any) {
+  console.error("Storage increment failed:", {
+    message: error?.message,
+    status: error?.response?.status,
+    data: error?.response?.data,
+  });
+}
+
+     
 
       setUploadProgress(100);
       setTimeout(() => {
