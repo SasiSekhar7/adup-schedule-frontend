@@ -5,7 +5,7 @@ export type Features = {
   LIVE_STREAMING: boolean;
   PROOF_OF_PLAY: boolean;
   MULTI_VIDEO_IN_LAYOUT: boolean;
-  CAROUSELD: boolean;
+  CAROUSELS: boolean;
 
   MAX_MULTI_VIDEOS_IN_LAYOUT: number;
   MAX_DEVICES: number | "unlimited";

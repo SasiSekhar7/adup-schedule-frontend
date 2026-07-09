@@ -325,25 +325,31 @@ function App() {
             <Route
               path="/carousels"
               element={
-                <Suspense fallback={<Loading />}>
-                  <Carousels />
-                </Suspense>
+                <ProtectedRoute feature="CAROUSELS">
+                  <Suspense fallback={<Loading />}>
+                    <Carousels />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/carousels/add"
               element={
-                <Suspense fallback={<Loading />}>
-                  <CreateCarousel />
-                </Suspense>
+                <ProtectedRoute feature="CAROUSELS">
+                  <Suspense fallback={<Loading />}>
+                    <CreateCarousel />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/carousels/:id"
               element={
-                <Suspense fallback={<Loading />}>
-                  <CreateCarousel />
-                </Suspense>
+                <ProtectedRoute feature="CAROUSELS">
+                  <Suspense fallback={<Loading />}>
+                    <CreateCarousel />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
 
