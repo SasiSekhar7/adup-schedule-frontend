@@ -357,7 +357,7 @@ function App() {
             <Route
               path="/live-content"
               element={
-                <ProtectedRoute feature="LIVE_STREAMING">
+                <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
                   <Suspense fallback={<Loading />}>
                     <LiveContent />
                   </Suspense>
@@ -367,7 +367,7 @@ function App() {
             <Route
               path="/live-content/add"
               element={
-                <ProtectedRoute feature="LIVE_STREAMING">
+                <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
                   <Suspense fallback={<Loading />}>
                     <CreateLiveContent />
                   </Suspense>

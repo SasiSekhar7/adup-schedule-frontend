@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import api from "@/api";
+import { useFeature } from "@/context/hooks/useFeature";
 
 interface LiveContentForm {
   name: string;
@@ -45,9 +46,20 @@ export default function CreateLiveContent() {
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(false);
+  const { has } = useFeature();
+
+  const canCreateLive = has("LIVE_STREAMING");
+  const canCreateWebLIve = has("LIVE_WEBSITE");
+
+  const defaultContentType = canCreateLive
+    ? "streaming"
+    : canCreateWebLIve
+      ? "website"
+      : "custom";
+
   const [formData, setFormData] = useState<LiveContentForm>({
     name: "",
-    content_type: "website",
+    content_type: defaultContentType,
     url: "",
     duration: 0,
     start_time: "",
@@ -293,28 +305,32 @@ export default function CreateLiveContent() {
                     <SelectValue placeholder="Select content type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="streaming">
-                      <div className="flex items-center gap-2">
-                        <Video className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">Streaming</p>
-                          <p className="text-xs text-muted-foreground">
-                            Live video stream
-                          </p>
+                    {canCreateLive && (
+                      <SelectItem value="streaming">
+                        <div className="flex items-center gap-2">
+                          <Video className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Streaming</p>
+                            <p className="text-xs text-muted-foreground">
+                              Live video stream
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="website">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        <div>
-                          <p className="font-medium">Website</p>
-                          <p className="text-xs text-muted-foreground">
-                            Full webpage display
-                          </p>
+                      </SelectItem>
+                    )}
+                    {canCreateWebLIve && (
+                      <SelectItem value="website">
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4" />
+                          <div>
+                            <p className="font-medium">Website</p>
+                            <p className="text-xs text-muted-foreground">
+                              Full webpage display
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
+                      </SelectItem>
+                    )}
                     <SelectItem value="iframe">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4" />

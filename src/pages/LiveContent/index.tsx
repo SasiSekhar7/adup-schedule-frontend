@@ -163,9 +163,9 @@ export default function LiveContent() {
   };
 
   const handleCopy = async (url: string) => {
-  await navigator.clipboard.writeText(url);
-  toast.success("URL copied");
-};
+    await navigator.clipboard.writeText(url);
+    toast.success("URL copied");
+  };
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return "Indefinite";
@@ -185,6 +185,7 @@ export default function LiveContent() {
   const { has } = useFeature();
 
   const canCreateLive = has("LIVE_STREAMING");
+  const canCreateWebLIve = has("LIVE_WEBSITE");
 
   if (loading) {
     return (
@@ -217,10 +218,10 @@ export default function LiveContent() {
               <div className="inline-block w-full sm:w-auto">
                 <Button
                   onClick={() => {
-                    if (!canCreateLive) return;
+                    if (!canCreateLive && !canCreateWebLIve) return;
                     navigate("/live-content/add");
                   }}
-                  disabled={!canCreateLive}
+                  disabled={!canCreateLive && !canCreateWebLIve}
                   className="w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -229,7 +230,7 @@ export default function LiveContent() {
               </div>
             </TooltipTrigger>
 
-            {!canCreateLive && (
+            {!canCreateLive && !canCreateWebLIve && (
               <TooltipContent>
                 <p>Upgrade your plan to enable Live Content</p>
               </TooltipContent>
@@ -266,11 +267,26 @@ export default function LiveContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="provider">Provider</SelectItem>
+            {/* <SelectItem value="provider">Provider</SelectItem>
             <SelectItem value="streaming">Streaming</SelectItem>
             <SelectItem value="website">Website</SelectItem>
             <SelectItem value="iframe">iFrame</SelectItem>
+            <SelectItem value="youtube">YouTube</SelectItem> */}
+            {canCreateLive && (
+              <>
+                <SelectItem value="provider">Provider</SelectItem>
+                <SelectItem value="streaming">Streaming</SelectItem>
+              </>
+            )}
+
+            {canCreateWebLIve && (
+              <>
+                <SelectItem value="website">Website</SelectItem>
+              </>
+            )}
             <SelectItem value="youtube">YouTube</SelectItem>
+            <SelectItem value="iframe">iFrame</SelectItem>
+
             <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
@@ -391,28 +407,28 @@ export default function LiveContent() {
                     </span>
                   </div>
 
-                 <div className="flex items-start gap-2 bg-muted p-2 rounded">
-  <p
-    className="flex-1 text-xs font-mono overflow-hidden"
-    style={{
-      display: "-webkit-box",
-      WebkitLineClamp: 2,
-      WebkitBoxOrient: "vertical",
-      wordBreak: "break-all",
-    }}
-  >
-    {content.url}
-  </p>
+                  <div className="flex items-start gap-2 bg-muted p-2 rounded">
+                    <p
+                      className="flex-1 text-xs font-mono overflow-hidden"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {content.url}
+                    </p>
 
-  <Button
-    variant="ghost"
-    size="icon"
-    className="h-7 w-7 shrink-0"
-    onClick={() => handleCopy(content.url)}
-  >
-    <Copy className="h-4 w-4" />
-  </Button>
-</div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => handleCopy(content.url)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
 
                   {(content.start_time || content.end_time) && (
                     <div>
