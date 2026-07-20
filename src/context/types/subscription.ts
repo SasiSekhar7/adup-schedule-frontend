@@ -4,6 +4,7 @@ export type Features = {
   LIVE_IN_LAYOUT: boolean;
   LIVE_STREAMING: boolean;
   PROOF_OF_PLAY: boolean;
+  LIVE_WEBSITE: boolean;
   MULTI_VIDEO_IN_LAYOUT: boolean;
   CAROUSELS: boolean;
 

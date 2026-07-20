@@ -1,15 +1,23 @@
-import { Navigate } from "react-router-dom";
 import { ReactNode } from "react";
 import { useFeature } from "../hooks/useFeature";
 import PlanAccessRequired from "@/pages/PlanAccess";
+import { Features } from "../types/subscription";
+
+type FeatureKey = keyof Features;
 
 type Props = {
-  feature: keyof import("../types/subscription").Features;
+  feature?: FeatureKey;
+  features?: FeatureKey[];
   type?: "boolean" | "limit";
   children: ReactNode;
 };
 
-const ProtectedRoute = ({ feature, type = "boolean", children }: Props) => {
+const ProtectedRoute = ({
+  feature,
+  features,
+  type = "boolean",
+  children,
+}: Props) => {
   const { has, limit, expired, loading } = useFeature();
 
   // Wait until subscription API finishes
@@ -22,13 +30,31 @@ const ProtectedRoute = ({ feature, type = "boolean", children }: Props) => {
     return <PlanAccessRequired type="expired" />;
   }
 
-  if (type === "boolean" && !has(feature)) {
-    return <PlanAccessRequired type="upgrade" />;
+  // Boolean feature check
+  if (type === "boolean") {
+    let hasAccess = true;
+
+    if (features && features.length > 0) {
+      // Allow if user has ANY one of the features
+      hasAccess = features.some((f) => has(f));
+    } else if (feature) {
+      hasAccess = has(feature);
+    }
+    
+    console.log("hasAccess", hasAccess, features);
+
+    if (!hasAccess) {
+      return <PlanAccessRequired type="upgrade" />;
+    }
   }
 
-  const featureLimit = limit(feature);
-  if (type === "limit" && featureLimit !== "unlimited" && featureLimit <= 0) {
-    return <PlanAccessRequired type="upgrade" />;
+  // Limit-based feature check (only supports single feature)
+  if (type === "limit" && feature) {
+    const featureLimit = limit(feature);
+
+    if (featureLimit !== "unlimited" && featureLimit <= 0) {
+      return <PlanAccessRequired type="upgrade" />;
+    }
   }
 
   return <>{children}</>;
