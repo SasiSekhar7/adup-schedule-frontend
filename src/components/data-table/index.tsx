@@ -110,7 +110,7 @@ export function DataTable<TData, TValue>({
       {/* Filters */}
       <div className="flex flex-col flex-shrink-0 gap-4 pb-4 overflow-x-auto md:flex-row">
         {filters?.map((filter) => (
-          <div className="flex items-center" key={filter.value}>
+          <div className="flex items-center p-4 md:p-6 " key={filter.value}>
             {filter.value === "type" ? (
               <Select
                 value={

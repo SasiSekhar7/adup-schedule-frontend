@@ -568,7 +568,7 @@ function Ads() {
         </div>
       ) : (
         <Card>
-          <CardContent className="sm:p-0 p-4 md:p-6">
+          <CardContent className="p-0">
             <div className="flex-1">
               {selectedAdId && (
                 <p className="text-sm text-muted-foreground mb-4">

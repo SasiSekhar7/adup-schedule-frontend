@@ -461,7 +461,7 @@ export default function CreateLiveContent() {
                 </div>
               )}
 
-              <div>
+              {/* <div>
                 <Label htmlFor="duration">Duration (seconds)</Label>
                 <Input
                   id="duration"
@@ -475,6 +475,30 @@ export default function CreateLiveContent() {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Set to 0 for indefinite duration
+                </p>
+              </div> */}
+              <div>
+                <Label htmlFor="duration">Duration (seconds)</Label>
+
+                <Select
+                  value={String(formData.duration || 10)}
+                  onValueChange={(value) =>
+                    handleInputChange("duration", parseInt(value))
+                  }
+                >
+                  <SelectTrigger id="duration">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="10">10 Seconds</SelectItem>
+                    <SelectItem value="20">20 Seconds</SelectItem>
+                    <SelectItem value="30">30 Seconds</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select how long this ad should be displayed.
                 </p>
               </div>
             </CardContent>
