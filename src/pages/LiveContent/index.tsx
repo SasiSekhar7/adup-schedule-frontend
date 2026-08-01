@@ -46,6 +46,8 @@ interface LiveContent {
   live_content_id: string;
   name: string;
   content_type: "streaming" | "website" | "iframe" | "youtube" | "custom";
+  website_type?: "STATIC" | "SOCKET";
+  auto_refresh?: number;
   url: string;
   duration: number;
   start_time?: string;
@@ -406,6 +408,30 @@ export default function LiveContent() {
                       {formatDuration(content.duration)}
                     </span>
                   </div>
+                  {content.content_type === "website" && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Website Type:
+                      </span>
+                      <span className="font-medium flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        {content.website_type}
+                      </span>
+                    </div>
+                  )}
+
+                  {content.content_type === "website" &&
+                    content.website_type === "STATIC" && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Auto Refresh:
+                        </span>
+                        <span className="font-medium flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {content.auto_refresh} seconds
+                        </span>
+                      </div>
+                    )}
 
                   <div className="flex items-start gap-2 bg-muted p-2 rounded">
                     <p
