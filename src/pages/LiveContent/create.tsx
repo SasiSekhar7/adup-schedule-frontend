@@ -508,7 +508,8 @@ export default function CreateLiveContent() {
                     </Select>
 
                     <p className="text-xs text-muted-foreground mt-1">
-                      Select how long this ad should be displayed.
+                      Select the refresh interval, in seconds, for automatically
+                      updating the website content.
                     </p>
                   </div>
                 )}
