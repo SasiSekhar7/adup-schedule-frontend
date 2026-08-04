@@ -120,7 +120,7 @@ function Home() {
                   columns={columns(fetchDta)}
                   onRowClick={handleRowClick}
                   filters={[
-                    { label: "Locations", value: "location" },
+                    { label: "Locations", value: "address" },
                     { label: "Device ID", value: "device_id" },
                     { label: "Group Name", value: "group_name" },
                     { label: "Device Name", value: "device_name" },

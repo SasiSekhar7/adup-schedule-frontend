@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
 import EditDeviceDialog from "./EditDeviceDialog";
-import LocationCell from "./LocationCell";
 
 interface Props {
   device: Device;
@@ -100,8 +99,7 @@ export default function MobileDeviceCard({ device, fetchDta }: Props) {
       <div className="mt-3">
         <p className="text-xs break-all">Device Location</p>
 
-        {/* <p>{device.location}</p> */}
-        <LocationCell cords={device.location} />
+        <p>{device?.address}</p>
       </div>
 
       {/* Status */}
