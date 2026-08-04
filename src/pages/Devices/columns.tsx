@@ -1,7 +1,7 @@
 "use client";
 
 import { DataTableColumnHeader } from "@/components/data-table/components/data-table-column-header";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { ColumnDef } from "@tanstack/react-table";
 // import { Checkbox } from "@components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import LocationCell from "./components/LocationCell";
+
 import EditDeviceDialog from "./components/EditDeviceDialog";
 import {
   Tooltip,
@@ -331,10 +331,7 @@ export const columns = (fetchDta: () => void): ColumnDef<Device>[] => [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Location" />
     ),
-    // cell: ({ row }) => {
-    //   const cords = row.getValue("location");
-    //   return <LocationCell cords={cords} />;
-    // },
+
     cell: ({ row }) => row.getValue("address"),
   },
   {
