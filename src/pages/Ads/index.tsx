@@ -269,6 +269,14 @@ function Ads() {
   const handleRowClick = (ad: Ad) => {
     navigate(`/ads/${ad.ad_id}`);
   };
+
+  const [search, setSearch] = useState("");
+
+  const filteredAds = data.filter(
+    (ad) =>
+      ad.name.toLowerCase().includes(search.toLowerCase()) ||
+      ad.ad_id.toLowerCase().includes(search.toLowerCase()),
+  );
   return (
     <div className="space-y-4 md:space-y-6 w-full max-w-[320px] mx-auto md:mx-0 md:max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-4">
@@ -301,26 +309,6 @@ function Ads() {
               <div className="space-y-4 md:space-y-6 py-4">
                 {/* <div className="space-y-2">
                   <Label htmlFor="adSelection">Ad Selection</Label>
-                  <Select
-                    value={selectedAdIds}
-                    onValueChange={setSelectedAdIds}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select ads to export" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Ads</SelectItem>
-                      {data.map((ad) => (
-                        <SelectItem key={ad.ad_id} value={ad.ad_id}>
-                          {ad.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div> */}
-
-                <div className="space-y-2">
-                  <Label htmlFor="adSelection">Ad Selection</Label>
 
                   <Select
                     value={selectedAdId ?? "all"}
@@ -333,14 +321,50 @@ function Ads() {
                     </SelectTrigger>
 
                     <SelectContent>
-                      {/* <SelectItem value="all">All Ads</SelectItem> */}
+                      
 
                       {data.map((ad) => (
                         <SelectItem key={ad.ad_id} value={ad.ad_id}>
                           {ad.name}
-                          {/* {ad.ad_id} */}
+                          
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div> */}
+
+                <div className="space-y-2">
+                  <Label>Ad Selection</Label>
+
+                  <Select
+                    value={selectedAdId ?? ""}
+                    onValueChange={setSelectedAdId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Ad" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <div className="sticky top-0 bg-background p-2 border-b z-10">
+                        <Input
+                          placeholder="Search ad..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        />
+                      </div>
+
+                      {filteredAds.length > 0 ? (
+                        filteredAds.map((ad) => (
+                          <SelectItem key={ad.ad_id} value={ad.ad_id}>
+                            {ad.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No ads found
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -473,12 +473,12 @@ export default function AdManager({ initialData, isEditing }: AdManagerProps) {
                       <SelectItem value="PROOF_OF_PLAY">
                         Proof of Play
                       </SelectItem>
-                      <SelectItem value="DEVICE_EVENTS">
+                      {/* <SelectItem value="DEVICE_EVENTS">
                         Device Events
                       </SelectItem>
                       <SelectItem value="DEVICE_TELEMETRY">
                         Device Telemetry
-                      </SelectItem>
+                      </SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>
