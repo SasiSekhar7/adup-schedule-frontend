@@ -29,6 +29,7 @@ interface LiveContentForm {
     | "provider";
   url: string;
   duration: number;
+  auto_refresh: number;
   start_time: string;
   end_time: string;
   channel_id?: string;
@@ -62,6 +63,7 @@ export default function CreateLiveContent() {
     content_type: defaultContentType,
     url: "",
     duration: 0,
+    auto_refresh: 10,
     start_time: "",
     end_time: "",
     website_type: "STATIC",
@@ -112,6 +114,8 @@ export default function CreateLiveContent() {
         content_type: content.content_type,
         url: content.url,
         duration: content.duration,
+        auto_refresh: content.auto_refresh,
+        website_type: content.website_type || "STATIC",
         start_time: content.start_time
           ? content.start_time.split("T")[0] +
             "T" +
@@ -138,7 +142,7 @@ export default function CreateLiveContent() {
   };
 
   const handleInputChange = (field: keyof LiveContentForm, value: any) => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
       [field]: value,
     }));
@@ -180,6 +184,7 @@ export default function CreateLiveContent() {
             : undefined,
         url: formData.url,
         duration: formData.duration,
+        auto_refresh: formData.auto_refresh,
         start_time: formData.start_time
           ? new Date(formData.start_time).toISOString()
           : undefined,
@@ -214,7 +219,10 @@ export default function CreateLiveContent() {
     if (formData.content_type !== "website") {
       setFormData((prev) => ({
         ...prev,
-        website_type: undefined,
+        website_type:
+          prev.content_type === "website"
+            ? prev.website_type || "STATIC"
+            : undefined,
       }));
     }
   }, [formData.content_type]);
@@ -318,19 +326,19 @@ export default function CreateLiveContent() {
                         </div>
                       </SelectItem>
                     )}
-                    {canCreateWebLIve && (
-                      <SelectItem value="website">
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4" />
-                          <div>
-                            <p className="font-medium">Website</p>
-                            <p className="text-xs text-muted-foreground">
-                              Full webpage display
-                            </p>
-                          </div>
+                    {/* {canCreateWebLIve && ( */}
+                    <SelectItem value="website">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        <div>
+                          <p className="font-medium">Website</p>
+                          <p className="text-xs text-muted-foreground">
+                            Full webpage display
+                          </p>
                         </div>
-                      </SelectItem>
-                    )}
+                      </div>
+                    </SelectItem>
+                    {/* )} */}
                     <SelectItem value="iframe">
                       <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4" />
@@ -385,8 +393,8 @@ export default function CreateLiveContent() {
                 <div>
                   <Label>Website Type</Label>
                   <Select
-                    value={formData.website_type}
-                    onValueChange={(value: "static" | "socket") =>
+                    value={formData.website_type ?? "STATIC"}
+                    onValueChange={(value: "STATIC" | "SOCKET") =>
                       handleInputChange("website_type", value)
                     }
                   >
@@ -461,7 +469,7 @@ export default function CreateLiveContent() {
                 </div>
               )}
 
-              {/* <div>
+              <div>
                 <Label htmlFor="duration">Duration (seconds)</Label>
                 <Input
                   id="duration"
@@ -476,31 +484,35 @@ export default function CreateLiveContent() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Set to 0 for indefinite duration
                 </p>
-              </div> */}
-              <div>
-                <Label htmlFor="duration">Duration (seconds)</Label>
-
-                <Select
-                  value={String(formData.duration || 10)}
-                  onValueChange={(value) =>
-                    handleInputChange("duration", parseInt(value))
-                  }
-                >
-                  <SelectTrigger id="duration">
-                    <SelectValue placeholder="Select duration" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value="10">10 Seconds</SelectItem>
-                    <SelectItem value="20">20 Seconds</SelectItem>
-                    <SelectItem value="30">30 Seconds</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <p className="text-xs text-muted-foreground mt-1">
-                  Select how long this ad should be displayed.
-                </p>
               </div>
+              {formData.content_type === "website" &&
+                formData.website_type === "STATIC" && (
+                  <div>
+                    <Label htmlFor="duration">Auto Refresh (seconds)</Label>
+
+                    <Select
+                      value={String(formData.auto_refresh || 10)}
+                      onValueChange={(value) =>
+                        handleInputChange("auto_refresh", parseInt(value))
+                      }
+                    >
+                      <SelectTrigger id="auto_refresh">
+                        <SelectValue placeholder="Select Auto Refresh Time" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="10">10 Seconds</SelectItem>
+                        <SelectItem value="20">20 Seconds</SelectItem>
+                        <SelectItem value="30">30 Seconds</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select the refresh interval, in seconds, for automatically
+                      updating the website content.
+                    </p>
+                  </div>
+                )}
             </CardContent>
           </Card>
 
