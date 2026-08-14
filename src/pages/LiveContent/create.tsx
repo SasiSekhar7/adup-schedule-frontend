@@ -305,9 +305,19 @@ export default function CreateLiveContent() {
                 <Label htmlFor="content_type">Content Type</Label>
                 <Select
                   value={formData.content_type}
-                  onValueChange={(value) =>
-                    handleInputChange("content_type", value)
-                  }
+                  // onValueChange={(value) =>
+                  //   handleInputChange("content_type", value)
+                  // }
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      content_type: value as LiveContentForm["content_type"],
+                      website_type:
+                        value === "website"
+                          ? prev.website_type || "STATIC"
+                          : undefined,
+                    }));
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select content type" />
