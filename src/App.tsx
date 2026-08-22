@@ -57,9 +57,29 @@ const CreateCarousel = lazy(() => import("./pages/Carousels/create"));
 const LiveContent = lazy(() => import("./pages/LiveContent"));
 const CreateLiveContent = lazy(() => import("./pages/LiveContent/create"));
 
-// Loading Fallback Component
+import { useEffect } from "react";
+import { toast } from "sonner";
+import {
+  requestWebNotificationPermission,
+  listenForegroundNotifications,
+} from "./lib/firebase";
 
 function App() {
+  useEffect(() => {
+    // Request Notification permission & register web token
+    requestWebNotificationPermission();
+
+    // Listen for foreground push messages
+    const unsubscribe = listenForegroundNotifications((payload) => {
+      console.log("App received FCM payload:", payload);
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, []);
+
+
   return (
     <Router>
       <Routes>

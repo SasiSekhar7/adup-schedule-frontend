@@ -64,6 +64,8 @@ import {
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 
+import { NotificationBell } from "@/components/NotificationBell";
+
 function LayoutContent() {
   const { state, isMobile } = useSidebar();
 
@@ -74,11 +76,15 @@ function LayoutContent() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card">
-        <div className="flex items-center gap-2 px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4">
+        <div className="flex items-center gap-2">
           <SidebarTrigger className="-ml-1" />
         </div>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+        </div>
       </header>
+
 
       <div
   style={{

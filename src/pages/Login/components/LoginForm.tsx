@@ -15,24 +15,44 @@ interface LoginFormProps {
   className?: string;
 }
 
+import { requestWebNotificationPermission, getOrCreateDeviceId } from "../../../lib/firebase";
+
 export function LoginForm({ className = "" }: LoginFormProps) {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      const deviceId = getOrCreateDeviceId();
+      // Retrieve Web FCM Device Token
+      let deviceToken = "";
+      try {
+        deviceToken =
+          (await requestWebNotificationPermission(deviceId)) || "";
+      } catch (fcmErr) {
+        console.warn("Could not retrieve FCM web token during login:", fcmErr);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          deviceToken,
+          platform: "web",
+          deviceId: deviceId,
+        }),
       });
+
 
       if (!response.ok) {
         let errorLog = await response.json();
