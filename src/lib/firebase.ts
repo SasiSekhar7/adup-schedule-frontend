@@ -92,25 +92,32 @@ export function listenForegroundNotifications(
     onMessage(messaging, (payload) => {
       console.log("Foreground notification received:", payload);
 
-      const title = payload?.notification?.title || payload?.data?.title || "Notification";
-      const body = payload?.notification?.body || payload?.data?.body || "";
+      const action = payload?.data?.action;
+      const isSilentAction =
+        action === "NOTIFICATION_DELETED" || action === "NOTIFICATIONS_CLEARED";
 
-      // 1. Always trigger Sonner Toast Banner
-      toast.info(title, {
-        description: body,
-        duration: 6000,
-      });
+      if (!isSilentAction) {
+        const title =
+          payload?.notification?.title || payload?.data?.title || "Notification";
+        const body = payload?.notification?.body || payload?.data?.body || "";
 
-      // 2. Always trigger Native Desktop System Notification Popup
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body: body,
-          icon: "/logo.png",
-          data: payload?.data || {},
+        // 1. Trigger Sonner Toast Banner only for standard notifications
+        toast.info(title, {
+          description: body,
+          duration: 6000,
         });
+
+        // 2. Trigger Native Desktop System Notification Popup
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(title, {
+            body: body,
+            icon: "/logo.png",
+            data: payload?.data || {},
+          });
+        }
       }
 
-      // 3. Notify all subscribed callbacks (e.g. NotificationBell)
+      // 3. Always notify all subscribed callbacks (e.g. NotificationBell) to sync state
       notificationSubscribers.forEach((subscriber) => {
         try {
           subscriber(payload);
@@ -118,6 +125,7 @@ export function listenForegroundNotifications(
           console.error("Error in notification subscriber:", err);
         }
       });
+
     });
   }
 
