@@ -122,7 +122,7 @@ function DevicePage() {
   const navigate = useNavigate();
   const [device, setDevice] = useState<Device | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  // const [proofOfPlayLogs, setProofOfPlayLogs] = useState<ProofOfPlayLog[]>([]);
+  const [proofOfPlayLogs, setProofOfPlayLogs] = useState<ProofOfPlayLog[]>([]);
   const [deviceEventLogs, setDeviceEventLogs] = useState<DeviceEventLog[]>([]);
   const [deviceTelemetry, setDeviceTelemetry] = useState<DeviceTelemetry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -691,7 +691,7 @@ function DevicePage() {
             `/device/${device_id}/proof-of-play-logs?page=${proofOfPlayPage}&limit=${proofOfPlayLimit}`,
           );
 
-        // setProofOfPlayLogs(proofOfPlayResponse.data || []);
+        setProofOfPlayLogs(proofOfPlayResponse.data || []);
         setProofOfPlayTotal(proofOfPlayResponse.total);
         setProofOfPlayTotalPages(proofOfPlayResponse.totalPages);
 
@@ -1312,6 +1312,15 @@ function DevicePage() {
         device_id={device_id}
         device={device}
         schedules={schedules}
+        proofOfPlayLogs={proofOfPlayLogs}
+        proofOfPlayPage={proofOfPlayPage}
+        proofOfPlayLimit={proofOfPlayLimit}
+        proofOfPlayTotal={proofOfPlayTotal}
+        proofOfPlayTotalPages={proofOfPlayTotalPages}
+        setProofOfPlayPage={setProofOfPlayPage}
+        setProofOfPlayLimit={setProofOfPlayLimit}
+        
+
         schedulesPage={schedulesPage}
         schedulesLimit={schedulesLimit}
         schedulesTotal={schedulesTotal}

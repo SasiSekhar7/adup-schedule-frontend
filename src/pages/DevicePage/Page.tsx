@@ -623,13 +623,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -683,6 +676,13 @@ export default function DeviceDetailPage({
   schedulesTotalPages,
   setSchedulesPage,
   setSchedulesLimit,
+  proofOfPlayLogs,
+  proofOfPlayPage,
+  proofOfPlayLimit,
+  proofOfPlayTotal,
+  proofOfPlayTotalPages,
+  setProofOfPlayPage,
+  setProofOfPlayLimit,
 }: any) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -691,7 +691,7 @@ export default function DeviceDetailPage({
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [applyLoading, setApplyLoading] = useState(false);
-  
+
   const fetchData = async (isCustom = false) => {
     try {
       if (isCustom) setApplyLoading(true);
@@ -715,7 +715,7 @@ export default function DeviceDetailPage({
       else setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     if (!device_id) return;
 
@@ -834,7 +834,7 @@ export default function DeviceDetailPage({
     "STORAGE_WARNING",
     "PERFORMANCE_ISSUE",
   ];
-  
+
   const metaFields = [
     { label: "Group", value: device?.DeviceGroup?.name },
     { label: "Type", value: device.device_type },
@@ -853,14 +853,33 @@ export default function DeviceDetailPage({
     },
   ];
 
-  if (loading) return <div className="p-6 text-slate-500">Loading device details...</div>;
+  const getContentName = (schedule: any) => {
+    switch (schedule.content_type) {
+      case "ad":
+        return schedule.Ad?.name || "Unknown Ad";
+
+      case "carousel":
+        return schedule.Carousel?.name || "Unknown Carousel";
+
+      case "live_content":
+        return schedule.LiveContent?.name || "Unknown Live Content";
+
+      case "layout":
+        return schedule.LayoutTemplate?.name || "Unknown Layout";
+
+      default:
+        return "Unknown Content";
+    }
+  };
+
+  if (loading)
+    return <div className="p-6 text-slate-500">Loading device details...</div>;
   if (!data) return <div className="p-6 text-slate-500">No Data Available</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-6 py-2">
-          
           {/* Top row: identity + actions (Responsive) */}
           <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
             {/* Left: name, location, status */}
@@ -891,7 +910,7 @@ export default function DeviceDetailPage({
                 </span>
               </div>
             </div>
-            
+
             {/* Right: Date Range Controls */}
             <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto mt-2 xl:mt-0">
               <select
@@ -971,7 +990,9 @@ export default function DeviceDetailPage({
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-500">{metric.label}</p>
+                      <p className="text-sm font-medium text-slate-500">
+                        {metric.label}
+                      </p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">
                         {metric.value}
                       </p>
@@ -989,7 +1010,13 @@ export default function DeviceDetailPage({
         {/* TABS - Scrollable on mobile */}
         <div className="mb-4 md:mb-6 w-full overflow-x-auto no-scrollbar pb-1">
           <div className="inline-flex w-max gap-1.5 sm:gap-2 bg-slate-200/50 p-1 sm:p-1.5 rounded-xl border border-slate-200">
-            {["overview", "resources", "events", "schedules"].map((tab) => (
+            {[
+              "overview",
+              "resources",
+              "events",
+              "schedules",
+              "proof-of-play",
+            ].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -999,7 +1026,9 @@ export default function DeviceDetailPage({
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "proof-of-play"
+                  ? "Proof of Play"
+                  : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -1017,12 +1046,38 @@ export default function DeviceDetailPage({
 
               <CardContent className="pt-6 px-2 sm:px-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={data.performance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickMargin={8} />
-                    <YAxis stroke="#64748b" fontSize={12} tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val)} />
-                    <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
-                    <Legend wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }} />
+                  <AreaChart
+                    data={data.performance}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#e5e7eb"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickFormatter={(val) =>
+                        val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val
+                      }
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                    />
 
                     <Area
                       type="monotone"
@@ -1046,7 +1101,9 @@ export default function DeviceDetailPage({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="border shadow-sm rounded-xl overflow-hidden">
                 <CardHeader className="border-b bg-slate-50/50">
-                  <CardTitle className="text-lg">Network Distribution</CardTitle>
+                  <CardTitle className="text-lg">
+                    Network Distribution
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <ResponsiveContainer width="100%" height={250}>
@@ -1060,11 +1117,18 @@ export default function DeviceDetailPage({
                         dataKey="value"
                         paddingAngle={2}
                       >
-                        {data.networkDistribution.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                        {data.networkDistribution.map(
+                          (entry: any, index: number) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ),
+                        )}
                       </Pie>
-                      <Tooltip contentStyle={{ borderRadius: "8px", border: "none" }} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: "8px", border: "none" }}
+                      />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1083,12 +1147,28 @@ export default function DeviceDetailPage({
 
             <CardContent className="pt-6 px-2 sm:px-6">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.telemetry} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart
+                  data={data.telemetry}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
                   <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickMargin={8} />
+                  <XAxis
+                    dataKey="time"
+                    stroke="#64748b"
+                    fontSize={12}
+                    tickMargin={8}
+                  />
                   <YAxis stroke="#64748b" fontSize={12} />
-                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
-                  <Legend wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                  />
 
                   <Line
                     type="monotone"
@@ -1119,9 +1199,17 @@ export default function DeviceDetailPage({
 
             <CardContent className="pt-6 px-2 sm:px-6">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.chartdata} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart
+                  data={data.chartdata}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
                   <CartesianGrid stroke="#e5e7eb" vertical={false} />
-                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickMargin={8} />
+                  <XAxis
+                    dataKey="time"
+                    stroke="#64748b"
+                    fontSize={12}
+                    tickMargin={8}
+                  />
                   <YAxis stroke="#64748b" fontSize={12} />
                   <Tooltip
                     wrapperStyle={{ zIndex: 9999 }}
@@ -1129,10 +1217,12 @@ export default function DeviceDetailPage({
                       backgroundColor: "#fff",
                       borderRadius: "8px",
                       border: "none",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }} />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                  />
 
                   {eventTypes.map((type, i) => (
                     <Line
@@ -1182,18 +1272,44 @@ export default function DeviceDetailPage({
                       <TableHeader className="bg-slate-50">
                         <TableRow>
                           {/* Added min-widths to prevent squishing */}
-                          <TableHead className="min-w-[120px]">Schedule ID</TableHead>
-                          <TableHead className="min-w-[160px]">Ad Name</TableHead>
-                          <TableHead className="min-w-[160px]">Start Time</TableHead>
-                          <TableHead className="min-w-[160px]">End Time</TableHead>
-                          <TableHead className="min-w-[100px]">Duration</TableHead>
+                          <TableHead className="min-w-[120px]">
+                            Schedule ID
+                          </TableHead>
+                          <TableHead className="min-w-[160px]">
+                            Content Name
+                          </TableHead>
+                          <TableHead className="min-w-[120px]">
+                            Content Type
+                          </TableHead>
+                          <TableHead className="min-w-[160px]">
+                            Start Time
+                          </TableHead>
+                          <TableHead className="min-w-[160px]">
+                            End Time
+                          </TableHead>
+                          <TableHead className="min-w-[100px]">
+                            Duration
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {schedules.map((schedule: any) => (
-                          <TableRow key={schedule.schedule_id} className="hover:bg-slate-50/50">
-                            <TableCell className="font-medium text-slate-600">{schedule.schedule_id}</TableCell>
-                            <TableCell className="font-medium text-slate-900">{schedule.Ad?.name || "Unknown Ad"}</TableCell>
+                          <TableRow
+                            key={schedule.schedule_id}
+                            className="hover:bg-slate-50/50"
+                          >
+                            <TableCell className="font-medium text-slate-600">
+                              {schedule.schedule_id}
+                            </TableCell>
+                            <TableCell className="font-medium text-slate-900">
+                              {/* {schedule.Ad?.name || "Unknown Ad"} */}
+                              {getContentName(schedule)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 capitalize">
+                                {schedule.content_type?.replace(/_/g, " ")}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-slate-600">
                               {new Date(schedule.start_time).toLocaleString()}
                             </TableCell>
@@ -1205,8 +1321,9 @@ export default function DeviceDetailPage({
                                 {Math.round(
                                   (new Date(schedule.end_time).getTime() -
                                     new Date(schedule.start_time).getTime()) /
-                                    (1000 * 60)
-                                )} min
+                                    (1000 * 60),
+                                )}{" "}
+                                min
                               </span>
                             </TableCell>
                           </TableRow>
@@ -1219,11 +1336,16 @@ export default function DeviceDetailPage({
                   <div className="md:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
                     {schedules.map((schedule: any) => {
                       const durationMins = Math.round(
-                        (new Date(schedule.end_time).getTime() - new Date(schedule.start_time).getTime()) / (1000 * 60)
+                        (new Date(schedule.end_time).getTime() -
+                          new Date(schedule.start_time).getTime()) /
+                          (1000 * 60),
                       );
-                      
+
                       return (
-                        <div key={schedule.schedule_id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                        <div
+                          key={schedule.schedule_id}
+                          className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3"
+                        >
                           {/* Top Row: Name and Duration */}
                           <div className="flex justify-between items-start gap-2">
                             <div className="min-w-0">
@@ -1298,8 +1420,188 @@ export default function DeviceDetailPage({
               ) : (
                 <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-b-xl">
                   <Calendar className="w-10 h-10 mx-auto text-slate-300 mb-3" />
-                  <p className="text-lg font-medium text-slate-600">No schedules found</p>
-                  <p className="text-sm">There are no upcoming schedules for this device.</p>
+                  <p className="text-lg font-medium text-slate-600">
+                    No schedules found
+                  </p>
+                  <p className="text-sm">
+                    There are no upcoming schedules for this device.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* PROOF OF PLAY LOGS - Mobile Responsive */}
+        {activeTab === "proof-of-play" && (
+          <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden mt-6">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b bg-slate-50/50">
+              <CardTitle className="text-lg">Proof of Play Logs</CardTitle>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={proofOfPlayLimit}
+                  onChange={(e) => {
+                    setProofOfPlayLimit(Number(e.target.value));
+                    setProofOfPlayPage(1);
+                  }}
+                  className="border border-slate-200 shadow-sm px-2 py-1.5 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0 sm:p-6 sm:pt-6">
+              {proofOfPlayLogs?.length > 0 ? (
+                <>
+                  {/* DESKTOP VIEW: Standard Table */}
+                  <div className="hidden md:block w-full overflow-x-auto border border-slate-200 rounded-lg">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="min-w-[120px]">
+                            Log ID
+                          </TableHead>
+                          <TableHead className="min-w-[140px]">
+                            Event ID
+                          </TableHead>
+                          <TableHead className="min-w-[140px]">Ad ID</TableHead>
+                          <TableHead className="min-w-[160px]">
+                            Start Time
+                          </TableHead>
+                          <TableHead className="min-w-[160px]">
+                            End Time
+                          </TableHead>
+                          <TableHead className="min-w-[100px]">
+                            Duration
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {proofOfPlayLogs.map((log: any) => (
+                          <TableRow
+                            key={log.id}
+                            className="hover:bg-slate-50/50"
+                          >
+                            <TableCell className="font-mono text-xs text-slate-600 truncate max-w-[120px]">
+                              {log.id}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-slate-600 truncate max-w-[140px]">
+                              {log.event_id}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs text-slate-900 truncate max-w-[140px]">
+                              {log.ad_id}
+                            </TableCell>
+                            <TableCell className="text-slate-600 text-xs">
+                              {new Date(log.start_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-slate-600 text-xs">
+                              {new Date(log.end_time).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                {(log.duration_played_ms / 1000).toFixed(1)}s
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* MOBILE VIEW: Card Layout */}
+                  <div className="md:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
+                    {proofOfPlayLogs.map((log: any) => (
+                      <div
+                        key={log.id}
+                        className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3"
+                      >
+                        {/* Top Row */}
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="min-w-0">
+                            <p className="font-mono text-xs font-semibold text-slate-900 truncate">
+                              Ad ID: {log.ad_id}
+                            </p>
+                            <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                              Event: {log.event_id}
+                            </p>
+                          </div>
+                          <span className="flex-shrink-0 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {(log.duration_played_ms / 1000).toFixed(1)}s
+                          </span>
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex flex-col gap-1.5 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-slate-500 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" /> Start:
+                            </span>
+                            <span className="text-right ml-2 text-slate-900 font-medium">
+                              {new Date(log.start_time).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-slate-500 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" /> End:
+                            </span>
+                            <span className="text-right ml-2 text-slate-900 font-medium">
+                              {new Date(log.end_time).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 p-4 sm:p-0 border-t border-slate-100 sm:border-none">
+                    <span className="text-xs sm:text-sm text-slate-500 text-center sm:text-left">
+                      Showing {(proofOfPlayPage - 1) * proofOfPlayLimit + 1} to{" "}
+                      {Math.min(
+                        proofOfPlayPage * proofOfPlayLimit,
+                        proofOfPlayTotal,
+                      )}{" "}
+                      of {proofOfPlayTotal} entries
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="px-3 py-1.5 border border-slate-200 rounded text-sm bg-white font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                        disabled={proofOfPlayPage === 1}
+                        onClick={() => setProofOfPlayPage((p: number) => p - 1)}
+                      >
+                        Prev
+                      </button>
+
+                      <span className="px-2 py-1 text-sm font-medium text-slate-700 bg-slate-100 rounded-md">
+                        {proofOfPlayPage} / {proofOfPlayTotalPages}
+                      </span>
+
+                      <button
+                        className="px-3 py-1.5 border border-slate-200 rounded text-sm bg-white font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                        disabled={proofOfPlayPage === proofOfPlayTotalPages}
+                        onClick={() => setProofOfPlayPage((p: number) => p + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-b-xl">
+                  <MonitorPlay className="w-10 h-10 mx-auto text-slate-300 mb-3" />
+                  <p className="text-lg font-medium text-slate-600">
+                    No proof of play logs found
+                  </p>
+                  <p className="text-sm">
+                    There are no playback logs recorded for this device.
+                  </p>
                 </div>
               )}
             </CardContent>
