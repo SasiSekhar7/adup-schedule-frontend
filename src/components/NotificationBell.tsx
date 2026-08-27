@@ -214,7 +214,6 @@ export function NotificationBell() {
                 size="sm"
                 onClick={handleClearAll}
                 className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 h-7 px-2"
-                title="Clear all notifications from database"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1" />
                 <span>Clear all</span>

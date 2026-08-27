@@ -69,8 +69,12 @@ interface LiveContentResponse {
   data: LiveContent[];
 }
 
+import { useConfirm } from "@/context/ConfirmContext";
+
 export default function LiveContent() {
+  const confirm = useConfirm();
   const [liveContents, setLiveContents] = useState<LiveContent[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -95,7 +99,14 @@ export default function LiveContent() {
   };
 
   const handleDeleteLiveContent = async (liveContentId: string) => {
-    if (!confirm("Are you sure you want to delete this live content?")) return;
+    const isConfirmed = await confirm({
+      title: "Delete Live Content",
+      description: "Are you sure you want to delete this live content? This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!isConfirmed) return;
+
 
     try {
       await api.delete(`/live-content/${liveContentId}`);

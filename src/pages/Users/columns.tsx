@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { CircleX } from "lucide-react";
 import api from "@/api";
 import { useState } from "react";
+import { useConfirm } from "@/context/ConfirmContext";
 
 export interface User {
   user_id: string;
@@ -100,12 +101,22 @@ export const userColumns: ColumnDef<User>[] = [
     header: () => "Action",
     cell: ({ row }) => {
       const user = row.original;
+      const confirm = useConfirm();
       const [newPassword, setNewPassword] = useState("");
 
       const handleDelete = async () => {
+        const isConfirmed = await confirm({
+          title: "Delete User Account",
+          description: `Are you sure you want to delete user '${user.name || user.email}'? This action cannot be undone.`,
+          confirmText: "Delete",
+          variant: "destructive",
+        });
+        if (!isConfirmed) return;
+
         await api.delete(`/user/${user.user_id}`);
-        location.reload(); // Or refresh table state
+        location.reload();
       };
+
 
       const handleResetPassword = async () => {
         if (!newPassword || newPassword.length < 8) {

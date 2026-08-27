@@ -39,8 +39,12 @@ import {
 import api from "@/api";
 import { toast } from "sonner";
 
+import { useConfirm } from "@/context/ConfirmContext";
+
 export default function ProviderChannelsPage() {
+  const confirm = useConfirm();
   const { slug } = useParams();
+
   const providerSlug = slug as string;
   //   const { provider: providerSlug } = use(params);
 
@@ -206,9 +210,18 @@ export default function ProviderChannelsPage() {
   };
 
   const deleteChannel = async (channelId: string) => {
+    const isConfirmed = await confirm({
+      title: "Delete Streaming Channel",
+      description: "Are you sure you want to delete this streaming channel? This action cannot be undone.",
+      confirmText: "Delete Channel",
+      variant: "destructive",
+    });
+    if (!isConfirmed) return;
+
     try {
       setDeleteLoading(channelId);
       const res = await api.delete(`/streaming/channel/${channelId}`);
+
 
       console.log("Channel Created:", res.data);
 

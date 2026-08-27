@@ -30,10 +30,21 @@ interface Props {
   onRefresh: () => void;
 }
 
+import { useConfirm } from "@/context/ConfirmContext";
+
 export default function MobileUserCard({ user, onRefresh }: Props) {
+  const confirm = useConfirm();
   const [newPassword, setNewPassword] = useState("");
 
   const handleDelete = async () => {
+    const isConfirmed = await confirm({
+      title: "Delete User Account",
+      description: `Are you sure you want to delete user '${user.name || user.email}'? This action cannot be undone.`,
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!isConfirmed) return;
+
     try {
       await api.delete(`/user/${user.user_id}`);
       onRefresh();
@@ -42,6 +53,7 @@ export default function MobileUserCard({ user, onRefresh }: Props) {
       alert("Failed to delete user");
     }
   };
+
 
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 8) {

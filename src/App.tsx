@@ -30,6 +30,7 @@ import PreviewLiveContent from "./pages/LiveContent/previewLiveContent";
 import ManageSubscriptionsPage from "./pages/Subscriptions/page";
 import ClientSubscriptionPage from "./pages/Subscriptions/clientpage";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
+import { ConfirmProvider } from "./context/ConfirmContext";
 import ProtectedRoute from "./context/components/ProtectedRoute";
 import ClientChannelsPage from "./pages/StreamProviders/components/clientChannelsPage";
 import ClientChannelDetailPage from "./pages/StreamProviders/components/clientchannelDetailsPage";
@@ -79,219 +80,220 @@ function App() {
     };
   }, []);
 
-
   return (
     <Router>
-      <Routes>
-        {/* <Route path="/login" element={<Login />} /> */}
-        {/* Public Routes */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-        </Route>
-        <Route path="/register-device" element={<RegisterDevice />} />
+      <ConfirmProvider>
+        <Routes>
+          {/* <Route path="/login" element={<Login />} /> */}
 
-        <Route element={<Layout />}>
-          {/* <Route element={<PrivateRoute />}> */}
-          <Route
-            element={
-              <SubscriptionProvider>
-                <Outlet />
-              </SubscriptionProvider>
-            }
-          >
-            <Route path="/" element={<Dashboard />} />
+          {/* Public Routes */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+          </Route>
+          <Route path="/register-device" element={<RegisterDevice />} />
+
+          <Route element={<Layout />}>
+            {/* <Route element={<PrivateRoute />}> */}
             <Route
-              path="/plans/all"
               element={
-                <Suspense fallback={<Loading />}>
-                  <Plans />
-                </Suspense>
+                <SubscriptionProvider>
+                  <Outlet />
+                </SubscriptionProvider>
               }
-            />
-
-            <Route
-              path="/manage-subscription/all"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ManageSubscriptionsPage />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/my-subscription"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ClientSubscriptionPage />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/screen-layout"
-              element={
-                <ProtectedRoute feature="MAX_LAYOUTS" type="limit">
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route
+                path="/plans/all"
+                element={
                   <Suspense fallback={<Loading />}>
-                    <ScreenLayoutPage />
+                    <Plans />
                   </Suspense>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
 
-            <Route
-              path="/layout-details/:layout_id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ScheduleAddPageDetails />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/all-plans"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <AdminPlans />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/all-exports"
-              element={
-                <ProtectedRoute feature="PROOF_OF_PLAY">
+              <Route
+                path="/manage-subscription/all"
+                element={
                   <Suspense fallback={<Loading />}>
-                    <ExportDetails />
+                    <ManageSubscriptionsPage />
                   </Suspense>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
 
-            <Route
-              path="/account"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Account />
-                </Suspense>
-              }
-            />
+              <Route
+                path="/my-subscription"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ClientSubscriptionPage />
+                  </Suspense>
+                }
+              />
 
-            <Route
-              path="/change-password"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ChangePassword />
-                </Suspense>
-              }
-            />
+              <Route
+                path="/screen-layout"
+                element={
+                  <ProtectedRoute feature="MAX_LAYOUTS" type="limit">
+                    <Suspense fallback={<Loading />}>
+                      <ScreenLayoutPage />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Wrap each lazy-loaded route inside Suspense */}
-            <Route
-              path="/ads"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Ads />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/users/all"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Users />
-                </Suspense>
-              }
-            />
+              <Route
+                path="/layout-details/:layout_id"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ScheduleAddPageDetails />
+                  </Suspense>
+                }
+              />
 
-            <Route
-              path="/ads/:ad_id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <AdPage edit={false} />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/ads/:ad_id/edit"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <AdPage edit={true} />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/users/clients"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Clients />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/schedule"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Schedule />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/schedule/calendar"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Calendar />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/schedule/placeholder"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <PlaceholderEditor />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/schedule/add"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <AddToSchedule />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/devices"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Devices />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/devices/:device_id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <DevicePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/devices/groups"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <DeviceGroup />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/device-groups/:groupId"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <DeviceGroupDetailPage />
-                </Suspense>
-              }
-            />
-            {/* <Route
+              <Route
+                path="/all-plans"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <AdminPlans />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/all-exports"
+                element={
+                  <ProtectedRoute feature="PROOF_OF_PLAY">
+                    <Suspense fallback={<Loading />}>
+                      <ExportDetails />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/account"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Account />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/change-password"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ChangePassword />
+                  </Suspense>
+                }
+              />
+
+              {/* Wrap each lazy-loaded route inside Suspense */}
+              <Route
+                path="/ads"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Ads />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/users/all"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Users />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/ads/:ad_id"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <AdPage edit={false} />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/ads/:ad_id/edit"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <AdPage edit={true} />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/users/clients"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Clients />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Schedule />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/schedule/calendar"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Calendar />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/schedule/placeholder"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <PlaceholderEditor />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/schedule/add"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <AddToSchedule />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/devices"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Devices />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/devices/:device_id"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <DevicePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/devices/groups"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <DeviceGroup />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/device-groups/:groupId"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <DeviceGroupDetailPage />
+                  </Suspense>
+                }
+              />
+              {/* <Route
               path="/devices/cricket"
               element={
                 <Suspense fallback={<Loading />}>
@@ -300,184 +302,184 @@ function App() {
               }
             /> */}
 
-            <Route
-              path="/apkVersion"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ApkVersionsPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/campaigns"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <Campaigns />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/campaigns/new"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <NewCampaignPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/campaigns/edit/:campaign_id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <EditCampaignPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/campaigns/interactions"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <CampaignInteractions />
-                </Suspense>
-              }
-            />
+              <Route
+                path="/apkVersion"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ApkVersionsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/campaigns"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <Campaigns />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/campaigns/new"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <NewCampaignPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/campaigns/edit/:campaign_id"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <EditCampaignPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/campaigns/interactions"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <CampaignInteractions />
+                  </Suspense>
+                }
+              />
 
-            {/* Carousel Routes */}
-            <Route
-              path="/carousels"
-              element={
-                <ProtectedRoute feature="CAROUSELS">
-                  <Suspense fallback={<Loading />}>
-                    <Carousels />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/carousels/add"
-              element={
-                <ProtectedRoute feature="CAROUSELS">
-                  <Suspense fallback={<Loading />}>
-                    <CreateCarousel />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/carousels/:id"
-              element={
-                <ProtectedRoute feature="CAROUSELS">
-                  <Suspense fallback={<Loading />}>
-                    <CreateCarousel />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            />
+              {/* Carousel Routes */}
+              <Route
+                path="/carousels"
+                element={
+                  <ProtectedRoute feature="CAROUSELS">
+                    <Suspense fallback={<Loading />}>
+                      <Carousels />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/carousels/add"
+                element={
+                  <ProtectedRoute feature="CAROUSELS">
+                    <Suspense fallback={<Loading />}>
+                      <CreateCarousel />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/carousels/:id"
+                element={
+                  <ProtectedRoute feature="CAROUSELS">
+                    <Suspense fallback={<Loading />}>
+                      <CreateCarousel />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Live Content Routes */}
-            <Route
-              path="/live-content"
-              element={
-                <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
-                  <Suspense fallback={<Loading />}>
-                    <LiveContent />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/live-content/add"
-              element={
-                <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
+              {/* Live Content Routes */}
+              <Route
+                path="/live-content"
+                element={
+                  <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
+                    <Suspense fallback={<Loading />}>
+                      <LiveContent />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/live-content/add"
+                element={
+                  <ProtectedRoute features={["LIVE_STREAMING", "LIVE_WEBSITE"]}>
+                    <Suspense fallback={<Loading />}>
+                      <CreateLiveContent />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/live-content/:id"
+                element={
                   <Suspense fallback={<Loading />}>
                     <CreateLiveContent />
                   </Suspense>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/live-content/:id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <CreateLiveContent />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/live-content-preview/:id"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <PreviewLiveContent />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/stream-providers"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <StreamProvidersPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/stream-providers/:slug"
-              element={
-                <Suspense fallback={<Loading />}>
-                  <ProviderChannelsPage />
-                </Suspense>
-              }
-            />
-
-            <Route
-              path="/stream-channels"
-              element={
-                <ProtectedRoute feature="LIVE_STREAMING">
+                }
+              />
+              <Route
+                path="/live-content-preview/:id"
+                element={
                   <Suspense fallback={<Loading />}>
-                    <ClientChannelsPage />
+                    <PreviewLiveContent />
                   </Suspense>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
+
+              <Route
+                path="/stream-providers"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <StreamProvidersPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/stream-providers/:slug"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ProviderChannelsPage />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/stream-channels"
+                element={
+                  <ProtectedRoute feature="LIVE_STREAMING">
+                    <Suspense fallback={<Loading />}>
+                      <ClientChannelsPage />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/stream-providers/:slug/:channelId"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ChannelDetailPage />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/channel-details/:channelId"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ClientChannelDetailPage />
+                  </Suspense>
+                }
+              />
+            </Route>
 
             <Route
-              path="/stream-providers/:slug/:channelId"
+              path="/forbidden"
               element={
                 <Suspense fallback={<Loading />}>
-                  <ChannelDetailPage />
+                  <NotFoundPage />
                 </Suspense>
               }
             />
 
             <Route
-              path="/channel-details/:channelId"
+              path="*"
               element={
                 <Suspense fallback={<Loading />}>
-                  <ClientChannelDetailPage />
+                  <NotFound />
                 </Suspense>
               }
             />
           </Route>
-
-          <Route
-            path="/forbidden"
-            element={
-              <Suspense fallback={<Loading />}>
-                <NotFoundPage />
-              </Suspense>
-            }
-          />
-
-          <Route
-            path="*"
-            element={
-              <Suspense fallback={<Loading />}>
-                <NotFound />
-              </Suspense>
-            }
-          />
-        </Route>
-        {/* </Route> */}
-      </Routes>
+        </Routes>
+      </ConfirmProvider>
     </Router>
   );
 }

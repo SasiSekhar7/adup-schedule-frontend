@@ -58,8 +58,12 @@ interface CarouselsResponse {
   data: Carousel[];
 }
 
+import { useConfirm } from "@/context/ConfirmContext";
+
 export default function Carousels() {
+  const confirm = useConfirm();
   const [carousels, setCarousels] = useState<Carousel[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -83,7 +87,14 @@ export default function Carousels() {
   };
 
   const handleDeleteCarousel = async (carouselId: string) => {
-    if (!confirm("Are you sure you want to delete this carousel?")) return;
+    const isConfirmed = await confirm({
+      title: "Delete Carousel",
+      description: "Are you sure you want to delete this carousel? This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!isConfirmed) return;
+
 
     try {
       await api.delete(`/carousel/${carouselId}`);
