@@ -6,7 +6,12 @@ import {
   Bot,
   BookOpen,
   QrCode,
-  // Add any other icons you use here
+  Users,
+  Activity,
+  Server,
+  HardDrive,
+  ShieldAlert,
+  Archive,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -28,7 +33,12 @@ const iconMap: Record<string, React.ElementType> = {
   Bot,
   BookOpen,
   QrCode,
-  // Add additional icon mappings here as needed
+  Users,
+  Activity,
+  Server,
+  HardDrive,
+  ShieldAlert,
+  Archive,
 };
 
 interface SidebarData {

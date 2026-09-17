@@ -31,6 +31,10 @@ const EditCampaignPage = lazy(() => import("./pages/Campaigns/edit"));
 const CampaignInteractions = lazy(() => import("./pages/CampaignInteractions"));
 const Users = lazy(() => import("./pages/Users"));
 const DevicePage = lazy(() => import("./pages/DevicePage"));
+const SystemHealth = lazy(() => import("./pages/SystemHealth"));
+const SystemAlerts = lazy(() => import("./pages/SystemHealth/AlertsPage"));
+const ServerLogs = lazy(() => import("./pages/SystemHealth/LogsPage"));
+const SystemArchive = lazy(() => import("./pages/SystemHealth/ArchivePage"));
 
 // Loading Fallback Component
 
@@ -228,6 +232,38 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <CampaignInteractions />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/system-health"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <SystemHealth />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/system-health/alerts"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <SystemAlerts />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/system-health/logs"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <ServerLogs />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/system-health/archive"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <SystemArchive />
                 </Suspense>
               }
             />
