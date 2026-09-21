@@ -171,7 +171,13 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const deviceId = localStorage.getItem("cms_web_device_id");
+      if (deviceId) {
+        await api.post("/notifications/unregister-token", { deviceId });
+      }
+    } catch (_) {}
     localStorage.clear();
     window.location.href = "/login";
   };
