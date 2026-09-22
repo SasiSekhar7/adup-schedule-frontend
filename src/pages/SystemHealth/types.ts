@@ -176,3 +176,54 @@ export interface LogFilterOptions {
   reverse: boolean;
 }
 
+export interface PartitionTableInfo {
+  tableName: string;
+  category: string;
+  prefix: string;
+  isProtected: boolean;
+  canClear: boolean;
+  protectionReason?: string | null;
+  badgeVariant: string;
+  iconType: string;
+  partitionDate: string;
+  year: number | null;
+  month: number | null;
+  formattedDate: string;
+  isCurrentMonth: boolean;
+  isFutureMonth: boolean;
+  isPastMonth: boolean;
+  rowCount: number;
+  sizeBytes: number;
+  indexSizeBytes: number;
+  sizeFormatted: string;
+  sizeMB: string;
+  indexSizeMB: string;
+}
+
+export interface PartitionGroupSummary {
+  partitionCount: number;
+  rowCount: number;
+  sizeBytes: number;
+  sizeFormatted: string;
+  sizeMB: string;
+  isProtected?: boolean;
+}
+
+export interface PartitionSummary {
+  totalPartitions: number;
+  totalRows: number;
+  totalSizeBytes: number;
+  totalSizeFormatted: string;
+  clearableSizeBytes: number;
+  clearableSizeFormatted: string;
+  clearableRows: number;
+  telemetry: PartitionGroupSummary;
+  events: PartitionGroupSummary;
+  proofOfPlay: PartitionGroupSummary;
+}
+
+export interface PartitionListResponse {
+  partitions: PartitionTableInfo[];
+  summary: PartitionSummary;
+}
+

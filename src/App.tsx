@@ -34,6 +34,7 @@ const DevicePage = lazy(() => import("./pages/DevicePage"));
 const SystemHealth = lazy(() => import("./pages/SystemHealth"));
 const SystemAlerts = lazy(() => import("./pages/SystemHealth/AlertsPage"));
 const ServerLogs = lazy(() => import("./pages/SystemHealth/LogsPage"));
+const SystemPartitions = lazy(() => import("./pages/SystemHealth/PartitionsPage"));
 const SystemArchive = lazy(() => import("./pages/SystemHealth/ArchivePage"));
 
 // Loading Fallback Component
@@ -256,6 +257,14 @@ function App() {
               element={
                 <Suspense fallback={<Loading />}>
                   <ServerLogs />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/system-health/partitions"
+              element={
+                <Suspense fallback={<Loading />}>
+                  <SystemPartitions />
                 </Suspense>
               }
             />
