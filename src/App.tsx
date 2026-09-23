@@ -165,7 +165,7 @@ function App() {
               <Route
                 path="/all-exports"
                 element={
-                  <ProtectedRoute feature="PROOF_OF_PLAY">
+                  <ProtectedRoute features={["PROOF_OF_PLAY", "DEVICE_TELEMETRY", "DEVICE_EVENTS"]}>
                     <Suspense fallback={<Loading />}>
                       <ExportDetails />
                     </Suspense>

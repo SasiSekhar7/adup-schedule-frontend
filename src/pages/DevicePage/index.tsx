@@ -580,10 +580,36 @@ function DevicePage() {
 
   const [fullDeviceJobType, setFullDeviceJobType] = useState("PROOF_OF_PLAY");
 
-  const { has, subscription } = useFeature();
+  const { has, isAdmin, subscription } = useFeature();
 
-  const hasFeaturesAccess = subscription?.Tier?.features_visible_to_client;
-  const canExport = has("PROOF_OF_PLAY");
+  const canViewPoP = isAdmin || has("PROOF_OF_PLAY");
+  const canViewTelemetry = isAdmin || has("DEVICE_TELEMETRY");
+  const canViewEvents = isAdmin || has("DEVICE_EVENTS");
+  const canExportAny = canViewPoP || canViewEvents || canViewTelemetry;
+  const hasFeaturesAccess =
+    isAdmin || subscription?.Tier?.features_visible_to_client;
+
+  useEffect(() => {
+    if (fullDeviceJobType === "PROOF_OF_PLAY" && !canViewPoP) {
+      if (canViewEvents) {
+        setFullDeviceJobType("DEVICE_EVENTS");
+      } else if (canViewTelemetry) {
+        setFullDeviceJobType("DEVICE_TELEMETRY");
+      }
+    } else if (fullDeviceJobType === "DEVICE_EVENTS" && !canViewEvents) {
+      if (canViewPoP) {
+        setFullDeviceJobType("PROOF_OF_PLAY");
+      } else if (canViewTelemetry) {
+        setFullDeviceJobType("DEVICE_TELEMETRY");
+      }
+    } else if (fullDeviceJobType === "DEVICE_TELEMETRY" && !canViewTelemetry) {
+      if (canViewPoP) {
+        setFullDeviceJobType("PROOF_OF_PLAY");
+      } else if (canViewEvents) {
+        setFullDeviceJobType("DEVICE_EVENTS");
+      }
+    }
+  }, [canViewPoP, canViewEvents, canViewTelemetry, fullDeviceJobType]);
 
   const handleFullDeviceExport = async () => {
     try {
@@ -686,34 +712,52 @@ function DevicePage() {
         setSchedulesTotalPages(deviceDetailsResponse.schedules.totalPages);
 
         // Fetch proof of play logs
-        const proofOfPlayResponse: PaginatedResponse<ProofOfPlayLog> =
-          await api.get(
-            `/device/${device_id}/proof-of-play-logs?page=${proofOfPlayPage}&limit=${proofOfPlayLimit}`,
-          );
+        if (canViewPoP) {
+          try {
+            const proofOfPlayResponse: PaginatedResponse<ProofOfPlayLog> =
+              await api.get(
+                `/device/${device_id}/proof-of-play-logs?page=${proofOfPlayPage}&limit=${proofOfPlayLimit}`,
+              );
 
-        // setProofOfPlayLogs(proofOfPlayResponse.data || []);
-        setProofOfPlayTotal(proofOfPlayResponse.total);
-        setProofOfPlayTotalPages(proofOfPlayResponse.totalPages);
+            // setProofOfPlayLogs(proofOfPlayResponse.data || []);
+            setProofOfPlayTotal(proofOfPlayResponse.total);
+            setProofOfPlayTotalPages(proofOfPlayResponse.totalPages);
+          } catch (err) {
+            console.error("Failed to fetch proof of play logs:", err);
+          }
+        }
 
         // Fetch device event logs
-        const eventLogsResponse: PaginatedResponse<DeviceEventLog> =
-          await api.get(
-            `/device/${device_id}/event-logs?page=${eventLogsPage}&limit=${eventLogsLimit}`,
-          );
+        if (canViewEvents) {
+          try {
+            const eventLogsResponse: PaginatedResponse<DeviceEventLog> =
+              await api.get(
+                `/device/${device_id}/event-logs?page=${eventLogsPage}&limit=${eventLogsLimit}`,
+              );
 
-        setDeviceEventLogs(eventLogsResponse.data || []);
-        setEventLogsTotal(eventLogsResponse.total);
-        setEventLogsTotalPages(eventLogsResponse.totalPages);
+            setDeviceEventLogs(eventLogsResponse.data || []);
+            setEventLogsTotal(eventLogsResponse.total);
+            setEventLogsTotalPages(eventLogsResponse.totalPages);
+          } catch (err) {
+            console.error("Failed to fetch event logs:", err);
+          }
+        }
 
         // Fetch device telemetry
-        const telemetryResponse: PaginatedResponse<DeviceTelemetry> =
-          await api.get(
-            `/device/${device_id}/telemetry-logs?page=${terminologyPage}&limit=${terminologyLimit}`,
-          );
+        if (canViewTelemetry) {
+          try {
+            const telemetryResponse: PaginatedResponse<DeviceTelemetry> =
+              await api.get(
+                `/device/${device_id}/telemetry-logs?page=${terminologyPage}&limit=${terminologyLimit}`,
+              );
 
-        setDeviceTelemetry(telemetryResponse.data || []);
-        setTerminologyTotal(telemetryResponse.total);
-        setTerminologyTotalPages(telemetryResponse.totalPages);
+            setDeviceTelemetry(telemetryResponse.data || []);
+            setTerminologyTotal(telemetryResponse.total);
+            setTerminologyTotalPages(telemetryResponse.totalPages);
+          } catch (err) {
+            console.error("Failed to fetch telemetry logs:", err);
+          }
+        }
       } catch (error: any) {
         console.error("Failed to fetch device data:", error);
       } finally {
@@ -732,6 +776,9 @@ function DevicePage() {
     eventLogsLimit,
     terminologyPage,
     terminologyLimit,
+    canViewPoP,
+    canViewEvents,
+    canViewTelemetry,
   ]);
 
   const [resolvedAddress, setResolvedAddress] = useState("Loading...");
@@ -803,7 +850,7 @@ function DevicePage() {
               <Dialog
                 open={fullDeviceExportDialogOpen}
                 onOpenChange={(open) => {
-                  if (!canExport) return;
+                  if (!canExportAny) return;
                   setFullDeviceExportDialogOpen(open);
                 }}
               >
@@ -815,7 +862,7 @@ function DevicePage() {
                           <span className="inline-block">
                             <Button
                               variant="default"
-                              disabled={!canExport}
+                              disabled={!canExportAny}
                               className="w-full sm:w-auto bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all disabled:opacity-50"
                             >
                               <Download className="w-4 h-4 mr-2" />
@@ -829,9 +876,9 @@ function DevicePage() {
                           </span>
                         </TooltipTrigger>
 
-                        {!canExport && (
+                        {!canExportAny && (
                           <TooltipContent side="top">
-                            Upgrade your plan to enable Proof of Play export
+                            Upgrade your plan to enable exports
                           </TooltipContent>
                         )}
                       </Tooltip>
@@ -869,15 +916,21 @@ function DevicePage() {
                           <SelectValue placeholder="Select export type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="PROOF_OF_PLAY">
-                            Proof of Play
-                          </SelectItem>
-                          <SelectItem value="DEVICE_EVENTS">
-                            Device Events
-                          </SelectItem>
-                          <SelectItem value="DEVICE_TELEMETRY">
-                            Device Telemetry
-                          </SelectItem>
+                          {canViewPoP && (
+                            <SelectItem value="PROOF_OF_PLAY">
+                              Proof of Play
+                            </SelectItem>
+                          )}
+                          {canViewEvents && (
+                            <SelectItem value="DEVICE_EVENTS">
+                              Device Events
+                            </SelectItem>
+                          )}
+                          {canViewTelemetry && (
+                            <SelectItem value="DEVICE_TELEMETRY">
+                              Device Telemetry
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
