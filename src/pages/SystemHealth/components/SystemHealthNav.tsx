@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Activity, Bell, Terminal, Archive } from "lucide-react";
+import { Activity, Bell, Terminal, Archive, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SystemHealthNavProps {
@@ -33,6 +33,13 @@ export const SystemHealthNav: React.FC<SystemHealthNavProps> = ({ unresolvedAler
       icon: Terminal,
       iconColor: "text-blue-500",
       isActive: pathname === "/system-health/logs",
+    },
+    {
+      title: "Device Logs & Partitions",
+      url: "/system-health/partitions",
+      icon: Database,
+      iconColor: "text-purple-500",
+      isActive: pathname === "/system-health/partitions",
     },
     {
       title: "Cold Data Archival & S3",
