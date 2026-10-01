@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_BASE_URL}`,
@@ -34,7 +35,19 @@ api.interceptors.response.use(
       window.location.href = "/login"; // Redirect to login page
     }
     if (error.response?.status === 403) {
-      window.location.href = "/forbidden"; // Redirect to dashboard
+      if (
+        error.response?.data?.code === "CLIENT_SUSPENDED" ||
+        error.response?.data?.message?.includes("suspended")
+      ) {
+        toast.error(
+          error.response?.data?.message ||
+            "Your account has been suspended. Please contact administrator.",
+        );
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return Promise.reject(error.response?.data || error.message);
+      }
+      window.location.href = "/forbidden"; // Redirect to forbidden
     }
 
     return Promise.reject(error.response?.data || error.message);

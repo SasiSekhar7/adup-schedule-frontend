@@ -76,7 +76,10 @@ function Users() {
               <DataTable
                 data={data}
                 columns={userColumns}
-                filters={[{ label: "Name", value: "name" }]}
+                filters={[
+                  { label: "Name", value: "name" },
+                  { label: "Email", value: "email" },
+                ]}
                 maxHeight="none"
               />
             </div>

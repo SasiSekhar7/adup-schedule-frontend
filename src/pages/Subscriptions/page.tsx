@@ -691,16 +691,33 @@ export default function ManageSubscriptionsPage() {
                                       setIsCreateOpen(true);
                                     } else {
                                       // 👉 EDIT FLOW CORRECT DATA
+                                      const currentTier = tiers.find(
+                                        (t) => t.tier_id === sub?.tier_id,
+                                      );
+                                      const cycle =
+                                        currentTier?.billing_cycle ||
+                                        sub?.Tier?.billing_cycle ||
+                                        sub?.billing_cycle ||
+                                        "monthly";
+
+                                      const calcDuration =
+                                        cycle === "yearly"
+                                          ? Math.max(
+                                              1,
+                                              Math.round(
+                                                (sub?.no_of_months || 12) / 12,
+                                              ),
+                                            )
+                                          : sub?.no_of_months || 1;
+
+                                      setBillingType(cycle);
+                                      setDuration(calcDuration);
+
                                       setEditFormData({
                                         plan: sub?.tier_id || "", // USE tier_id
                                         status: sub?.status || "active",
                                         renewalPeriod: "1-month",
                                       });
-
-                                      setBillingType(
-                                        sub?.billing_cycle || "monthly",
-                                      ); // correct
-                                      setDuration(sub?.no_of_months || 1); // correct
 
                                       setIsEditOpen(true);
                                       setButtonType("edit");
@@ -728,23 +745,33 @@ export default function ManageSubscriptionsPage() {
                                       );
                                       const sub = client?.currentSubscription;
 
-                                      setBillingType(
-                                        sub?.billing_cycle || "monthly",
+                                      const currentTier = tiers.find(
+                                        (t) => t.tier_id === sub?.tier_id,
                                       );
+                                      const cycle =
+                                        currentTier?.billing_cycle ||
+                                        sub?.Tier?.billing_cycle ||
+                                        sub?.billing_cycle ||
+                                        "monthly";
+
+                                      const durationValue =
+                                        cycle === "yearly"
+                                          ? Math.max(
+                                              1,
+                                              Math.round(
+                                                (sub?.no_of_months || 12) / 12,
+                                              ),
+                                            )
+                                          : sub?.no_of_months || 1;
+
+                                      setBillingType(cycle);
+                                      setDuration(durationValue);
 
                                       setEditFormData({
                                         plan: sub?.tier_id || "",
                                         status: "active",
                                         renewalPeriod: "1-month",
                                       });
-
-                                      // convert months → proper duration
-                                      const durationValue =
-                                        sub?.billing_cycle === "yearly"
-                                          ? (sub?.no_of_months || 12) / 12
-                                          : sub?.no_of_months || 1;
-
-                                      setDuration(durationValue);
 
                                       setIsEditOpen(true); // reuse same modal
                                       setButtonType("renew");
@@ -1135,16 +1162,32 @@ export default function ManageSubscriptionsPage() {
                   onChange={(e) => setDuration(Number(e.target.value))}
                 >
                   {billingType === "monthly"
-                    ? Array.from({ length: 11 }, (_, i) => i + 1).map((m) => (
-                        <option key={m} value={m}>
-                          {m} Month
-                        </option>
-                      ))
-                    : [1, 2].map((y) => (
-                        <option key={y} value={y}>
-                          {y} Year
-                        </option>
-                      ))}
+                    ? Array.from(
+                        new Set(
+                          Array.from({ length: 11 }, (_, i) => i + 1)
+                            .concat(duration)
+                            .filter((m) => m > 0),
+                        ),
+                      )
+                        .sort((a, b) => a - b)
+                        .map((m) => (
+                          <option key={m} value={m}>
+                            {m} {m === 1 ? "Month" : "Months"}
+                          </option>
+                        ))
+                    : Array.from(
+                        new Set(
+                          Array.from({ length: 2 }, (_, i) => i + 1)
+                            .concat(duration)
+                            .filter((y) => y > 0),
+                        ),
+                      )
+                        .sort((a, b) => a - b)
+                        .map((y) => (
+                          <option key={y} value={y}>
+                            {y} {y === 1 ? "Year" : "Years"}
+                          </option>
+                        ))}
                 </select>
               </div>
 
@@ -1343,16 +1386,32 @@ export default function ManageSubscriptionsPage() {
                     onChange={(e) => setDuration(Number(e.target.value))}
                   >
                     {billingType === "monthly"
-                      ? Array.from({ length: 11 }, (_, i) => i + 1).map((m) => (
-                          <option key={m} value={m}>
-                            {m} Month
-                          </option>
-                        ))
-                      : [1, 2].map((y) => (
-                          <option key={y} value={y}>
-                            {y} Year
-                          </option>
-                        ))}
+                      ? Array.from(
+                          new Set(
+                            Array.from({ length: 11 }, (_, i) => i + 1)
+                              .concat(duration)
+                              .filter((m) => m > 0),
+                          ),
+                        )
+                          .sort((a, b) => a - b)
+                          .map((m) => (
+                            <option key={m} value={m}>
+                              {m} {m === 1 ? "Month" : "Months"}
+                            </option>
+                          ))
+                      : Array.from(
+                          new Set(
+                            Array.from({ length: 2 }, (_, i) => i + 1)
+                              .concat(duration)
+                              .filter((y) => y > 0),
+                          ),
+                        )
+                          .sort((a, b) => a - b)
+                          .map((y) => (
+                            <option key={y} value={y}>
+                              {y} {y === 1 ? "Year" : "Years"}
+                            </option>
+                          ))}
                   </select>
                 </div>
               )}

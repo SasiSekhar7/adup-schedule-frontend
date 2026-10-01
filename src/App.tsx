@@ -61,6 +61,7 @@ const Carousels = lazy(() => import("./pages/Carousels"));
 const CreateCarousel = lazy(() => import("./pages/Carousels/create"));
 const LiveContent = lazy(() => import("./pages/LiveContent"));
 const CreateLiveContent = lazy(() => import("./pages/LiveContent/create"));
+const ClientManagement = lazy(() => import("./pages/ClientManagement"));
 
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -120,6 +121,15 @@ function App() {
                 element={
                   <Suspense fallback={<Loading />}>
                     <ManageSubscriptionsPage />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/client-management"
+                element={
+                  <Suspense fallback={<Loading />}>
+                    <ClientManagement />
                   </Suspense>
                 }
               />

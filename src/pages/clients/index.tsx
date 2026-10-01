@@ -1,7 +1,15 @@
 import api from "@/api";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Layers, Pencil, Plus, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  Layers,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  X,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -81,6 +89,42 @@ function Clients() {
     email: "",
     phoneNumber: "",
     // tier_name: "",
+  });
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState("all");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const availablePlans = Array.from(
+    new Set(
+      (data || [])
+        .map((c) => c?.Subscriptions?.[0]?.Tier?.name || "No Plan")
+        .filter(Boolean),
+    ),
+  );
+
+  const filteredClients = (data || []).filter((c) => {
+    const query = debouncedSearchTerm.toLowerCase().trim();
+    const planName = c?.Subscriptions?.[0]?.Tier?.name || "No Plan";
+
+    const matchesPlan = planFilter === "all" || planName === planFilter;
+
+    const matchesSearch =
+      !query ||
+      c.name?.toLowerCase().includes(query) ||
+      c.email?.toLowerCase().includes(query) ||
+      (c.phone_number && c.phone_number.toString().includes(query)) ||
+      planName.toLowerCase().includes(query);
+
+    return matchesPlan && matchesSearch;
   });
 
   // const [tiers, setTiers] = useState<Tier[]>([]);
@@ -280,21 +324,57 @@ function Clients() {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between mb-4 md:mb-6">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by client name, email, or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-8"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            className="w-full sm:w-48 px-3 py-2 border rounded-md text-sm bg-background text-foreground"
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+          >
+            <option value="all">All Plans</option>
+            {availablePlans.map((plan) => (
+              <option key={plan} value={plan}>
+                {plan}
+              </option>
+            ))}
+          </select>
+
+          {(searchTerm || planFilter !== "all") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setPlanFilter("all");
+              }}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* {data.map((client, index) => (
-          <Card key={index} className="col-span-1">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {client.name}
-              </CardTitle>
-              <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{client.adsCount}</div>
-              <p className="text-xs text-muted-foreground">Total Ads</p>
-            </CardContent>
-          </Card>
-        ))} */}
         {loadingdata ? (
           <div className="flex items-center justify-center h-64 col-span-full">
             <div className="text-center">
@@ -302,8 +382,17 @@ function Clients() {
               <p className="mt-2 text-muted-foreground">Loading Clients...</p>
             </div>
           </div>
+        ) : filteredClients.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 col-span-full text-center">
+            <p className="text-lg font-medium text-muted-foreground">
+              No clients found
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Try adjusting your search criteria or clear filters.
+            </p>
+          </div>
         ) : (
-          data.map((client, index) => {
+          filteredClients.map((client, index) => {
             const usedBytes = Number(client.used_storage_bytes || 0);
             const limitBytes = Number(
               client?.Subscriptions?.[0]?.features_cache?.STORAGE_LIMIT || 0,
